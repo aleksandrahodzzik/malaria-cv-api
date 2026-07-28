@@ -1,5 +1,5 @@
 # ==============================================================================
-# Multi-Stage Security-Hardened Dockerfile for Malaria Classification Microservice
+# Multi-stage non-root Dockerfile for the research classification service
 # ==============================================================================
 
 # ------------------------------------------------------------------------------
@@ -18,15 +18,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     && rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt .
+COPY requirements-bootstrap.txt requirements.txt constraints.txt ./
 
 # Create isolated virtual environment
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
-# Install production Python dependencies
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+# Install production Python dependencies without silently changing bootstrap
+# tooling. Bootstrap-tool upgrades must be reviewed and pinned separately.
+RUN python -m pip install --no-cache-dir --require-hashes \
+        -r requirements-bootstrap.txt && \
+    python -m pip install --no-cache-dir -r requirements.txt
 
 # ------------------------------------------------------------------------------
 # Stage 2: Final Non-Root Minimal Runtime Stage
@@ -64,5 +66,6 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
 
-# Production Gunicorn + Uvicorn worker entrypoint
-ENTRYPOINT ["gunicorn", "-w", "2", "-k", "uvicorn.workers.UvicornWorker", "-b", "0.0.0.0:8000", "src.main:app"]
+# One worker is the conservative default because every worker owns a model copy.
+# Increase only after measuring peak RSS and latency with the approved model.
+ENTRYPOINT ["gunicorn", "-w", "1", "-k", "uvicorn.workers.UvicornWorker", "--access-logfile", "-", "--error-logfile", "-", "-b", "0.0.0.0:8000", "src.main:app"]

@@ -6,7 +6,7 @@ from src.services.inference import MalariaClassifierService
 
 
 def get_classifier_service(request: Request) -> MalariaClassifierService:
-    """Dependency injector providing access to the loaded MalariaClassifierService instance."""
+    """Provide the loaded classifier service through FastAPI dependency injection."""
     service: MalariaClassifierService | None = getattr(
         request.app.state, "classifier_service", None
     )
@@ -14,7 +14,8 @@ def get_classifier_service(request: Request) -> MalariaClassifierService:
     if service is None or not service.is_ready():
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="ML Model inference service is not initialized or still loading.",
+            detail="The approved model is not configured, loaded, or ready.",
+            headers={"Retry-After": "5"},
         )
 
     return service

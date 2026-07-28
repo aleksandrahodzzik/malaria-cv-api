@@ -1,0 +1,52 @@
+[tool.ruff]
+target-version = "py311"
+line-length = 88
+extend-exclude = [
+  ".venv",
+  "audit",
+]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "ASYNC"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.pyright]
+include = ["src", "tests"]
+extraPaths = ["."]
+
+[tool.mypy]
+python_version = "3.11"
+mypy_path = "."
+strict = true
+warn_unreachable = true
+show_error_codes = true
+exclude = ["^\\.venv/", "^audit/"]
+
+[[tool.mypy.overrides]]
+module = ["torch", "torch.*", "transformers", "transformers.*", "PIL", "PIL.*"]
+follow_imports = "skip"
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = [
+  "--strict-config",
+  "--strict-markers",
+]
+
+[tool.coverage.run]
+branch = true
+source = ["src"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
+fail_under = 80
+exclude_also = [
+  "if TYPE_CHECKING:",
+  "if __name__ == .__main__.:",
+]

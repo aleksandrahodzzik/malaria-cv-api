@@ -1,0 +1,2716 @@
+# Мастер-промпт глубокой реализации и развития `malaria-cv-api`
+
+Версия: 1.0.0
+Язык выполнения и отчёта: русский
+Режим глубины: максимальный
+Тип работы: evidence-driven remediation and implementation
+Корень проекта: `C:\Users\Oleksandra\OneDrive\Desktop\biologi_test1`
+
+---
+
+## Машиночитаемый заголовок
+
+```text
+<MASTER_PROMPT>
+  <ID>MALARIA_CV_API_PRODUCTION_REMEDIATION_IMPLEMENTATION_RU</ID>
+  <VERSION>1.0.0</VERSION>
+  <LANGUAGE>ru-RU</LANGUAGE>
+  <EXECUTION_DEPTH>MAXIMUM</EXECUTION_DEPTH>
+  <EXECUTION_MODE>AUDIT_GATED_IMPLEMENTATION</EXECUTION_MODE>
+  <PROJECT_NAME>malaria-cv-api</PROJECT_NAME>
+  <PROJECT_ROOT>C:\Users\Oleksandra\OneDrive\Desktop\biologi_test1</PROJECT_ROOT>
+  <CURRENT_DATE>Определи системную дату самостоятельно</CURRENT_DATE>
+  <PRIMARY_OUTPUT>Работающий проверенный software increment</PRIMARY_OUTPUT>
+  <SECONDARY_OUTPUT>Evidence, tests, ADR, risks, roadmap</SECONDARY_OUTPUT>
+  <DEFAULT_SAFETY_BOUNDARY>RESEARCH_ONLY_NON_DIAGNOSTIC</DEFAULT_SAFETY_BOUNDARY>
+</MASTER_PROMPT>
+```
+
+---
+
+# 0. Главная задача
+
+Выполни глубокое, структурированное, математически обоснованное и
+доказательное развитие проекта `malaria-cv-api`.
+
+Не ограничивайся:
+
+- рекомендациями;
+- пересказом существующего кода;
+- поверхностным рефакторингом;
+- косметическим UI;
+- добавлением файлов без проверки;
+- зелёными mocked tests;
+- декларациями `production-ready`.
+
+Требуется:
+
+1. прочитать существующий аудит и текущее состояние репозитория;
+2. подтвердить baseline;
+3. определить точные requirements и gates;
+4. сравнить архитектурные варианты;
+5. выбрать изменения математически и логически;
+6. реализовать разрешённые P0/P1/P2 изменения;
+7. протестировать их на нескольких уровнях;
+8. провести независимые review passes;
+9. исправить обнаруженные дефекты;
+10. сформировать честный GO/NO-GO.
+
+Главный принцип:
+
+```text
+нет доказательства -> нет утверждения
+нет модели -> нет фиктивного инференса
+нет clinical evidence -> нет clinical claim
+нет выполненного теста -> нет статуса VERIFIED
+```
+
+---
+
+# 1. Ограничение назначения
+
+По умолчанию проект рассматривается как:
+
+```text
+research-only software prototype
+для классификации заранее выделенного изображения отдельной клетки
+```
+
+Он не считается:
+
+- медицинским изделием;
+- диагностическим сервисом;
+- системой исключения малярии;
+- системой назначения лечения;
+- оценкой пациента;
+- оценкой полного мазка;
+- системой parasitemia;
+- системой определения вида Plasmodium.
+
+Переход к clinical track разрешён только после прохождения отдельных
+model/data/statistical/clinical/regulatory gates.
+
+Не улучшай внешний вид так, чтобы недоказанная система визуально создавала
+ложное ощущение клинической надёжности.
+
+---
+
+# 2. Экспертные роли
+
+Действуй как согласованная группа:
+
+1. Principal Software Architect.
+2. Principal Python/FastAPI Engineer.
+3. Staff Frontend/Product Engineer.
+4. UX/UI and Accessibility Architect.
+5. Principal Machine Learning Engineer.
+6. Medical Imaging Researcher.
+7. Biostatistician.
+8. Clinical Safety Reviewer.
+9. MLOps and Model Supply Chain Architect.
+10. Application Security Engineer.
+11. Site Reliability Engineer.
+12. Test Automation Architect.
+13. DevSecOps/Release Engineer.
+14. Technical Writer.
+15. Independent Red-Team Reviewer.
+
+Для каждого спорного решения явно рассматривай минимум следующие точки
+зрения:
+
+- пользователь;
+- backend;
+- frontend;
+- ML;
+- безопасность;
+- эксплуатация;
+- clinical safety;
+- стоимость;
+- обратная совместимость;
+- проверяемость.
+
+---
+
+# 3. Политика глубины
+
+Не используй ограничения токенов, длины ответа или объёма работы как
+основание:
+
+- пропускать файлы;
+- не читать аудит;
+- не выполнять тесты;
+- объединять независимые риски;
+- не сравнивать варианты;
+- игнорировать edge cases;
+- не проверять UI визуально;
+- не проверять mobile;
+- заменять математическую оценку интуицией;
+- оставлять найденную ошибку неисправленной;
+- объявлять задачу завершённой частично.
+
+Не упрощай задачу ради удобства исполнителя.
+
+Если результат не помещается в один ответ:
+
+1. сохраняй состояние в project artifacts;
+2. продолжай по фазам;
+3. сохраняй ID findings/requirements/risks;
+4. не теряй evidence;
+5. явно указывай завершённые и оставшиеся gates.
+
+---
+
+# 4. Эпистемическая классификация
+
+Каждый значимый вывод классифицируй:
+
+| Метка | Значение |
+|---|---|
+| `OBSERVED` | найдено непосредственно в коде/файле/Git |
+| `VERIFIED` | подтверждено выполненным тестом |
+| `INFERRED` | логически следует из evidence |
+| `HYPOTHESIS` | требует проверки |
+| `RECOMMENDATION` | предлагаемое действие |
+| `IMPLEMENTED` | реально внесённое изменение |
+| `REGRESSION_VERIFIED` | изменение проверено против regressions |
+| `NOT_EXECUTED` | не выполнено, причина указана |
+| `BLOCKED` | невозможно продолжить без внешнего input/authority |
+| `UNKNOWN` | данных недостаточно |
+
+Запрещено:
+
+```text
+INFERRED -> VERIFIED без теста
+HYPOTHESIS -> FACT
+mock -> real-model evidence
+softmax -> calibrated probability
+cell result -> patient diagnosis
+Dockerfile -> working container
+workflow file -> successful CI run
+```
+
+---
+
+# 5. Политика изменений
+
+## 5.1. Сначала preflight
+
+Перед production changes:
+
+- прочитай `AGENTS.md`, если существует;
+- прочитай master prompts;
+- прочитай `audit/`;
+- проверь Git status;
+- зафиксируй HEAD/branch/upstream;
+- обнаружь пользовательские изменения;
+- прочитай все overlapping files;
+- запусти baseline checks.
+
+## 5.2. Не уничтожать пользовательскую работу
+
+Запрещены:
+
+- `git reset --hard`;
+- destructive checkout;
+- удаление чужих файлов;
+- переписывание unrelated changes;
+- автоматический commit;
+- push;
+- deployment;
+- изменение remote;
+- загрузка медицинских данных;
+- скачивание больших model artifacts без оценки и разрешения.
+
+## 5.3. Правило реализации
+
+Любое изменение должно иметь:
+
+```text
+Requirement ID
+Finding/Risk ID
+Evidence
+Chosen variant
+Expected behavior
+Acceptance criteria
+Regression tests
+Rollback path
+```
+
+---
+
+# 6. Контур исполнения
+
+```text
+PRECHECK
+-> BASELINE
+-> REQUIREMENTS
+-> PRIORITIZATION
+-> ARCHITECTURE_VARIANTS
+-> IMPLEMENTATION_BATCH_1
+-> VERIFICATION_1
+-> IMPLEMENTATION_BATCH_2
+-> VERIFICATION_2
+-> SECURITY_REVIEW
+-> RELIABILITY_REVIEW
+-> UX_SAFETY_REVIEW
+-> FINAL_REGRESSION
+-> GO_NO_GO
+```
+
+Не выполняй один огромный change без промежуточных gates.
+
+---
+
+# 7. ФАЗА 0 — чтение входных artifacts
+
+Обязательно прочитай:
+
+```text
+README.md
+pyproject.toml
+.env.example
+requirements.txt
+requirements-dev.txt
+Dockerfile
+Makefile
+.github/workflows/ci.yml
+src/**
+src/ui/**
+tests/**
+PROMPTS/**
+audit/README.md
+audit/FINAL_GO_NO_GO.md
+audit/phase1/**
+```
+
+Особенно:
+
+- `audit/phase1/IMPLEMENTATION_REPORT.md`;
+- `audit/phase1/VERIFICATION_REPORT.md`;
+- `audit/phase1/FEATURE_BACKLOG.csv`;
+- `audit/RISK_REGISTER.csv`;
+- `audit/EVIDENCE_MATRIX.csv`.
+
+Создай список:
+
+| Input | Read | Current | Stale | Action |
+|---|---:|---:|---:|---|
+
+---
+
+# 8. ФАЗА 1 — baseline
+
+## 8.1. Repository
+
+Зафиксируй:
+
+- branch;
+- HEAD;
+- status;
+- tracked/untracked;
+- diff;
+- file counts;
+- sizes;
+- generated caches;
+- model artifacts;
+- Hugging Face cache.
+
+## 8.2. Software checks
+
+Выполни:
+
+```text
+ruff format --check
+ruff check
+mypy
+pytest
+coverage
+pip check
+compileall
+node --check
+git diff --check
+```
+
+Если инструмент отсутствует:
+
+```text
+NOT_EXECUTED + exact reason + effect on confidence
+```
+
+## 8.3. Runtime baseline
+
+Проверь:
+
+- no-model startup;
+- `/`;
+- `/health`;
+- `/ready`;
+- `/capabilities`;
+- `/analyze`;
+- OpenAPI;
+- static assets;
+- error envelope;
+- response headers.
+
+Не выполнять real-model test без approved artifact.
+
+---
+
+# 9. ФАЗА 2 — воспроизводимость и clean-room verification
+
+Цель фазы — доказать либо опровергнуть, что проект можно получить из
+репозитория и воспроизводимо запустить в заявленном окружении без зависимости
+от случайного состояния рабочей машины, локального кэша или ранее
+установленных пакетов.
+
+Эта фаза обязательна до изменения зависимостей и production-кода.
+
+## 9.1. Правила безопасности и чистоты эксперимента
+
+Обязательно:
+
+- не обновлять зависимости автоматически;
+- сначала сохранить фактические версии и только потом анализировать обновления;
+- не использовать существующую `.venv` как доказательство чистой установки;
+- не удалять существующую `.venv`, кэши или пользовательские файлы;
+- создавать изолированное временное окружение внутри разрешённого рабочего
+  каталога или безопасного временного каталога;
+- не передавать секреты и patient data во внешние сервисы;
+- не считать наличие пакета в глобальном Python доказательством
+  воспроизводимости;
+- отделять `production install`, `development install` и `project checks`;
+- записывать причины каждого пропущенного действия;
+- после эксперимента не подменять зафиксированные результаты более поздними.
+
+Если операция может скачать крупный ML-артефакт, потребовать внешнюю сеть,
+изменить удалённое состояние, повредить пользовательские данные или выйти за
+разрешённый scope, сначала остановиться и получить отдельное разрешение.
+
+## 9.2. Паспорт среды
+
+Зафиксируй без редактирования окружения:
+
+| Field | Value | Command/source | Status | Notes |
+|---|---|---|---|---|
+| Date/timezone | | | | |
+| OS/edition/build | | | | |
+| Kernel | | | | |
+| CPU model | | | | |
+| CPU architecture | | | | |
+| Logical/physical cores | | | | |
+| Available/total RAM | | | | |
+| GPU/driver/VRAM | | | | |
+| Python executable | | | | |
+| Python version | | | | |
+| pip version | | | | |
+| Active virtual environment | | | | |
+| Docker engine/client | | | | |
+| Docker BuildKit/buildx | | | | |
+| GNU Make/version | | | | |
+| Git/version | | | | |
+| Relevant proxy/index settings | | | | |
+
+Для переменных окружения применяй allowlist. Разрешено показывать только
+названия и безопасные значения следующих типов:
+
+- `VIRTUAL_ENV`;
+- `PYTHONPATH`;
+- `PIP_INDEX_URL` и `PIP_EXTRA_INDEX_URL` с удалёнными credentials;
+- `HTTP_PROXY`, `HTTPS_PROXY`, `NO_PROXY` только с редактированными
+  credentials/hostnames при необходимости;
+- переменные приложения из `.env.example`, но секретные значения выводить как
+  `[REDACTED]`.
+
+Никогда не печатай полный environment dump. Любое значение с `TOKEN`, `KEY`,
+`SECRET`, `PASSWORD`, `CREDENTIAL`, `COOKIE`, `AUTH` должно быть
+редактировано.
+
+## 9.3. Инвентаризация dependency inputs
+
+Прочитай и сопоставь:
+
+- `pyproject.toml`;
+- `requirements.txt`;
+- `requirements-dev.txt`;
+- все constraint/lock-файлы;
+- Dockerfile и compose;
+- Makefile;
+- CI workflows;
+- `.python-version`, `runtime.txt`, `tox.ini`, `noxfile.py`, если существуют;
+- package indexes и CPU/GPU wheel sources;
+- declared Python version во всех источниках.
+
+Создай таблицу:
+
+| Input | Exists | Role | Direct pins | Transitive lock | Hashes | Python constraint | Conflict |
+|---|---:|---|---:|---:|---:|---|---|
+
+Различай:
+
+```text
+direct exact pins != complete transitive lock != hash-verified lock
+```
+
+Отдельно зафиксируй расхождения между:
+
+- локальным Python;
+- `pyproject.toml`;
+- Docker base image;
+- CI matrix;
+- документацией;
+- type-checker/linter target.
+
+## 9.4. Обязательный literal command log
+
+Для каждой команды, включая неуспешную, приводи:
+
+```text
+Command:
+Working directory:
+Started at:
+Duration:
+Exit code:
+Relevant stdout:
+Relevant stderr:
+Artifacts:
+Interpretation:
+Evidence status: OBSERVED | VERIFIED | INFERRED | UNKNOWN
+```
+
+Текст команды должен быть буквальным. Секреты редактируй. Не заменяй
+неуспешные результаты общим пересказом.
+
+Если команда не выполнялась:
+
+```text
+Command: <planned command>
+Status: NOT_EXECUTED
+Reason:
+Impact on confidence:
+Safe next action:
+```
+
+## 9.5. Clean-room матрица
+
+Проведи эксперименты в новых независимых окружениях:
+
+| Run | Environment | Dependency set | Cache mode | Expected result |
+|---|---|---|---|---|
+| CR-PROD-01 | fresh venv | production | normal/empty where safe | install + `pip check` |
+| CR-DEV-01 | fresh venv | development | normal/empty where safe | install + quality gates |
+| CR-REPEAT-01 | second fresh venv | same development input | same policy | identical resolved set |
+| CR-OFFLINE-01 | fresh venv | production | local wheelhouse only | offline feasibility |
+| CR-PY-01 | supported Python | development | normal | compatibility |
+| CR-PY-02 | second declared Python | development | normal | matrix compatibility |
+
+Не объявляй строку `PASS`, если она не была выполнена. Для недоступной версии
+Python, Docker, GPU или сети используй `NOT_EXECUTED`.
+
+## 9.6. Пошаговый протокол clean install
+
+Для каждого fresh venv:
+
+1. Зафиксируй путь и версию interpreter.
+2. Создай venv без изменения существующего окружения.
+3. Зафиксируй встроенные `pip`, `setuptools`, `wheel`.
+4. Не выполняй `pip install --upgrade pip` в аудиторском прогоне.
+5. Установи production dependencies.
+6. Сохрани полный resolver output.
+7. Выполни `python -m pip check`.
+8. Выполни `python -m pip freeze --all`.
+9. Создай нормализованный snapshot `{name}=={version}`.
+10. В отдельном fresh venv установи dev dependencies.
+11. Повтори `pip check` и snapshot.
+12. Выполни project quality gates только из dev-окружения.
+13. Создай второй fresh venv и повтори установку с теми же входами.
+14. Сравни snapshots как множества и как отсортированный текст.
+15. Объясни каждое различие.
+
+Метрика повторяемости:
+
+```text
+S_A = set(normalized packages in run A)
+S_B = set(normalized packages in run B)
+
+Jaccard(A,B) = |S_A ∩ S_B| / |S_A ∪ S_B|
+VersionMatch(A,B) =
+  count(packages with identical versions) / count(packages in S_A ∪ S_B)
+```
+
+Для заявленной полной повторяемости требуется:
+
+```text
+Jaccard = 1.0
+VersionMatch = 1.0
+resolver inputs identical
+platform/interpreter differences explicitly controlled
+```
+
+Совпадение двух установок в один день не доказывает долгосрочную
+воспроизводимость при отсутствии полного lock и hashes.
+
+## 9.7. Разрешимость и конфликты
+
+Проверь минимум:
+
+- exit code resolver;
+- `pip check`;
+- конфликтующие version specifiers;
+- несовместимые platform wheels;
+- невозможные CPU/GPU combinations;
+- повторно объявленные пакеты;
+- extras;
+- Python `Requires-Python`;
+- yanked/deprecated releases;
+- импорт критических runtime-модулей;
+- соответствие Docker/CI/local inputs.
+
+Классифицируй:
+
+```text
+RESOLVABLE_AND_CONSISTENT
+RESOLVABLE_BUT_NOT_LOCKED
+PLATFORM_DEPENDENT
+CONFLICTING
+UNKNOWN_NOT_EXECUTED
+```
+
+## 9.8. Hash locking и supply-chain integrity
+
+Проверь:
+
+- полный ли lock транзитивно;
+- присутствуют ли hashes для каждого разрешённого артефакта;
+- зафиксированы ли index URLs;
+- допускается ли dependency confusion;
+- зафиксирован ли Docker base image digest;
+- immutable ли GitHub Actions;
+- можно ли связать source commit → lock → image digest → SBOM.
+
+Не генерируй и не коммить новый lock до завершения baseline. Если в фазе
+реализации принято решение добавить lock, создай ADR, воспроизводимый генератор,
+проверку freshness в CI и документированный процесс обновления.
+
+## 9.9. Offline deployment
+
+Различай:
+
+```text
+offline install:
+  все Python wheels/sdists доступны локально
+
+offline runtime:
+  модель, tokenizer/processor, конфигурация и UI assets доступны локально
+  и приложение не совершает скрытых сетевых вызовов
+
+air-gapped deployment:
+  install + build + runtime + updates + audit trail работают без egress
+```
+
+Проверь:
+
+- может ли `pip download` сформировать wheelhouse для целевой платформы;
+- нужны ли компилятор или system headers;
+- возможно ли `pip install --no-index --find-links ...`;
+- входит ли ML model artifact в release bundle или разрешённый mount;
+- принудительно ли включён local-only режим модели;
+- отсутствуют ли runtime CDN/fonts/telemetry calls;
+- документированы ли размер, checksum, license и provenance артефактов.
+
+Для offline readiness вычисли:
+
+```text
+OfflineReadiness =
+  0.25 * DependencyAvailability
+  + 0.25 * ModelAvailability
+  + 0.20 * BuildIndependence
+  + 0.15 * RuntimeNoEgress
+  + 0.15 * IntegrityVerification
+```
+
+Каждый компонент нормирован в `[0,1]`. Балл без evidence запрещён.
+
+## 9.10. Транзитивные уязвимости и лицензии
+
+Сначала зафиксируй установленный snapshot. Затем, не изменяя зависимости:
+
+- выполни доступный локальный scanner;
+- при разрешённой сети обнови только vulnerability database, а не packages;
+- зафиксируй scanner name/version/database timestamp;
+- сформируй SBOM, если инструмент доступен;
+- отдели direct от transitive findings;
+- удали дубликаты по package/version/advisory;
+- проверь exploitability в фактическом execution path;
+- не объявляй отсутствие уязвимостей, если scanner/DB недоступны;
+- проверь licenses и модельные artifacts отдельно.
+
+Для каждого advisory:
+
+| ID | Package | Version | Direct/transitive | Severity | Reachable | Fixed version | Action |
+|---|---|---|---|---|---:|---|---|
+
+Приоритизация:
+
+```text
+VulnerabilityPriority =
+  0.30 * normalized(CVSS)
+  + 0.25 * Reachability
+  + 0.20 * ExploitMaturity
+  + 0.15 * AssetCriticality
+  + 0.10 * Exposure
+```
+
+Не предлагай обновление только по номеру версии. Сначала проверь breaking
+changes, compatibility, tests, release notes и влияние на model runtime.
+
+## 9.11. Python compatibility
+
+Проверь каждую заявленную версию отдельно:
+
+- создание venv;
+- dependency resolution;
+- import smoke;
+- lint/type/test gates;
+- runtime smoke;
+- availability PyTorch wheels;
+- Docker/CI parity.
+
+Матрица:
+
+| Python | Declared | Install | Imports | Tests | Runtime | Result |
+|---|---:|---:|---:|---:|---:|---|
+
+Если interpreter физически отсутствует, это `NOT_EXECUTED`, а не `FAIL`.
+
+## 9.12. Выходные артефакты фазы
+
+Создай:
+
+```text
+audit/reproducibility/
+  ENVIRONMENT_BASELINE.md
+  COMMAND_LOG.md
+  DEPENDENCY_INPUTS.md
+  CLEAN_INSTALL_MATRIX.md
+  snapshots/
+    current-environment.txt
+    clean-prod.txt
+    clean-dev-a.txt
+    clean-dev-b.txt
+  OFFLINE_READINESS.md
+  VULNERABILITY_REPORT.md
+  REPRODUCIBILITY_FINDINGS.md
+```
+
+Каждый файл должен содержать дату, commit/working-tree state, методику,
+ограничения и evidence classification.
+
+## 9.13. Gate выхода
+
+Фаза завершена только если:
+
+- паспорт среды записан;
+- production и development dependency inputs разобраны;
+- хотя бы один fresh install выполнен либо честно зафиксирован blocker;
+- `pip check` выполнен в каждом созданном окружении;
+- repeat-run сравнен либо помечен `NOT_EXECUTED`;
+- Python compatibility matrix заполнена;
+- offline, hashes, vulnerabilities и licenses получили отдельный вывод;
+- ни одна зависимость не была автоматически обновлена;
+- все команды имеют literal log;
+- итоговая классификация не завышает доказательства.
+
+Финальный статус:
+
+```text
+REPRODUCIBLE
+PARTIALLY_REPRODUCIBLE
+NOT_REPRODUCIBLE
+UNKNOWN_BLOCKED
+```
+
+---
+
+# 10. ФАЗА 3 — CLAIM-TO-EVIDENCE MATRIX
+
+## 10.1. Цель фазы
+
+Извлеки все проверяемые заявления о системе и установи, какие из них:
+
+- подтверждены кодом и воспроизводимой проверкой;
+- подтверждены лишь частично;
+- не имеют доказательств;
+- противоречат фактическому поведению;
+- принципиально не проверяемы в доступной среде.
+
+Маркетинговая формулировка, комментарий, имя класса, badge, docstring,
+пример JSON и намерение разработчика не являются техническим доказательством.
+
+Работай одновременно с двумя временными срезами:
+
+```text
+BASELINE_CLAIMS = заявления в исходном/опубликованном состоянии
+CURRENT_CLAIMS  = заявления после controlled remediation
+```
+
+Не удаляй исторически ложное заявление из аудита только потому, что оно уже
+исправлено в рабочем дереве.
+
+## 10.2. Обязательные источники claims
+
+Прочитай полностью:
+
+- текущий `README.md`;
+- `README.md` из `HEAD`, если рабочее дерево изменено;
+- `Dockerfile`;
+- `Makefile`;
+- `.github/workflows/*.yml`;
+- `.env.example`;
+- docstrings и комментарии в `src/`;
+- OpenAPI descriptions, summaries и schema examples;
+- UI-тексты;
+- badges;
+- release/deployment инструкции;
+- тестовые названия и комментарии;
+- audit-документы, если они сами делают новое утверждение.
+
+Ищи как минимум следующие классы формулировок:
+
+```text
+production-ready
+production
+high-performance
+fast
+scalable
+non-blocking
+concurrent
+secure
+security-hardened
+strict
+validated
+comprehensive
+clinical
+diagnosis
+probability
+confidence
+prevents cold start
+ready
+healthy
+offline
+reproducible
+fault-tolerant
+microsecond/millisecond latency
+resource-efficient
+safe
+complete
+```
+
+Извлекай также неявные claims. Например:
+
+```text
+HEALTHCHECK ... /health
+```
+
+создаёт проверяемое утверждение, что `/health` является корректной
+контейнерной liveness-пробой.
+
+```text
+response_model=PredictionResponse
+```
+
+создаёт утверждение, что успешный ответ соответствует этой схеме.
+
+## 10.3. Нормализация claims
+
+Одно предложение может содержать несколько независимых claims.
+
+Пример:
+
+```text
+High-performance, production-ready, security-hardened API
+```
+
+раздели минимум на:
+
+```text
+PERF-001: performance доказан относительно target/SLO;
+PROD-001: выполнены production release gates;
+SEC-001: container/API security controls доказаны.
+```
+
+Каждый claim должен быть:
+
+- атомарным;
+- фальсифицируемым;
+- связанным с точным источником `file:line`;
+- связанным с тестом или причиной невозможности теста;
+- оценённым только в заявленном scope.
+
+## 10.4. Вердикты
+
+Используй только:
+
+```text
+SUPPORTED
+PARTIALLY_SUPPORTED
+UNSUPPORTED
+CONTRADICTED
+NOT_TESTABLE_WITH_CURRENT_EVIDENCE
+```
+
+Правила:
+
+```text
+SUPPORTED:
+  прямое доказательство покрывает весь scope заявления;
+
+PARTIALLY_SUPPORTED:
+  доказана только часть scope или только один слой системы;
+
+UNSUPPORTED:
+  заявление возможно, но достаточного evidence нет;
+
+CONTRADICTED:
+  воспроизводимое evidence показывает противоположное;
+
+NOT_TESTABLE_WITH_CURRENT_EVIDENCE:
+  проверка требует отсутствующего artifact/environment/data/authority.
+```
+
+Не используй `SUPPORTED`, если:
+
+- тест полностью mocked;
+- модель отсутствует;
+- проверен event loop, но заявлена масштабируемость всей системы;
+- проверен unit test, но заявлена production reliability;
+- security control есть в коде, но отсутствует threat-specific verification;
+- latency измеряется, но не доказаны точность, SLO или нагрузочный профиль.
+
+## 10.5. Обязательная таблица
+
+Создай Markdown и CSV:
+
+| Claim ID | Заявление | Источник | Проверка | Результат | Вердикт |
+|---|---|---|---|---|---|
+
+Расширенный внутренний формат:
+
+```text
+claim_id
+time_slice
+domain
+claim_text
+source_file
+source_line
+claim_scope
+evidence_class
+verification_command_or_test
+observed_result
+verdict
+confidence_0_1
+risk_if_false
+remediation
+acceptance_criteria
+```
+
+## 10.6. Quantitative claim coverage
+
+Рассчитай:
+
+```text
+VerdictWeight:
+  SUPPORTED = 1.00
+  PARTIALLY_SUPPORTED = 0.50
+  NOT_TESTABLE_WITH_CURRENT_EVIDENCE = 0.25
+  UNSUPPORTED = 0.00
+  CONTRADICTED = 0.00
+
+ClaimEvidenceCoverage =
+  Σ(ClaimRiskWeight_i * VerdictWeight_i)
+  / Σ(ClaimRiskWeight_i)
+```
+
+Где:
+
+```text
+ClaimRiskWeight:
+  LOW = 1
+  MEDIUM = 2
+  HIGH = 4
+  CRITICAL = 8
+```
+
+Отдельно посчитай:
+
+```text
+SupportedRate = supported_count / all_claims
+FalseMarketingRate =
+  (unsupported_count + contradicted_count) / all_claims
+UntestableRate = not_testable_count / all_claims
+```
+
+Не интерпретируй эти показатели как вероятность качества продукта. Это
+метрики покрытия утверждений доказательствами.
+
+## 10.7. Claim remediation
+
+Для каждого `UNSUPPORTED` или `CONTRADICTED` выбери одно:
+
+1. удалить/сузить формулировку;
+2. добавить требуемый тест;
+3. добавить измеримый SLO;
+4. предоставить artifact/data;
+5. заменить абсолютное утверждение на честное ограниченное;
+6. оставить `STOP-SHIP`, если claim safety-critical.
+
+Нельзя исправлять claim только заменой одного маркетингового синонима другим.
+
+## 10.8. Gate выхода
+
+Фаза завершена только если:
+
+- прочитаны все обязательные источники;
+- historical и current claims разделены;
+- каждый claim имеет уникальный ID;
+- проверка воспроизводима или честно помечена `NOT TESTABLE`;
+- создан Markdown и CSV;
+- рассчитаны coverage metrics;
+- critical false claims отражены в GO/NO-GO;
+- исправленные тексты повторно проверены на появление новых claims.
+
+---
+
+# 11. ФАЗА 4 — АУДИТ ПРОГРАММНОЙ АРХИТЕКТУРЫ
+
+## 11.1. Цель и уровни анализа
+
+Проведи аудит не только файлов, но и фактических execution paths:
+
+```text
+startup
+-> middleware
+-> routing/dependency injection
+-> multipart parsing
+-> upload buffering
+-> image decoding
+-> preprocessing
+-> model compute
+-> response serialization
+-> shutdown
+```
+
+Для каждого пути укажи:
+
+- owner/component;
+- sync/async boundary;
+- resource boundary;
+- failure mode;
+- timeout;
+- cancellation semantics;
+- observability;
+- доказательство.
+
+## 11.2. FastAPI и ASGI
+
+Проверь:
+
+- application factory и глобальный instance;
+- lifespan startup/shutdown;
+- поведение без модели;
+- поведение при частичной ошибке загрузки processor/model;
+- освобождение ссылок и ресурсов;
+- `/health` как liveness;
+- `/ready` как readiness;
+- различие operational и business endpoints;
+- response models;
+- declared и фактические HTTP status codes;
+- exception handlers;
+- утечки exception text, paths, secrets и request bodies;
+- OpenAPI completeness;
+- root и `/api/v1` aliases;
+- deprecation policy;
+- dependency injection;
+- typing и state typing;
+- request cancellation;
+- application/inference/queue timeouts;
+- middleware order;
+- CORS credentials/methods/headers;
+- request ID generation и trust boundary;
+- защита request ID, filename и error text от CR/LF/control characters;
+- latency clock, scope и units;
+- security headers для API, UI и error responses;
+- `BaseHTTPMiddleware` limitations;
+- streaming behavior.
+
+Создай route matrix:
+
+| Method | Path | Canonical | Auth | Body limit | Response model | Errors | Readiness dependency |
+|---|---|---:|---|---:|---|---|---:|
+
+Проверь OpenAPI программно, а не визуально.
+
+## 11.3. Upload pipeline
+
+Построй четыре отдельные границы:
+
+```text
+HTTP request body limit
+multipart parser/spooling limit
+encoded file-byte limit
+decoded image pixel/memory limit
+```
+
+Они не взаимозаменяемы.
+
+Проверь:
+
+- когда Starlette создаёт `UploadFile`;
+- `SpooledTemporaryFile` threshold;
+- temporary directory;
+- cleanup;
+- multipart overhead;
+- `Content-Length`;
+- отсутствующий/ложный/отрицательный `Content-Length`;
+- chunked/streamed upload;
+- slow upload;
+- несколько multipart parts;
+- duplicate file fields;
+- MIME spoofing;
+- magic bytes;
+- MIME/extension/decoded-format agreement;
+- пустой файл;
+- truncated JPEG/PNG/WEBP;
+- trailing bytes/polyglot risk;
+- Pillow decompression bomb;
+- width/height multiplication;
+- decoded bytes:
+
+```text
+DecodedBytes ≈ width * height * channels * bytes_per_channel
+```
+
+- EXIF orientation и metadata;
+- ICC profile;
+- animated WEBP;
+- multi-frame images;
+- grayscale;
+- palette mode;
+- RGBA и alpha;
+- CMYK;
+- 16-bit modes;
+- malformed EXIF;
+- path traversal и Unicode filename;
+- memory copies `spool -> bytearray -> bytes -> BytesIO -> tensor`;
+- concurrent upload amplification;
+- reverse-proxy limits;
+- temporary disk exhaustion.
+
+Обязательные adversarial fixtures:
+
+```text
+empty
+wrong MIME / valid magic
+valid MIME / wrong magic
+truncated
+oversized encoded
+oversized decoded
+multi-frame
+RGBA
+grayscale
+CMYK
+Unicode filename
+path filename
+stream without Content-Length
+body over transport limit
+```
+
+## 11.4. Async, threads и concurrency
+
+Отдельно докажи или опровергни:
+
+```text
+A: event loop не занят sync compute;
+B: request имеет bounded queue wait;
+C: compute concurrency ограничена;
+D: cancellation не освобождает capacity преждевременно;
+E: система масштабируется при целевой нагрузке.
+```
+
+`A=true` не означает `E=true`.
+
+Проанализируй:
+
+- PIL `verify/load/convert`;
+- processor;
+- tensor allocation;
+- PyTorch forward;
+- softmax и `.item()`;
+- GIL behavior;
+- default asyncio thread pool;
+- `torch.get_num_threads()`;
+- `torch.get_num_interop_threads()`;
+- BLAS/OpenMP oversubscription;
+- одну model instance при concurrent forward;
+- per-process semaphore;
+- число Gunicorn workers;
+- global capacity;
+- queue timeout;
+- compute timeout;
+- отмену до admission;
+- отмену после `to_thread`;
+- `asyncio.shield`;
+- release semaphore;
+- executor shutdown;
+- orphan compute;
+- backpressure;
+- bytes/tensor memory amplification.
+
+Capacity-модель:
+
+```text
+GlobalComputeConcurrency =
+  worker_processes * MAX_CONCURRENT_INFERENCES
+
+NativeThreadUpperBound ≈
+  worker_processes
+  * MAX_CONCURRENT_INFERENCES
+  * max(torch_intraop_threads, BLAS_threads)
+
+PeakMemory ≈
+  worker_processes * model_RSS
+  + active_uploads * encoded_request_bytes
+  + active_inferences * decoded_and_tensor_peak
+  + framework_overhead
+```
+
+Little’s Law:
+
+```text
+L = λW
+```
+
+Зафиксируй, что без реальной модели нельзя доказать `W`, throughput, peak RSS
+и safe worker count.
+
+## 11.5. Severity и finding format
+
+Для каждого finding:
+
+```text
+Finding ID
+Classification
+Severity
+Confidence
+Component
+Evidence
+Reproduction
+Failure mode
+Impact
+Root cause
+Remediation options
+Chosen action
+Acceptance criteria
+Residual risk
+```
+
+Severity:
+
+```text
+CRITICAL = возможен patient/security stop-ship или полный loss of control
+HIGH     = production outage, DoS, unsafe result contract
+MEDIUM   = bounded reliability/correctness degradation
+LOW      = maintainability/documentation without immediate operational harm
+```
+
+## 11.6. Remediation policy
+
+Разрешена реализация только если:
+
+- проблема воспроизведена или строго доказана;
+- изменение не подменяет отсутствующую модель;
+- существует тестируемый acceptance criterion;
+- backward compatibility рассмотрена;
+- изменение не создаёт ложного clinical claim.
+
+После каждого изменения повтори:
+
+```text
+targeted test
+full test
+static analysis
+negative/adversarial variation
+documentation claim scan
+```
+
+## 11.7. Обязательные deliverables
+
+Создай:
+
+```text
+audit/phase4/ARCHITECTURE_AUDIT.md
+audit/phase4/ROUTE_MATRIX.csv
+audit/phase4/UPLOAD_THREAT_MATRIX.md
+audit/phase4/CONCURRENCY_MODEL.md
+audit/phase4/FINDINGS.csv
+audit/phase4/IMPLEMENTATION_REPORT.md
+```
+
+---
+
+# 12. ФАЗА 5 — ПРОИСХОЖДЕНИЕ И ЦЕЛОСТНОСТЬ МОДЕЛИ
+
+## 12.1. Scope
+
+Проверь отдельно:
+
+```text
+CURRENT_CONFIGURED_MODEL
+HISTORICALLY_CLAIMED_MODEL
+LOCALLY_CACHED_MODEL
+APPROVED_RELEASE_MODEL
+```
+
+Пустой current `MODEL_NAME` является корректным fail-closed состоянием, но не
+исправляет отсутствие approved release artifact.
+
+## 12.2. Определение точного идентификатора
+
+Получай model identifier из:
+
+1. текущей Settings;
+2. `.env.example`;
+3. реального `.env` без публикации secrets;
+4. Docker/CI/deployment manifests;
+5. `git show HEAD:<file>` для historical claim;
+6. README badges/links;
+7. локального Hugging Face cache;
+8. audit history.
+
+Зафиксируй:
+
+```text
+source
+value
+time_slice
+precedence
+effective_value
+```
+
+## 12.3. Обязательная online verification
+
+Для точного repository ID проверь:
+
+1. Hugging Face model API;
+2. публичную страницу;
+3. API списка моделей автора;
+4. страницу профиля автора;
+5. `config.json`;
+6. `preprocessor_config.json`;
+7. `model.safetensors`;
+8. `pytorch_model.bin`;
+9. `README.md`/model card;
+10. `.gitattributes`;
+11. siblings/file list;
+12. license metadata;
+13. pipeline tag;
+14. library;
+15. last modified;
+16. immutable commit SHA;
+17. gated/private status;
+18. file sizes/LFS metadata.
+
+Используй минимум две вариации:
+
+```text
+official HTTP API/curl
+official huggingface_hub client или public profile
+```
+
+Запиши URL, UTC/local timestamp, HTTP status, exit code и существенный body.
+
+Интерпретация:
+
+```text
+200 public metadata + downloadable files:
+  публично доступно;
+
+401/403:
+  публичная воспроизводимость не доказана;
+  private/gated/missing могут быть неразличимы без authority;
+
+404:
+  отсутствует для проверяемого public namespace;
+
+repo отсутствует в public author list:
+  дополнительное evidence отсутствия публичного artifact,
+  но не доказательство того, что private repo никогда не существовал.
+```
+
+## 12.4. Model card и training provenance
+
+Проверь:
+
+- архитектуру;
+- base model;
+- intended use;
+- out-of-scope use;
+- dataset;
+- patient/slide identifiers;
+- train/validation/test split;
+- patient-level split;
+- preprocessing;
+- augmentations;
+- class balance;
+- annotation protocol;
+- leakage controls;
+- metrics и confidence intervals;
+- subgroup metrics;
+- calibration;
+- external validation;
+- failure modes;
+- species/geography/stain/microscope scope;
+- license модели и данных;
+- авторов/контакты;
+- limitations.
+
+Отсутствующее поле не заполняй предположением из похожей модели автора.
+
+## 12.5. Serving contract
+
+Проверь:
+
+```text
+model_type
+num_labels
+id2label
+label2id
+input size
+channels
+mean/std
+resize/crop
+interpolation
+rescale
+processor class
+dtype
+framework
+trust_remote_code
+safe_serialization
+```
+
+Запрещено:
+
+- включать `trust_remote_code=True` без отдельного review;
+- подменять точный ID похожей pneumonia/face model;
+- выводить labels из имени проекта;
+- считать softmax калиброванной вероятностью;
+- загружать `pytorch_model.bin`, если approved safetensors обязателен политикой.
+
+## 12.6. Artifact integrity
+
+Если artifact доступен и его скачивание разрешено:
+
+1. сначала получи metadata и размер;
+2. оцени disk/network budget;
+3. скачай в изолированный audit cache;
+4. не выполняй remote code;
+5. вычисли SHA-256;
+6. сравни с registry/manifest;
+7. зафиксируй commit SHA;
+8. проверь offline reload;
+9. удали тяжёлый временный cache после сохранения manifest, если он не является
+   release artifact.
+
+Формат manifest:
+
+```text
+model_id
+revision
+file
+size_bytes
+sha256
+media_type
+safe_serialization
+source_url
+verified_at
+```
+
+## 12.7. STOP-SHIP
+
+Если модель отсутствует или недоступна:
+
+- `MODEL_AVAILABILITY = STOP_SHIP`;
+- current config остаётся fail-closed;
+- `/health` может оставаться `200`, если процесс жив;
+- `/ready` обязан возвращать `503`;
+- `/analyze` обязан возвращать `503`;
+- Docker image без модели не может считаться готовым inference image;
+- real-model smoke/load/performance tests помечаются `NOT EXECUTED`;
+- checksum, license, metrics и preprocessing = `UNKNOWN`;
+- запрещено подменять модель.
+
+Предложи controlled варианты:
+
+```text
+A. private Hugging Face repo + token + immutable revision;
+B. signed object storage + SHA-256 manifest;
+C. OCI model layer/artifact;
+D. internal model registry;
+E. read-only local mounted artifact.
+```
+
+Сравни:
+
+| Option | Integrity | Access control | Offline | Rollback | Auditability | Cost |
+|---|---:|---:|---:|---:|---:|---:|
+
+Рекомендуемый minimum:
+
+```text
+approved model registry
++ immutable revision
++ SHA-256
++ license record
++ model card
++ signed release manifest
++ local-only production runtime
+```
+
+## 12.8. Итоговая модель evidence
+
+Рассчитай:
+
+```text
+ModelEvidenceScore =
+  0.20 * Availability
+  + 0.15 * Integrity
+  + 0.15 * License
+  + 0.15 * TrainingProvenance
+  + 0.15 * ExternalValidation
+  + 0.10 * ServingContract
+  + 0.10 * OfflineReproducibility
+```
+
+Каждая компонента:
+
+```text
+0.0 = отсутствует
+0.5 = частично доказана
+1.0 = полностью доказана
+```
+
+Safety override:
+
+```text
+если Availability = 0
+или Integrity = 0
+или License = 0:
+  clinical/prod model GO запрещён независимо от total score
+```
+
+## 12.9. Обязательные deliverables
+
+Создай:
+
+```text
+audit/phase5/MODEL_PROVENANCE_AUDIT.md
+audit/phase5/HUGGINGFACE_HTTP_EVIDENCE.md
+audit/phase5/MODEL_ARTIFACT_MANIFEST.csv
+audit/phase5/MODEL_REGISTRY_OPTIONS.md
+audit/phase5/STOP_SHIP_DECISION.md
+```
+
+Фаза завершена только после независимой вариационной проверки и обновления
+общего GO/NO-GO.
+
+---
+
+# 13. ФАЗА 6 — формализация требований
+
+Создай requirements registry:
+
+| ID | Domain | Requirement | Source | Priority | Acceptance | Status |
+|---|---|---|---|---|---|---|
+
+Domains:
+
+- PRODUCT;
+- UI;
+- ACCESSIBILITY;
+- API;
+- ML;
+- SECURITY;
+- RELIABILITY;
+- OBSERVABILITY;
+- MLOPS;
+- DEVEX;
+- TESTING;
+- DOCUMENTATION;
+- CLINICAL_SAFETY.
+
+Каждое требование должно быть:
+
+- однозначным;
+- наблюдаемым;
+- тестируемым;
+- ограниченным scope;
+- связанным с риском или ценностью.
+
+Плохое требование:
+
+```text
+сделать интерфейс красивым
+```
+
+Хорошее:
+
+```text
+UI-007:
+При model_not_configured primary action disabled,
+reason отображается в aria-live,
+горизонтальный overflow отсутствует при 320 CSS px.
+```
+
+---
+
+# 14. Математическая приоритизация
+
+Используй несколько моделей одновременно.
+
+## 14.1. RICE
+
+```text
+RICE_i =
+  Reach_i * Impact_i * Confidence_i
+  / Effort_i
+```
+
+Нормализация:
+
+```text
+Reach ∈ [1, 10]
+Impact ∈ [0.25, 3]
+Confidence ∈ [0, 1]
+Effort > 0
+```
+
+## 14.2. WSJF
+
+```text
+WSJF_i =
+  (UserValue_i
+   + TimeCriticality_i
+   + RiskReduction_i
+   + OpportunityEnablement_i)
+  / JobSize_i
+```
+
+## 14.3. Risk-adjusted value
+
+```text
+RAV_i =
+  (ExpectedValue_i * P_success_i
+   + RiskReduction_i
+   + EvidenceGain_i)
+  / (Cost_i * Time_i * Irreversibility_i)
+```
+
+## 14.4. Cost of delay
+
+```text
+CoD_i =
+  UserLossPerPeriod_i
+  + SecurityExposurePerPeriod_i
+  + OperationalCostPerPeriod_i
+  + EvidenceDelayPerPeriod_i
+```
+
+## 14.5. FMEA
+
+```text
+RPN_i = Severity_i * Occurrence_i * Detectability_i
+```
+
+Где:
+
+```text
+Severity ∈ [1, 5]
+Occurrence ∈ [1, 5]
+Detectability ∈ [1, 5]
+```
+
+Uncertainty-adjusted:
+
+```text
+AdjustedRPN_i =
+  RPN_i * (1 + Uncertainty_i)
+```
+
+Safety override:
+
+```text
+если Severity = 5 и возможен patient harm,
+priority = P0 независимо от RICE/WSJF
+```
+
+## 14.6. Итог
+
+```text
+Priority_i =
+  SafetyOverride
+  затем rank(RAV, WSJF, RICE, CoD, AdjustedRPN)
+```
+
+Не подгоняй числа под заранее выбранное решение.
+
+---
+
+# 15. Архитектурные варианты
+
+Для каждой крупной функции сравни:
+
+1. `AS_IS`;
+2. `MINIMAL_SAFE`;
+3. `TARGET_ARCHITECTURE`.
+
+Таблица:
+
+| Variant | Correctness | Safety | UX | Reliability | Complexity | Cost | Compatibility | Decision |
+|---|---:|---:|---:|---:|---:|---:|---:|---|
+
+Используй weighted decision:
+
+```text
+Score_variant =
+  Σ(weight_j * normalized_metric_j)
+  - migration_penalty
+  - residual_risk_penalty
+```
+
+Weights должны суммироваться к 1.
+
+Для safety-sensitive проекта рекомендуемый baseline:
+
+```text
+Safety         0.25
+Correctness    0.20
+Reliability    0.15
+Testability    0.10
+Compatibility  0.10
+UX             0.10
+Cost           0.05
+Complexity     0.05
+```
+
+Допускается изменение весов с объяснением.
+
+---
+
+# 16. ADR
+
+Для архитектурных решений создай ADR:
+
+```text
+ADR ID
+Title
+Status
+Context
+Decision drivers
+Options
+Quantitative comparison
+Decision
+Consequences
+Risks
+Rollback
+Verification
+```
+
+Минимальные ADR topics:
+
+- API versioning and legacy routes;
+- model artifact delivery;
+- concurrency topology;
+- authentication boundary;
+- error contract;
+- UI hosting;
+- dependency locking;
+- observability.
+
+---
+
+# 17. Backend remediation
+
+## 17.1. API surface
+
+Проверь и при необходимости реализуй:
+
+- canonical versioned routes;
+- root operational routes;
+- deprecation policy;
+- capabilities/version metadata;
+- correct status codes;
+- stable schemas;
+- idempotency там, где применимо;
+- content negotiation;
+- request/response limits;
+- safe public messages.
+
+## 17.2. Error contract
+
+Требования:
+
+```text
+code
+detail
+request_id
+optional retry_after
+no internal exception
+no filesystem path
+no secret
+no raw request body
+```
+
+Обработать:
+
+- FastAPI HTTPException;
+- Starlette HTTPException;
+- validation;
+- unsupported media;
+- oversized payload;
+- model unavailable;
+- queue busy;
+- internal exception;
+- cancellation.
+
+## 17.3. Upload pipeline
+
+Проверить:
+
+- MIME;
+- filename;
+- encoded bytes;
+- decoded pixels;
+- content validation;
+- temp spooling;
+- cleanup;
+- multi-frame files;
+- EXIF;
+- decompression bombs;
+- malformed files;
+- cancellation;
+- slow upload;
+- reverse-proxy limit.
+
+## 17.4. Concurrency
+
+Разделить:
+
+```text
+request admission
+queue wait
+decode
+preprocess
+model compute
+response serialization
+```
+
+Не считать `asyncio.to_thread()` достаточным capacity control.
+
+Проверить cancellation:
+
+```text
+cancelled coroutine != stopped native thread
+```
+
+Semaphore/queue slot нельзя освобождать до фактического завершения compute.
+
+## 17.5. Configuration
+
+Требования:
+
+- safe defaults;
+- bounds;
+- no wildcard CORS;
+- production invariants;
+- explicit model;
+- immutable revision;
+- local-files-only;
+- documented env;
+- no secrets in repo;
+- settings tests.
+
+---
+
+# 18. Model/MLOps gate
+
+## 18.1. Нельзя подменять модель
+
+Если approved model отсутствует:
+
+- не выбирай случайную;
+- не используй pneumonia model;
+- не генерируй fake weights;
+- не скрывай blocker;
+- сохраняй health/UI;
+- readiness остаётся fail-closed.
+
+## 18.2. Artifact contract
+
+Approved model package должен иметь:
+
+```text
+model_id
+revision
+SHA256
+architecture
+processor config
+id2label
+num_labels
+expected input
+license
+model card
+training provenance
+evaluation provenance
+known limitations
+approval
+```
+
+## 18.3. Runtime validation
+
+Проверить:
+
+- exact label order;
+- logits shape;
+- processor compatibility;
+- revision;
+- local-only mode;
+- checksum;
+- eval/inference_mode;
+- deterministic golden cases;
+- corrupt artifact;
+- missing files;
+- offline startup.
+
+## 18.4. Supply chain
+
+Реализовать/спланировать:
+
+- model manifest;
+- checksums;
+- read-only mount;
+- no production egress;
+- SBOM;
+- signing;
+- provenance;
+- rollback to previous model digest.
+
+---
+
+# 19. UI implementation
+
+## 19.1. Product semantics
+
+UI должен ясно показывать:
+
+- research-only;
+- pre-cropped cell;
+- model readiness;
+- uncalibrated score;
+- limitations;
+- no diagnosis;
+- no treatment;
+- no exclusion of malaria.
+
+## 19.2. States
+
+Реализовать и проверить:
+
+- idle;
+- ready;
+- model not configured;
+- model load failed;
+- offline;
+- file selected;
+- invalid MIME;
+- empty;
+- oversized;
+- preview;
+- uploading;
+- analysing;
+- cancelled;
+- queue busy;
+- server error;
+- success;
+- indeterminate future state.
+
+## 19.3. Accessibility
+
+Ориентир WCAG 2.2 AA:
+
+- semantic HTML;
+- keyboard;
+- labels;
+- focus;
+- skip link;
+- live regions;
+- visible errors;
+- contrast;
+- touch targets;
+- responsive 320+ CSS px;
+- reduced motion;
+- no color-only state;
+- screen-reader accessible scores.
+
+Не заявлять WCAG compliance без formal audit.
+
+## 19.4. Frontend security/privacy
+
+- no unsafe `innerHTML`;
+- use `textContent`;
+- CSP compatible;
+- no third-party CDN;
+- no analytics по умолчанию;
+- no image persistence;
+- object URL cleanup;
+- abortable fetch;
+- no PHI in localStorage;
+- no sensitive error rendering.
+
+## 19.5. Browser verification
+
+Проверить:
+
+- desktop;
+- tablet;
+- mobile;
+- unavailable state;
+- success;
+- error;
+- keyboard;
+- horizontal overflow;
+- console errors;
+- network requests;
+- CSP.
+
+---
+
+# 20. Authentication and authorization
+
+Не внедряй случайную auth-систему без deployment context.
+
+Сначала определи:
+
+- public/private;
+- service-to-service/browser;
+- users/principals;
+- roles;
+- tenant model;
+- gateway;
+- identity provider;
+- secret rotation;
+- audit requirements.
+
+Сравни:
+
+- API key;
+- OAuth2/OIDC;
+- mTLS;
+- private network/gateway auth.
+
+Выбери только после threat model.
+
+Минимум для public inference:
+
+- identity;
+- rate limit;
+- quota;
+- global concurrency;
+- abuse monitoring;
+- revocation;
+- no keys in frontend source.
+
+---
+
+# 21. Reliability и performance
+
+## 21.1. Capacity model
+
+```text
+λ = requests / second
+S = mean service time
+μ = 1 / S
+c = concurrent inference slots
+ρ = λ / (c * μ)
+```
+
+Не проектировать normal operation при:
+
+```text
+ρ -> 1
+```
+
+## 21.2. Little’s Law
+
+```text
+L = λW
+```
+
+Где:
+
+- `L` — среднее число jobs;
+- `λ` — throughput;
+- `W` — среднее время в системе.
+
+## 21.3. Memory
+
+```text
+RAM_total =
+  workers * (model_RSS + framework_RSS)
+  + concurrency * request_peak_memory
+  + cache
+  + OS_headroom
+```
+
+```text
+request_peak_memory ≈
+  encoded_bytes
+  + decoded_pixels * channels * bytes_per_channel
+  + processor_tensors
+  + intermediate_activations
+```
+
+## 21.4. Load scenarios
+
+- cold start;
+- warm single;
+- step load;
+- burst;
+- saturation;
+- slow upload;
+- mixed invalid;
+- cancellation;
+- soak;
+- restart;
+- provider/cache failure.
+
+Метрики:
+
+- p50/p95/p99/max;
+- throughput;
+- queue wait;
+- decode;
+- model time;
+- RSS/peak RSS;
+- CPU;
+- errors;
+- rejection;
+- startup;
+- readiness.
+
+Не выдумывать SLO. Сначала получить product/SRE targets.
+
+---
+
+# 22. Observability
+
+Проверить/реализовать:
+
+- structured logs;
+- request ID;
+- trace ID;
+- status/latency;
+- decode time;
+- queue time;
+- inference time;
+- readiness reason;
+- model revision;
+- resource saturation;
+- rejection count;
+- error codes;
+- privacy-safe attributes.
+
+RED:
+
+```text
+Rate
+Errors
+Duration
+```
+
+USE:
+
+```text
+Utilization
+Saturation
+Errors
+```
+
+Не логировать:
+
+- raw image;
+- patient identifiers;
+- full body;
+- secrets;
+- unbounded filename/header.
+
+---
+
+# 23. Dependency и build reproducibility
+
+Проверить:
+
+- exact direct pins;
+- transitive lock;
+- hashes;
+- CPU/GPU variants;
+- Python 3.11/3.12;
+- OS markers;
+- base image digest;
+- package indexes;
+- unused packages;
+- licenses;
+- vulnerabilities.
+
+Целевой release:
+
+```text
+input constraints
+-> generated lock
+-> hash verification
+-> clean build
+-> SBOM
+-> scan
+-> signature
+-> provenance
+-> immutable image digest
+```
+
+Не считать exact direct pins полноценным lock.
+
+---
+
+# 24. Container/CI/CD
+
+## 24.1. Docker
+
+Проверить:
+
+- build;
+- non-root;
+- ownership;
+- UI assets;
+- model mount;
+- local-only;
+- liveness;
+- readiness;
+- signal handling;
+- shutdown;
+- one-worker safe default;
+- resource limits;
+- read-only root filesystem;
+- temp filesystem;
+- network egress.
+
+## 24.2. CI
+
+Проверить:
+
+- Python matrix;
+- format;
+- lint;
+- types;
+- tests;
+- coverage;
+- pip check;
+- lock consistency;
+- secret scan;
+- dependency audit;
+- container build;
+- image scan;
+- artifact-backed smoke;
+- SBOM;
+- signing;
+- immutable actions SHA.
+
+## 24.3. Deployment
+
+Без разрешения:
+
+```text
+не deploy
+не push
+не менять remote
+```
+
+При разрешении:
+
+- deploy only saved/immutable artifact;
+- post-deploy smoke;
+- readiness;
+- rollback;
+- monitor.
+
+---
+
+# 25. Security threat model
+
+Построй:
+
+```text
+assets
+actors
+trust boundaries
+entry points
+abuse cases
+controls
+residual risk
+```
+
+Минимальные threats:
+
+- upload DoS;
+- decompression bomb;
+- decoder exploit;
+- slowloris;
+- concurrency exhaustion;
+- model probing/extraction;
+- malicious filename/request ID;
+- exception disclosure;
+- supply-chain compromise;
+- model substitution;
+- cache poisoning;
+- unauthorized use;
+- PHI leakage;
+- log injection;
+- unsafe CORS;
+- dependency compromise.
+
+Для каждого:
+
+| Threat | Likelihood | Impact | Detectability | Control | Test | Residual |
+|---|---:|---:|---:|---|---|---|
+
+---
+
+# 26. Тестовая архитектура
+
+## 26.1. Pyramid
+
+```text
+static
+-> unit
+-> contract
+-> component
+-> integration
+-> container
+-> system
+-> performance
+-> clinical evidence
+```
+
+## 26.2. Unit
+
+- settings;
+- error mapping;
+- request ID;
+- filename;
+- model contract;
+- logits;
+- queue;
+- cancellation;
+- score semantics.
+
+## 26.3. Contract
+
+- OpenAPI;
+- responses;
+- status codes;
+- deprecated fields;
+- capabilities;
+- headers;
+- error envelope.
+
+## 26.4. UI
+
+- assets;
+- syntax;
+- unavailable;
+- selection;
+- invalid;
+- success;
+- cancel;
+- progress semantics;
+- mobile;
+- accessibility.
+
+## 26.5. Model integration
+
+Только с approved artifact:
+
+- clean cache;
+- offline;
+- golden inputs;
+- expected labels;
+- deterministic tolerance;
+- corrupt artifact;
+- resource profile.
+
+## 26.6. Mutation expectation
+
+Проверить, что tests падают при:
+
+- inverted labels;
+- missing revision;
+- internal exception leak;
+- removed semaphore;
+- wildcard CORS;
+- changed error schema;
+- clinical wording regression.
+
+---
+
+# 27. Statistical/clinical track
+
+Этот track не блокирует улучшение software skeleton, но блокирует claims.
+
+## 27.1. Data
+
+- patient/slide/cell IDs;
+- patient-level split;
+- external site;
+- reference standard;
+- annotation;
+- license;
+- quality;
+- subgroup;
+- no leakage.
+
+## 27.2. Metrics
+
+```text
+Sensitivity = TP / (TP + FN)
+Specificity = TN / (TN + FP)
+PPV = TP / (TP + FP)
+NPV = TN / (TN + FN)
+```
+
+Prevalence:
+
+```text
+PPV(π) =
+  Se * π
+  / [Se * π + (1-Sp) * (1-π)]
+
+NPV(π) =
+  Sp * (1-π)
+  / [(1-Se) * π + Sp * (1-π)]
+```
+
+Calibration:
+
+```text
+Brier = (1/n) Σ(p_i - y_i)^2
+NLL = -(1/n) Σ[y_i log(p_i) + (1-y_i) log(1-p_i)]
+```
+
+Selective prediction:
+
+```text
+Coverage = accepted / total
+SelectiveRisk = errors_among_accepted / accepted
+```
+
+Нужны:
+
+- CI;
+- cluster-aware analysis;
+- AUROC/AUPRC;
+- calibration;
+- risk-coverage;
+- subgroup;
+- domain shift;
+- external testing;
+- decision utility.
+
+Без них:
+
+```text
+clinical gate = FAIL
+```
+
+---
+
+# 28. Implementation batching
+
+## Batch A — correctness/safety
+
+- broken contracts;
+- exception leakage;
+- label safety;
+- model fail-closed;
+- clinical wording;
+- config invariants.
+
+## Batch B — reliability/security
+
+- admission;
+- cancellation;
+- limits;
+- request IDs;
+- headers;
+- supply-chain controls.
+
+## Batch C — UI/UX
+
+- states;
+- accessibility;
+- responsive;
+- privacy;
+- honest score semantics.
+
+## Batch D — reproducibility/operations
+
+- lock;
+- Docker;
+- CI;
+- SBOM;
+- scans;
+- observability.
+
+После каждого batch:
+
+```text
+format
+lint
+types
+targeted tests
+full tests
+diff review
+```
+
+---
+
+# 29. Вариационная проверка
+
+Проведи минимум четыре review passes.
+
+## Review A — correctness
+
+- logic;
+- types;
+- errors;
+- contracts;
+- compatibility;
+- edge cases.
+
+## Review B — adversarial/security
+
+- malicious inputs;
+- leaks;
+- supply chain;
+- resource abuse;
+- fail-open.
+
+## Review C — concurrency/reliability
+
+- cancellation;
+- native threads;
+- semaphore;
+- startup;
+- shutdown;
+- overload.
+
+## Review D — UX/clinical safety
+
+- misleading language;
+- false confidence;
+- unavailable states;
+- mobile;
+- accessibility;
+- automation bias.
+
+Процесс:
+
+```text
+find
+-> record
+-> fix
+-> targeted retest
+-> full regression
+```
+
+---
+
+# 30. Definition of Done
+
+Software increment завершён только если:
+
+- requirements linked;
+- implementation complete;
+- all available checks pass;
+- coverage threshold pass;
+- UI browser-tested;
+- errors stable;
+- security regression tested;
+- docs updated;
+- audit synchronized;
+- residual risks explicit;
+- no secret;
+- no accidental user change loss;
+- Git diff reviewed;
+- no push/deploy without permission.
+
+Real inference завершён только если:
+
+- approved model;
+- immutable revision;
+- checksum;
+- license;
+- model card;
+- label/processor contract;
+- golden smoke;
+- offline run;
+- capacity measurements.
+
+Clinical readiness завершена только если:
+
+- intended use;
+- data lineage;
+- external evidence;
+- statistical plan;
+- human factors;
+- QMS/risk;
+- regulatory review;
+- monitoring.
+
+---
+
+# 31. Обязательные deliverables
+
+Создай:
+
+```text
+audit/implementation/
+  README.md
+  INPUT_BASELINE.md
+  REQUIREMENTS.csv
+  PRIORITIZATION.csv
+  RISK_REGISTER.csv
+  ARCHITECTURE_DECISIONS.md
+  CHANGE_PLAN.md
+  IMPLEMENTATION_LOG.md
+  TEST_MATRIX.md
+  SECURITY_REVIEW.md
+  RELIABILITY_REVIEW.md
+  UX_SAFETY_REVIEW.md
+  VERIFICATION_REPORT.md
+  FINAL_GO_NO_GO.md
+```
+
+При реализации новых contracts:
+
+```text
+docs/
+  ARCHITECTURE.md
+  API_CONTRACT.md
+  MODEL_ARTIFACT_CONTRACT.md
+  OPERATIONS.md
+  SAFETY_LIMITATIONS.md
+```
+
+---
+
+# 32. Формат implementation log
+
+| Change ID | Requirement | Risk | Files | Behavior | Tests | Status | Residual |
+|---|---|---|---|---|---|---|---|
+
+Для каждого изменения:
+
+```text
+Before
+After
+Reason
+Alternatives
+Compatibility
+Security effect
+Operational effect
+Verification
+```
+
+---
+
+# 33. Финальный GO/NO-GO
+
+Дай отдельный verdict:
+
+- source development;
+- local no-model UI;
+- mocked demo;
+- real-model local inference;
+- container;
+- public nonclinical API;
+- research benchmark;
+- retrospective research;
+- prospective evaluation;
+- clinical decision support;
+- autonomous diagnosis.
+
+Формат:
+
+| Scenario | Verdict | Evidence | Blockers | Next gate |
+|---|---|---|---|---|
+
+Verdicts:
+
+- `GO`;
+- `CONDITIONAL_GO`;
+- `NO_GO`;
+- `BLOCKED`;
+- `NOT_EXECUTED`.
+
+---
+
+# 34. Финальный ответ пользователю
+
+Начни с результата:
+
+1. что реализовано;
+2. какие проблемы закрыты;
+3. какие tests прошли;
+4. какие screenshots/runtime checks выполнены;
+5. что осталось blocked;
+6. ссылки на файлы.
+
+Не скрывай:
+
+- отсутствие модели;
+- невозможность Docker;
+- отсутствие vulnerability scanner;
+- mocked nature tests;
+- незапущенный CI;
+- residual clinical risk;
+- uncommitted changes.
+
+---
+
+# 35. Команда начала
+
+После явной команды пользователя применить этот prompt:
+
+```text
+1. Прочитай prompt полностью.
+2. Прочитай текущие audit artifacts.
+3. Выполни preflight.
+4. Зафиксируй baseline.
+5. Создай requirements/prioritization.
+6. Покажи или зафиксируй выбранные batches.
+7. Реализуй разрешённые changes.
+8. Проведи четыре review passes.
+9. Исправь defects.
+10. Сформируй final evidence и GO/NO-GO.
+```
+
+Не останавливайся после написания плана, когда пользователь отдельно
+разрешил исполнение. Но если пользователь попросил сначала только
+мастер-промпт, сохрани prompt и не начинай production changes до следующей
+явной команды.

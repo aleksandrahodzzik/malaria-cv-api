@@ -1,0 +1,14 @@
+Method,Path,Canonical,Auth,Body limit,Response model,Declared errors,Readiness dependency,Notes
+GET,/,yes-public-UI,none,n/a,FileResponse,404,no,Research-only static UI
+GET,/assets/*,yes-public-assets,none,n/a,StaticFiles,404,no,CSP applied
+GET,/health,yes-operational,none,n/a,HealthResponse,500,no,Container liveness; remains root
+GET,/ready,no-compatibility,none,n/a,ReadinessResponse,503,no,"Deprecation header; successor /api/v1/ready"
+GET,/capabilities,no-compatibility,none,n/a,CapabilitiesResponse,500,no,"Deprecation header; successor /api/v1/capabilities"
+POST,/analyze,no-compatibility,none,"HTTP body + encoded file + decoded pixels",PredictionResponse,"400;413;415;422;500;503;504",yes,"Deprecation header; successor /api/v1/analyze"
+GET,/api/v1/health,yes,none,n/a,HealthResponse,500,no,Canonical versioned representation
+GET,/api/v1/ready,yes,none,n/a,ReadinessResponse,503,no,Canonical model readiness
+GET,/api/v1/capabilities,yes,none,n/a,CapabilitiesResponse,500,no,Non-sensitive runtime contract
+POST,/api/v1/analyze,yes,none,"HTTP body + encoded file + decoded pixels",PredictionResponse,"400;413;415;422;500;503;504",yes,Research-only classification
+GET,/docs,development-public,none,n/a,HTML,404,no,Authentication policy required before public deployment
+GET,/redoc,development-public,none,n/a,HTML,404,no,Authentication policy required before public deployment
+GET,/openapi.json,development-public,none,n/a,JSON,500,no,Only canonical versioned business routes are documented

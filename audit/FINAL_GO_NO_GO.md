@@ -1,7 +1,15 @@
 # Финальный GO / NO-GO
 
-Дата: 2026-07-27  
+Дата: 2026-07-27
 Версия: 1.0.0
+
+> Post-remediation 2026-07-28: UI/backend software gates усилены и проходят
+> 28 тестов с coverage 84.89%. Default no-model режим теперь fail-closed.
+> Вердикт для real model/public/clinical use остаётся NO-GO. Актуальные детали:
+> [`phase1/IMPLEMENTATION_REPORT.md`](phase1/IMPLEMENTATION_REPORT.md),
+> [`phase3/CLAIM_TO_EVIDENCE_MATRIX.md`](phase3/CLAIM_TO_EVIDENCE_MATRIX.md),
+> [`phase4/ARCHITECTURE_AUDIT.md`](phase4/ARCHITECTURE_AUDIT.md) и
+> [`phase5/MODEL_PROVENANCE_AUDIT.md`](phase5/MODEL_PROVENANCE_AUDIT.md).
 
 ## 1. Решение по сценариям
 

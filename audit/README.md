@@ -1,9 +1,17 @@
 # Полный аудит `malaria-cv-api`
 
-Версия отчёта: 1.0.0  
-Дата фиксации: 2026-07-27  
-Режим: READ-ONLY для production-кода  
+Версия отчёта: 1.0.0
+Дата фиксации: 2026-07-27
+Режим: READ-ONLY для production-кода
 Корень: `C:\Users\Oleksandra\OneDrive\Desktop\biologi_test1`
+
+> Обновление 2026-07-28: выполнена controlled remediation и добавлен
+> research-only UI. Исходные документы ниже сохраняют baseline на момент
+> первого аудита. Текущий implementation/verification status находится в
+> [`audit/phase1/`](phase1/README.md). Фазы claim verification, архитектуры и
+> model provenance находятся в [`audit/phase3/`](phase3/CLAIM_TO_EVIDENCE_MATRIX.md),
+> [`audit/phase4/`](phase4/ARCHITECTURE_AUDIT.md) и
+> [`audit/phase5/`](phase5/MODEL_PROVENANCE_AUDIT.md).
 
 ## Итог
 

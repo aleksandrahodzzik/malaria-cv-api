@@ -1,203 +1,306 @@
-# 🔬 Malaria Cell Classification Microservice (`malaria-cv-api`)
+# Malaria Cell Classification API
 
-[![CI Pipeline](https://github.com/aleksandrahodzzik/malaria-cv-api/actions/workflows/ci.yml/badge.svg)](https://github.com/aleksandrahodzzik/malaria-cv-api/actions/workflows/ci.yml)
-[![Python Version](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.110%2B-009688.svg)](https://fastapi.tiangolo.com/)
-[![PyTorch](https://img.shields.io/badge/PyTorch-2.2%2B-EE4C2C.svg)](https://pytorch.org/)
-[![HuggingFace](https://img.shields.io/badge/%F0%9F%A4%97%20Model-trpakov%2Fvit--malaria--classification-orange)](https://huggingface.co/trpakov/vit-malaria-classification)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+Исследовательский web/API-прототип для классификации заранее выделенного
+изображения отдельной клетки крови.
 
-High-performance, production-ready MedTech REST API microservice designed for rapid microscopic blood smear cell classification (**Parasitized** vs. **Uninfected**). Built with **FastAPI**, **PyTorch**, and HuggingFace's Vision Transformer (`trpakov/vit-malaria-classification`), following strict DevSecOps and MLOps standards.
+> [!WARNING]
+> Сервис не является медицинским изделием, не ставит диагноз пациенту, не
+> исключает малярию и не предназначен для выбора лечения. Softmax-score не
+> является калиброванной вероятностью правильного результата.
 
----
+## Текущее состояние
 
-## 🏗️ System Architecture & Workflow
+Backend, UI и тестовый HTTP-контур реализованы. Утверждённая ML-модель в
+репозиторий не входит и по умолчанию не настроена. Поэтому после чистого
+запуска:
 
-The microservice offloads heavy matrix calculations to worker threads using `asyncio.to_thread()` to prevent blocking FastAPI's async event loop under concurrent production load.
+- `/health` возвращает `200`;
+- UI доступен на `/`;
+- `/ready` возвращает `503` с `reason=model_not_configured`;
+- `/analyze` возвращает `503`, пока не предоставлен проверенный model artifact.
 
-```mermaid
-sequenceDiagram
-    autonumber
-    actor Client as 🏥 Clinical Client / App
-    participant MW as ⏱️ RequestTracking Middleware
-    participant API as 🚀 FastAPI Router (/analyze)
-    participant Service as 🧠 MalariaClassifierService
-    participant Loop as 🔄 Event Loop (asyncio.to_thread)
-    participant Model as 🔬 HuggingFace ViT Model
+Такое поведение намеренно: приложение не подменяет отсутствующую модель и не
+делает фиктивные predictions.
 
-    Client->>MW: POST /analyze (Image File Upload)
-    MW->>MW: Generate X-Request-ID (UUID4)
-    MW->>API: Route Request
-    API->>API: Validate Content-Type & File Size
-    API->>Service: Call analyze_image(bytes, filename)
-    Service->>Loop: Offload PyTorch compute to ThreadPool
-    Loop->>Model: Preprocess Image & Execute ViT Forward Pass
-    Model-->>Loop: Raw Logits (Parasitized vs Uninfected)
-    Loop-->>Service: Class Probabilities & Top Diagnosis
-    Service-->>API: Return Structured Prediction Schema
-    API-->>MW: HTTP 200 OK Response
-    MW-->>Client: Response + Headers (X-Request-ID, X-Response-Time-Ms)
+## Возможности
+
+- FastAPI application factory и lifespan;
+- разделённые liveness/readiness probes;
+- JPEG/PNG/WEBP upload;
+- encoded-size и decoded-pixel limits;
+- MIME-to-decoded-format, single-frame и image-mode validation;
+- Pillow verification до processor;
+- PyTorch inference вне event loop;
+- bounded inference concurrency на процесс;
+- queue и execution timeouts с корректным учётом native worker;
+- fail-closed проверка `id2label`;
+- обязательные `safetensors` и запрет remote code;
+- централизованный error envelope;
+- валидируемый `X-Request-ID`;
+- security headers;
+- dependency-free responsive UI;
+- non-root multi-stage Docker image;
+- Ruff, Mypy, Pytest и coverage gate.
+
+## UI
+
+После запуска откройте:
+
+```text
+http://localhost:8000/
 ```
 
----
+Интерфейс:
 
-## ✨ Key Architectural Features
+- показывает readiness модели;
+- локально проверяет тип и размер файла;
+- отображает preview без сохранения истории;
+- поддерживает drag-and-drop и отмену запроса;
+- выводит model class и score;
+- явно сообщает ограничения и research-only назначение.
 
-- **Non-Blocking Inference Engine**: Uses `asyncio.to_thread()` to run PyTorch Vision Transformer inference without stalling the async event loop.
-- **FastAPI Lifespan Management**: Pre-loads model weights during application startup lifespan, preventing cold-start latency on request handling.
-- **Production Observability**: Automated ASGI middleware assigning correlation request IDs (`X-Request-ID`) and tracking request latency in milliseconds (`X-Response-Time-Ms`).
-- **Strict Data Contracts**: Pydantic v2 models for comprehensive input validation, error handling, and swagger schema documentation.
-- **DevSecOps Containerization**: Multi-stage, non-root Docker builds running Gunicorn with Uvicorn workers.
-- **Continuous Integration**: GitHub Actions automated pipeline executing `ruff` linting, `mypy` static type checking, and `pytest` with code coverage.
+API documentation:
 
----
+- Swagger: `http://localhost:8000/docs`
+- ReDoc: `http://localhost:8000/redoc`
+- OpenAPI: `http://localhost:8000/openapi.json`
 
-## 📁 Repository Structure
+## Быстрый запуск
 
-```
-.
-├── .github/
-│   └── workflows/
-│       └── ci.yml              # GitHub Actions CI pipeline (lint, mypy, pytest)
-├── src/
-│   ├── __init__.py
-│   ├── main.py                 # FastAPI initialization & Lifespan manager
-│   ├── api/
-│   │   ├── dependencies.py     # Dependency injection providers
-│   │   └── routes.py           # /health, /ready, /analyze REST endpoints
-│   ├── core/
-│   │   ├── config.py           # Pydantic BaseSettings configuration
-│   │   └── middleware.py       # Tracing & latency ASGI middleware
-│   ├── schemas/
-│   │   └── payload.py          # Pydantic payload & response validation
-│   └── services/
-│       └── inference.py        # Async ViT PyTorch inference service
-├── tests/
-│   ├── __init__.py
-│   └── test_api.py             # Pytest test suite with FastAPI TestClient
-├── .gitignore                  # Python, PyTorch, & ML gitignore rules
-├── Dockerfile                  # Security-hardened multi-stage build
-├── Makefile                    # Developer ergonomics task automation
-├── requirements.txt            # Production dependencies
-├── requirements-dev.txt        # Development & testing dependencies
-└── README.md                   # Project documentation
-```
+### Требования
 
----
+- Python 3.11 или 3.12;
+- локальный утверждённый model artifact для настоящего инференса;
+- Docker — опционально.
 
-## 🚀 Quick Start & Developer Ergonomics
+### Windows PowerShell
 
-### Prerequisites
-- Python `3.11+`
-- Docker (optional)
-
-### 1. Initialize Development Environment
-```bash
-make init
-# Or manually:
+```powershell
 python -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-pip install -r requirements-dev.txt
+.\.venv\Scripts\python.exe -m pip install --require-hashes -r requirements-bootstrap.txt
+.\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt
+Copy-Item .env.example .env
+.\.venv\Scripts\python.exe -m uvicorn src.main:app --reload
 ```
 
-### 2. Run Local Development Server
+### Linux/macOS
+
 ```bash
-make run
-# Access interactive OpenAPI documentation at http://localhost:8000/docs
+python -m venv .venv
+.venv/bin/python -m pip install --require-hashes -r requirements-bootstrap.txt
+.venv/bin/python -m pip install -r requirements-dev.txt
+cp .env.example .env
+.venv/bin/python -m uvicorn src.main:app --reload
 ```
 
-### 3. Code Quality & Unit Testing
+Без `MODEL_NAME` UI и health endpoints работают, но inference остаётся
+fail-closed.
+
+## Конфигурация модели
+
+Не указывайте случайную публичную модель. До настройки должны быть проверены:
+
+- лицензия;
+- model card;
+- training/evaluation provenance;
+- immutable revision/checksum;
+- preprocessing;
+- число logits;
+- точный порядок labels;
+- external performance и limitations.
+
+Пример для утверждённого локального artifact:
+
+```dotenv
+MODEL_NAME=C:\models\approved-malaria-cell-model
+MODEL_LOCAL_FILES_ONLY=true
+MODEL_EXPECTED_LABELS=["Parasitized","Uninfected"]
+```
+
+Пример для проверенного Hugging Face repository:
+
+```dotenv
+MODEL_NAME=organization/approved-malaria-cell-model
+MODEL_REVISION=0123456789abcdef0123456789abcdef01234567
+MODEL_LOCAL_FILES_ONLY=false
+MODEL_EXPECTED_LABELS=["Parasitized","Uninfected"]
+```
+
+Для production рекомендуется заранее получить artifact, проверить hashes и
+запускать с `MODEL_LOCAL_FILES_ONLY=true`.
+
+Полный пример находится в [.env.example](.env.example).
+
+## API
+
+Канонические versioned endpoints:
+
+| Method | Path | Назначение |
+|---|---|---|
+| GET | `/api/v1/health` | liveness |
+| GET | `/api/v1/ready` | readiness модели |
+| GET | `/api/v1/capabilities` | публичные limits/metadata |
+| POST | `/api/v1/analyze` | research-only cell classification |
+
+Для совместимости те же endpoints пока доступны без `/api/v1`.
+Legacy `/ready`, `/capabilities` и `/analyze` исключены из canonical OpenAPI и
+возвращают `Deprecation: true` вместе с `Link` на versioned successor.
+
+### Capabilities
+
 ```bash
-# Run linting (ruff) & static type checking (mypy)
-make lint
-
-# Run pytest test suite with coverage
-make test
+curl http://localhost:8000/api/v1/capabilities
 ```
 
----
+Пример:
 
-## 📡 API Endpoint Reference & cURL Examples
-
-### 1. Liveness Probe (`GET /health`)
-```bash
-curl -X GET "http://localhost:8000/health" -H "accept: application/json"
-```
-**Response (200 OK):**
 ```json
 {
-  "status": "healthy",
-  "version": "1.0.0",
-  "timestamp": "2026-07-27T18:00:00.000000+00:00"
-}
-```
-
-### 2. Service Readiness Probe (`GET /ready`)
-```bash
-curl -X GET "http://localhost:8000/ready" -H "accept: application/json"
-```
-**Response (200 OK):**
-```json
-{
-  "status": "ready",
-  "model_loaded": true,
-  "model_name": "trpakov/vit-malaria-classification"
-}
-```
-
-### 3. Cell Image Classification (`POST /analyze`)
-```bash
-curl -X POST "http://localhost:8000/analyze" \
-  -H "accept: application/json" \
-  -H "Content-Type: multipart/form-data" \
-  -F "file=@/path/to/cell_sample.png;type=image/png"
-```
-**Response (200 OK):**
-```json
-{
-  "filename": "cell_sample.png",
-  "diagnosis": "Parasitized",
-  "confidence": 0.9845,
-  "probabilities": [
-    {
-      "label": "Parasitized",
-      "confidence": 0.9845
-    },
-    {
-      "label": "Uninfected",
-      "confidence": 0.0155
-    }
+  "api_version": "1.1.0",
+  "intended_use": "research_only",
+  "model_configured": false,
+  "accepted_content_types": [
+    "image/jpeg",
+    "image/png",
+    "image/webp"
   ],
-  "execution_time_ms": 38.42,
-  "timestamp": "2026-07-27T18:00:00.000000+00:00"
+  "max_upload_size_mb": 10,
+  "max_image_pixels": 25000000,
+  "probabilities_calibrated": false
 }
 ```
 
----
+### Readiness без модели
 
-## 🐳 Docker Deployment
-
-### Build Container Image
-```bash
-make docker-build
+```json
+{
+  "status": "not_ready",
+  "model_loaded": false,
+  "model_name": null,
+  "reason": "model_not_configured"
+}
 ```
 
-### Run Container
-```bash
-docker run -d -p 8000:8000 --name malaria-api malaria-cv-api:latest
-```
-
----
-
-## 🐙 GitHub Publishing Instructions
-
-To initialize the local Git repository and push directly to GitHub (`aleksandrahodzzik/malaria-cv-api`):
+### Analysis
 
 ```bash
-make github-push
+curl -X POST http://localhost:8000/api/v1/analyze \
+  -H "accept: application/json" \
+  -F "file=@cell.png;type=image/png"
 ```
 
----
+Успешный ответ содержит:
 
-## 📄 License
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+- `predicted_cell_class` — основной безопасный термин;
+- `diagnosis` — deprecated compatibility alias, не диагноз пациента;
+- `confidence` — некалиброванный softmax-score;
+- `probabilities` — scores всех классов;
+- `calibrated=false`;
+- `intended_use=research_only`;
+- обязательные limitations.
+
+### Error envelope
+
+```json
+{
+  "code": "SERVICE_UNAVAILABLE",
+  "detail": "The approved model is not configured, loaded, or ready.",
+  "request_id": "d78d9ea1-7c4a-41f2-9e71-f06831ad665d"
+}
+```
+
+Внутренние исключения не возвращаются клиенту.
+
+## Проверки
+
+С Make:
+
+```bash
+make lint
+make test
+make check
+```
+
+Напрямую в Windows:
+
+```powershell
+.\.venv\Scripts\python.exe -m ruff format --check src tests
+.\.venv\Scripts\python.exe -m ruff check src tests
+.\.venv\Scripts\python.exe -m mypy src
+.\.venv\Scripts\python.exe -m pytest --cov=src --cov-report=term-missing --cov-fail-under=80 tests
+.\.venv\Scripts\python.exe -m pip check
+```
+
+Mocked unit/API tests не считаются доказательством реальной ML-модели.
+Artifact-backed smoke test должен быть отдельным release gate.
+
+## Docker
+
+```bash
+docker build -t malaria-cv-api:local .
+docker run --rm -p 8000:8000 malaria-cv-api:local
+```
+
+Image использует одного worker по умолчанию: каждый worker хранит отдельную
+копию модели. Увеличивать worker count можно только после измерения peak RSS,
+latency и throughput на утверждённой модели.
+
+Docker `HEALTHCHECK` проверяет только liveness через `/health`. В orchestrator
+нужно отдельно настроить readiness probe на `/ready`; без модели она корректно
+возвращает `503`.
+
+Для настоящего offline inference model directory/cache следует монтировать
+read-only и передавать соответствующие переменные окружения.
+
+## Структура
+
+```text
+.
+├── .github/workflows/ci.yml
+├── PROMPTS/
+├── audit/
+├── src/
+│   ├── api/
+│   ├── core/
+│   ├── schemas/
+│   ├── services/
+│   ├── ui/
+│   └── main.py
+├── tests/
+├── .env.example
+├── Dockerfile
+├── Makefile
+├── pyproject.toml
+├── constraints.txt
+├── requirements-bootstrap.txt
+├── requirements.txt
+└── requirements-dev.txt
+```
+
+## Известные ограничения
+
+- утверждённая модель не поставляется;
+- транзитивные версии зафиксированы в `constraints.txt`, bootstrap `pip`
+  проверяется по hash, но полного hash-verified cross-platform lock пока нет;
+- нет real-model smoke test;
+- нет authentication/rate limiting для публичного deployment;
+- per-process semaphore не заменяет внешний global quota;
+- нет external clinical evaluation, calibration, OOD или abstention;
+- нет patient/slide aggregation;
+- Docker build и load tests требуют отдельного окружения.
+
+Полные findings и roadmap: [audit/README.md](audit/README.md).
+
+Дополнительные доказательства:
+
+- [Claim-to-Evidence matrix](audit/phase3/CLAIM_TO_EVIDENCE_MATRIX.md);
+- [аудит архитектуры](audit/phase4/ARCHITECTURE_AUDIT.md);
+- [аудит provenance модели](audit/phase5/MODEL_PROVENANCE_AUDIT.md);
+- [model STOP-SHIP](audit/phase5/STOP_SHIP_DECISION.md).
+
+## Лицензия
+
+Исходный код распространяется по MIT License: [LICENSE](LICENSE).
+
+MIT License проекта не предоставляет автоматически права на сторонние model
+weights или datasets. Их лицензии должны проверяться отдельно.

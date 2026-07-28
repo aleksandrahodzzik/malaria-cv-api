@@ -1,0 +1,15 @@
+Feature_ID,Layer,User,Problem,Current,Desired,Risk,Reach,Impact,Confidence,Effort,RICE,UserBusinessValue,TimeCriticality,RiskReduction,JobSize,WSJF,Priority,Decision
+F-001,Backend,All,"Misleading diagnosis semantics","diagnosis + clinical prediction","predicted_cell_class + research-only context",Critical,10,3,1.0,2,15.0,10,10,10,2,15.0,P0,IMPLEMENT
+F-002,ML/MLOps,Developer,"Model artifact unavailable","mutable missing HF ID","approved immutable artifact",Critical,10,3,1.0,8,3.75,10,10,10,8,3.75,P0,BLOCKED_EXTERNAL
+F-003,Backend,Integrator,"Unstable/leaky errors","raw exception detail","central safe error envelope",High,8,3,1.0,2,12.0,8,8,9,2,12.5,P0,IMPLEMENT
+F-004,Security,Operator,"Untrusted request ID","arbitrary reflected header","bounded validated correlation ID",Medium,6,2,1.0,1,12.0,5,6,7,1,18.0,P1,IMPLEMENT
+F-005,Reliability,All,"Unbounded inference admission","one to_thread per request","bounded semaphore/queue timeout",High,8,3,0.9,3,7.2,8,8,9,3,8.33,P0,IMPLEMENT
+F-006,ML,Developer,"Unsafe label fallback","assumed label order","fail-closed model contract",Critical,10,3,1.0,2,15.0,10,10,10,2,15.0,P0,IMPLEMENT
+F-007,MLOps,Operator,"Mutable model source","no revision","revision + local-only controls",High,7,3,1.0,2,10.5,8,8,9,2,12.5,P0,IMPLEMENT
+F-008,UI,Researcher,"No human UI","Swagger only","accessible research upload UI",Medium,8,2,0.9,4,3.6,8,6,5,4,4.75,P1,IMPLEMENT
+F-009,DX,Developer,"Undocumented config","no env example","validated .env.example",Medium,8,2,1.0,1,16.0,7,7,6,1,20.0,P1,IMPLEMENT
+F-010,Docs,All,"README mojibake/claims","corrupted and overstated","UTF-8 evidence-aligned docs",High,10,3,1.0,2,15.0,9,9,9,2,13.5,P0,IMPLEMENT
+F-011,CI,Developer,"Incomplete quality gate","lint/type/unit only","format/pip/coverage checks",Medium,8,2,1.0,2,8.0,7,7,7,2,10.5,P1,IMPLEMENT
+F-012,SupplyChain,Security,"No lock/SBOM/signing","mutable dependencies","reproducible signed release",High,8,3,0.9,8,2.7,9,8,9,8,3.25,P1,PLAN
+F-013,Security,Public API,"No auth/rate limit","anonymous unlimited","gateway identity/quotas",High,6,3,0.8,8,1.8,8,7,9,8,3.0,P1,PLAN_AFTER_DEPLOYMENT_CONTEXT
+F-014,Clinical,Clinical user,"No evidence/workflow","cell prototype","validated patient workflow",Critical,10,3,0.5,20,0.75,10,8,10,20,1.4,P0,BLOCKED_RESEARCH_PROGRAM

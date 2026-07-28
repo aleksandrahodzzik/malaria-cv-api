@@ -1,0 +1,7 @@
+model_id,revision,file,size_bytes,sha256,media_type,safe_serialization,source_status,verified_at
+trpakov/vit-malaria-classification,UNKNOWN,config.json,UNKNOWN,UNKNOWN,application/json,n/a,HTTP_401,2026-07-28
+trpakov/vit-malaria-classification,UNKNOWN,preprocessor_config.json,UNKNOWN,UNKNOWN,application/json,n/a,HTTP_401,2026-07-28
+trpakov/vit-malaria-classification,UNKNOWN,model.safetensors,UNKNOWN,UNKNOWN,application/octet-stream,EXPECTED_BUT_UNAVAILABLE,HTTP_401,2026-07-28
+trpakov/vit-malaria-classification,UNKNOWN,pytorch_model.bin,UNKNOWN,UNKNOWN,application/octet-stream,UNSAFE_POLICY_REJECTED,HTTP_401,2026-07-28
+trpakov/vit-malaria-classification,UNKNOWN,README.md,UNKNOWN,UNKNOWN,text/markdown,n/a,HTTP_401,2026-07-28
+trpakov/vit-malaria-classification,UNKNOWN,.gitattributes,UNKNOWN,UNKNOWN,text/plain,n/a,HTTP_401,2026-07-28

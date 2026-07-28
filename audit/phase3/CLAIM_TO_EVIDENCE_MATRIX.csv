@@ -1,0 +1,45 @@
+Claim ID,Time slice,Risk,Заявление,Источник,Проверка,Результат,Вердикт
+H-001,BASELINE,CRITICAL,"Сервис production-ready","HEAD:README.md:9","Clean start, model probe, audit gates","Модель не загружается; production/clinical gates отсутствуют",CONTRADICTED
+H-002,BASELINE,HIGH,"Сервис high-performance","HEAD:README.md:9","Искать target SLO и нагрузочные измерения","SLO, benchmark и real-model load test отсутствуют",UNSUPPORTED
+H-003,BASELINE,CRITICAL,"Сервис является MedTech API","HEAD:README.md:9","Проверить intended use, clinical validation и regulatory evidence","Доказательства медицинского назначения отсутствуют",CONTRADICTED
+H-004,BASELINE,HIGH,"Сервис выполняет rapid classification","HEAD:README.md:9","Real-model latency/throughput benchmark","Approved model отсутствует; тест невозможен",NOT_TESTABLE_WITH_CURRENT_EVIDENCE
+H-005,BASELINE,CRITICAL,"trpakov/vit-malaria-classification — доступная malaria-модель","HEAD:README.md:9; HEAD:src/core/config.py","HF API, author list, exact page/files, real loader","Exact endpoints 401; author list содержит только face-expression и pneumonia; loader exit 1",CONTRADICTED
+H-006,BASELINE,HIGH,"asyncio.to_thread делает inference non-blocking","HEAD:README.md:15","Проследить decode/processor/forward и cancellation","Sync pipeline offloaded; это не доказывает системную масштабируемость",PARTIALLY_SUPPORTED
+H-007,BASELINE,HIGH,"Event loop не блокируется under concurrent production load","HEAD:README.md:15","Concurrent real-model load/heartbeat test","Production load и real model не проверены",UNSUPPORTED
+H-008,BASELINE,MEDIUM,"Lifespan предотвращает cold-start latency","HEAD:README.md:40","Проверить startup path и first-request benchmark","Модель грузится в startup, но startup/first-request с artifact не воспроизведены",PARTIALLY_SUPPORTED
+H-009,BASELINE,MEDIUM,"Middleware назначает X-Request-ID","HEAD:README.md:41","API test safe/unsafe request IDs","UUID генерируется; допустимый client ID сохраняется; control chars не принимаются",SUPPORTED
+H-010,BASELINE,MEDIUM,"Middleware измеряет latency в миллисекундах","HEAD:README.md:41","Проверить perf_counter и response header","X-Response-Time-Ms формируется monotonic perf_counter",SUPPORTED
+H-011,BASELINE,HIGH,"Strict comprehensive input validation","HEAD:README.md:42","Adversarial upload/OpenAPI tests","Были MIME/size/Pydantic checks, но не было MIME-magic/multiframe/mode contract",PARTIALLY_SUPPORTED
+H-012,BASELINE,HIGH,"Docker image security-hardened","HEAD:Dockerfile:2; HEAD:README.md:43","Docker build/security controls/scan","Только multi-stage/non-root; build и container scan не выполнены",UNSUPPORTED
+H-013,BASELINE,MEDIUM,"Docker является multi-stage и non-root","HEAD:README.md:43","Static Dockerfile inspection","Два stage и USER appuser присутствуют; build не выполнен",PARTIALLY_SUPPORTED
+H-014,BASELINE,MEDIUM,"CI выполняет ruff, mypy, pytest coverage","HEAD:README.md:44","Workflow inspection и локальный эквивалент","Шаги существуют и локально проходят; remote GitHub run ещё не доказан",PARTIALLY_SUPPORTED
+H-015,BASELINE,CRITICAL,"После быстрого запуска /ready возвращает ready=true","HEAD:README.md:111","Clean startup и historical model probe","Historical model loader падает; текущий fail-closed /ready возвращает 503",CONTRADICTED
+H-016,BASELINE,CRITICAL,"diagnosis/confidence можно читать как клиническую вероятность","HEAD:README.md:125-137","Проверить calibration/clinical validation/schema","Это softmax без calibration; patient-level validation отсутствует",CONTRADICTED
+H-017,BASELINE,CRITICAL,"API предназначен для clinical client","HEAD:README.md:20 diagram","Проверить intended use и clinical workflow evidence","Текущий контракт явно research_only; clinical evidence отсутствует",CONTRADICTED
+H-018,BASELINE,HIGH,"Тестовый набор comprehensive","Walkthrough; HEAD:README.md:44","Coverage и real-model test inventory","API unit tests есть, но model loading/inference были mocked",PARTIALLY_SUPPORTED
+H-019,BASELINE,MEDIUM,"Latency записывается с microsecond precision","Walkthrough claim","Проверить clock/header/rounding","Header имеет миллисекунды и округляется до 0.01 ms; microsecond claim не доказан",UNSUPPORTED
+H-020,BASELINE,MEDIUM,"Pre-loading устраняет request-time model load","Walkthrough; HEAD:src/main.py","Проследить lifecycle call graph","load_model вызывается в lifespan, но эффект зависит от доступного artifact",PARTIALLY_SUPPORTED
+C-001,CURRENT,CRITICAL,"Сервис имеет research-only назначение","README.md; schemas; UI","Schema/OpenAPI/UI/API tests","intended_use=research_only и предупреждения согласованы",SUPPORTED
+C-002,CURRENT,CRITICAL,"По умолчанию модель не настроена","src/core/config.py; .env.example","Effective settings probe","MODEL_NAME='' и .env отсутствует",SUPPORTED
+C-003,CURRENT,MEDIUM,"Без модели /health возвращает 200","README.md; routes.py","TestClient clean lifespan","Получен 200 healthy",SUPPORTED
+C-004,CURRENT,LOW,"Без модели UI доступен на /","README.md; main.py","UI/static asset API test","HTML, JS и CSS возвращают 200",SUPPORTED
+C-005,CURRENT,CRITICAL,"Без модели /ready возвращает 503 с reason","README.md; routes.py","Readiness tests","503, model_loaded=false, model_not_configured",SUPPORTED
+C-006,CURRENT,CRITICAL,"Без модели /analyze возвращает 503","README.md; dependency.py","API test без ready service","Fail-closed dependency возвращает SERVICE_UNAVAILABLE",SUPPORTED
+C-007,CURRENT,CRITICAL,"Приложение не создаёт фиктивные predictions","README.md; main.py","Поиск fallback/mock в runtime path","Runtime fallback отсутствует; mocks ограничены tests",SUPPORTED
+C-008,CURRENT,MEDIUM,"Есть application factory и lifespan","README.md; main.py","Static call-path inspection","create_application и async lifespan подключены",SUPPORTED
+C-009,CURRENT,HIGH,"Liveness и readiness разделены","README.md; routes.py","Status-semantic API tests","health независимо жив; ready зависит от model state",SUPPORTED
+C-010,CURRENT,HIGH,"API строго принимает JPEG/PNG/WEBP","README.md; routes.py; inference.py","MIME spoof, corrupt, multiframe, mode tests","MIME сопоставляется decoded format; unsupported/multiframe/CMYK отклоняются",SUPPORTED
+C-011,CURRENT,HIGH,"Есть encoded-size и decoded-pixel limits","README.md; middleware.py; inference.py","Transport, file-byte и pixel-limit tests","Три отдельные границы реализованы; proxy/temp disk остаются deployment controls",SUPPORTED
+C-012,CURRENT,HIGH,"Pillow verification выполняется до processor","README.md; inference.py","Corrupt image test и code path","verify/reopen/load выполняются в worker thread до processor",SUPPORTED
+C-013,CURRENT,HIGH,"Sync ML pipeline выполняется вне event loop","README.md; inference.py","Call-path inspection и cancellation/concurrency tests","decode, processor и forward находятся внутри asyncio.to_thread",SUPPORTED
+C-014,CURRENT,HIGH,"Inference concurrency bounded per process","README.md; inference.py","Queue timeout и cancellation capacity tests","Semaphore ограничивает admission и не освобождается до завершения worker thread",SUPPORTED
+C-015,CURRENT,CRITICAL,"Model id2label проверяется fail-closed","README.md; inference.py","Exact/inverted label tests","Inverted labels и non-contiguous/size mismatch отклоняются",SUPPORTED
+C-016,CURRENT,HIGH,"Ошибки имеют централизованный безопасный envelope","README.md; errors.py","404/422/internal/image error tests","Stable code/detail/request_id; internal path не возвращается",SUPPORTED
+C-017,CURRENT,MEDIUM,"X-Request-ID валидируется как log-safe","README.md; middleware.py","Valid/unsafe/control-character tests","Разрешён bounded ASCII pattern; unsafe заменяется UUID",SUPPORTED
+C-018,CURRENT,HIGH,"Реализованы security headers","README.md; middleware.py","Response header tests","Основные headers есть; это не доказывает security-hardening всей системы",PARTIALLY_SUPPORTED
+C-019,CURRENT,LOW,"UI responsive","README.md; styles.css","Static CSS inspection","Responsive rules есть; реальная browser/320px visual проверка не выполнена",PARTIALLY_SUPPORTED
+C-020,CURRENT,MEDIUM,"Docker image multi-stage и non-root","README.md; Dockerfile","Static Dockerfile inspection","Структура подтверждена; Docker build/runtime NOT EXECUTED",PARTIALLY_SUPPORTED
+C-021,CURRENT,MEDIUM,"Ruff, Mypy, Pytest и coverage gate работают","README.md; CI; pyproject.toml","Локальный и два clean-room quality gates","43 tests; coverage 87.96%; threshold 80%",SUPPORTED
+C-022,CURRENT,LOW,"UI поддерживает drag-drop и отмену","README.md; app.js","Static assertions и JS syntax","Код реализован; browser interaction test не выполнен",PARTIALLY_SUPPORTED
+C-023,CURRENT,CRITICAL,"UI выводит результат реальной модели","README.md; app.js","Artifact-backed end-to-end test","Approved model отсутствует",NOT_TESTABLE_WITH_CURRENT_EVIDENCE
+C-024,CURRENT,CRITICAL,"Confidence явно является некалиброванным softmax score","README.md; schemas; inference.py","Schema/OpenAPI/inference unit tests","calibrated=false; clinical probability не заявляется",SUPPORTED
