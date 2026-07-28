@@ -72,3 +72,39 @@ version reproducibility = VERIFIED for tested Windows/Python 3.12 runs
 artifact integrity      = PARTIAL
 cross-platform lock     = NOT VERIFIED
 ```
+
+## Вариация 5 — GitHub Actions Python matrix
+
+Первый remote run после push:
+
+```text
+run_id = 30371963285
+Python 3.12 = SUCCESS
+Python 3.11 = FAILURE at dependency installation
+```
+
+PyPI metadata подтвердил root cause:
+
+```text
+numpy==2.5.1 requires Python >=3.12
+```
+
+Это означало, что Windows/Python 3.12 snapshot нельзя безусловно применять к
+Python 3.11.
+
+Remediation:
+
+```text
+numpy==2.4.2; python_version < "3.12"
+numpy==2.5.1; python_version >= "3.12"
+```
+
+`numpy 2.4.2` официально заявляет `Requires-Python >=3.11`.
+
+Также Actions с Node 20 runtime заменены на актуальные major versions:
+
+```text
+actions/checkout@v6
+actions/setup-python@v6
+actions/upload-artifact@v6
+```

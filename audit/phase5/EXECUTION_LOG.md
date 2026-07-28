@@ -210,3 +210,30 @@ audit/phase5/.verification-venv-b
 ```
 
 Snapshots, reports and evidence were retained.
+
+## First remote CI run
+
+Run:
+
+```text
+https://github.com/aleksandrahodzzik/malaria-cv-api/actions/runs/30371963285
+```
+
+Result:
+
+```text
+overall: failure
+Python 3.12: success
+Python 3.11: dependency installation failure
+```
+
+Public log download required repository admin authentication and returned
+`403`, но job metadata локализовала failure в install step. Независимая
+проверка official PyPI JSON API показала:
+
+```text
+numpy/2.5.1 requires_python >=3.12
+numpy/2.4.2 requires_python >=3.11
+```
+
+Remediation: Python-version markers в `constraints.txt`.
