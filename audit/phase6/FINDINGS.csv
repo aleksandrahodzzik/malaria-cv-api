@@ -1,0 +1,6 @@
+FindingID,Classification,Severity,Confidence,Evidence,Impact,Recommendation,AcceptanceCriteria
+TASK-001,VERIFIED,STOP-SHIP,HIGH,"API and model adapter accept one pre-cropped image","Cannot support detection slide or patient tasks","Keep A/F scope explicit","Machine-readable task and UI wording tested"
+TASK-002,VERIFIED,STOP-SHIP,HIGH,"No detector segmenter aggregation or patient schema","One-cell result cannot become a patient diagnosis","Do not add diagnostic claims","B-E remain explicitly unsupported"
+TASK-003,OBSERVED,HIGH,HIGH,"Only technical Pillow validation exists","Poor microscopy quality can pass","Create separately validated biological QC stage","QC sensitivity and failure workflow externally validated"
+TASK-004,UNKNOWN,STOP-SHIP,HIGH,"Training and validation domains unavailable","Domain applicability cannot be established","Require model card and external multi-site cohort","All critical domain axes documented and evaluated"
+TASK-005,VERIFIED,MEDIUM,HIGH,"UI previously relied on warning text only","Users may overlook exact input scope","Require explicit pre-cropped-cell acknowledgement","Primary action disabled until acknowledgement"

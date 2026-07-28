@@ -26,7 +26,16 @@ show_error_codes = true
 exclude = ["^\\.venv/", "^audit/"]
 
 [[tool.mypy.overrides]]
-module = ["torch", "torch.*", "transformers", "transformers.*", "PIL", "PIL.*"]
+module = [
+  "numpy",
+  "numpy.*",
+  "torch",
+  "torch.*",
+  "transformers",
+  "transformers.*",
+  "PIL",
+  "PIL.*",
+]
 follow_imports = "skip"
 ignore_missing_imports = true
 

@@ -1,0 +1,9 @@
+Order,Stage,Status,Input,Output,Evidence,MissingControl,Risk
+1,input_image,IMPLEMENTED,one encoded upload,validated byte buffer,POST /api/v1/analyze and upload tests,acquisition provenance and patient/slide lineage,user may submit an inapplicable crop
+2,image_quality_control,PARTIAL,encoded image,technical accept/reject,Pillow verify format mode frame and pixel checks,focus stain illumination morphology and smear adequacy,technically valid but diagnostically unusable image
+3,cell_detection_or_segmentation,MISSING,whole field,cell crops,no detector or segmenter exists,detection validation and missed-cell accounting,whole-slide input cannot be processed correctly
+4,cell_classification,UNVALIDATED,pre-cropped cell,binary class and uncalibrated scores,serving adapter and mocked tests exist,approved model and locked external cohort,unknown discrimination and calibration
+5,slide_level_aggregation,MISSING,cell outputs,slide result,no slide ID or aggregation code,sampling and aggregation protocol,cell result may be mistaken for slide result
+6,patient_level_interpretation,MISSING,slide evidence,patient interpretation,no patient schema or reference standard,patient-level validation and clinical rule,false diagnostic inference
+7,human_review,PARTIAL,research output,manual interpretation,UI warning and human_review_required flag,authenticated reviewer sign-off and audit trail,warning may not ensure qualified review
+8,clinical_action,MISSING,reviewed evidence,clinical decision,explicitly unsupported,benefit-risk workflow and prospective validation,unsafe treatment or reassurance

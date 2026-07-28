@@ -1,5 +1,6 @@
 * text=auto
 
+.gitattributes text eol=lf
 *.py text eol=lf
 *.js text eol=lf
 *.css text eol=lf
@@ -9,5 +10,6 @@
 *.yml text eol=lf
 *.yaml text eol=lf
 *.txt text eol=lf
+*.csv text eol=lf
 Dockerfile text eol=lf
 Makefile text eol=lf

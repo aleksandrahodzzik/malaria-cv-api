@@ -3,20 +3,24 @@
 Дата: 2026-07-27
 Версия: 1.0.0
 
-> Post-remediation 2026-07-28: UI/backend software gates усилены и проходят
-> 28 тестов с coverage 84.89%. Default no-model режим теперь fail-closed.
+> Post-remediation 2026-07-28: UI/backend/software/statistical gates усилены и
+> проходят 64 теста с coverage 87.78%. Default no-model режим fail-closed.
 > Вердикт для real model/public/clinical use остаётся NO-GO. Актуальные детали:
 > [`phase1/IMPLEMENTATION_REPORT.md`](phase1/IMPLEMENTATION_REPORT.md),
 > [`phase3/CLAIM_TO_EVIDENCE_MATRIX.md`](phase3/CLAIM_TO_EVIDENCE_MATRIX.md),
 > [`phase4/ARCHITECTURE_AUDIT.md`](phase4/ARCHITECTURE_AUDIT.md) и
-> [`phase5/MODEL_PROVENANCE_AUDIT.md`](phase5/MODEL_PROVENANCE_AUDIT.md).
+> [`phase5/MODEL_PROVENANCE_AUDIT.md`](phase5/MODEL_PROVENANCE_AUDIT.md),
+> [`phase6/INTENDED_USE_AUDIT.md`](phase6/INTENDED_USE_AUDIT.md),
+> [`phase7/DATASET_GATES.md`](phase7/DATASET_GATES.md) и
+> [`phase8/MATHEMATICAL_VALIDATION_STATUS.md`](phase8/MATHEMATICAL_VALIDATION_STATUS.md).
 
 ## 1. Решение по сценариям
 
 | Сценарий | Решение | Условия |
 |---|---|---|
 | Просмотр исходников и unit-test scaffold | GO | Только как инженерный пример |
-| Локальное mocked API demo | CONDITIONAL GO | Явно сообщать, что prediction синтетический |
+| Локальная no-model UI/API documentation | CONDITIONAL GO | Research-only; inference unavailable |
+| Локальное mocked API demo | CONDITIONAL GO | Только тестовый контур; не показывать как реальную модель |
 | Локальное demo с реальной malaria-моделью | NO-GO | Artifact не доступен/не доказан |
 | Публичный non-clinical API | NO-GO | Нет модели, security/capacity gates |
 | Research benchmark | NO-GO | Нет provenance, данных и statistical report |

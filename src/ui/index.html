@@ -101,6 +101,14 @@
 
             <p id="form-error" class="inline-error" role="alert" hidden></p>
 
+            <label class="scope-confirmation">
+              <input id="scope-confirmation" type="checkbox">
+              <span>
+                Подтверждаю: это заранее вырезанное изображение одной клетки
+                без идентифицирующих данных пациента.
+              </span>
+            </label>
+
             <div class="actions">
               <button id="analyze-button" class="primary-button" type="submit" disabled>
                 <span class="button-label">Запустить анализ</span>
@@ -137,10 +145,11 @@
             <div id="score-list" class="score-list" aria-label="Scores по классам"></div>
 
             <div class="result-warning">
-              <strong>Score не калиброван.</strong>
+              <strong>Score не калиброван. Требуется проверка человеком.</strong>
               <span>
                 Его нельзя интерпретировать как вероятность правильного
-                диагноза.
+                диагноза или использовать для автоматического клинического
+                действия.
               </span>
             </div>
 
@@ -161,6 +170,21 @@
           </div>
         </section>
       </div>
+
+      <section class="pipeline-section" aria-labelledby="pipeline-title">
+        <div class="section-heading">
+          <p class="step-label">Границы системы</p>
+          <h2 id="pipeline-title">От изображения до клинического действия</h2>
+          <p>
+            API реализует только технический приём файла и исследовательскую
+            классификацию отдельной клетки. Остальные звенья нельзя считать
+            выполненными автоматически.
+          </p>
+        </div>
+        <ol id="pipeline-list" class="pipeline-list" aria-live="polite">
+          <li class="pipeline-placeholder">Получаем машиночитаемую методологию…</li>
+        </ol>
+      </section>
 
       <section class="details-grid" aria-label="Ограничения и техническая информация">
         <article>

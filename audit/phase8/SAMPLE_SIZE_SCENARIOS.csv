@@ -1,0 +1,5 @@
+Scenario,Status,ExpectedSensitivity,ExpectedSpecificity,HalfWidth,MeanClusterSize,ICC,DesignEffect,PositiveAdjustedCeiling,NegativeAdjustedCeiling,Warning
+S1,HYPOTHETICAL_PLANNING_ONLY,0.90,0.90,0.05,1,0.00,1.00,139,139,"Approximation only"
+S2,HYPOTHETICAL_PLANNING_ONLY,0.95,0.90,0.03,1,0.00,1.00,203,385,"Approximation only"
+S3,HYPOTHETICAL_PLANNING_ONLY,0.95,0.95,0.03,20,0.05,1.95,396,396,"Clustering nearly doubles required units under assumed ICC"
+S4,HYPOTHETICAL_PLANNING_ONLY,0.98,0.95,0.02,20,0.05,1.95,368,890,"Final protocol requires a biostatistician and dropout/subgroup inflation"

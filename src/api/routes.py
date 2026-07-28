@@ -22,6 +22,8 @@ from src.schemas.payload import (
     CapabilitiesResponse,
     ErrorResponse,
     HealthResponse,
+    MethodologyResponse,
+    PipelineStage,
     PredictionResponse,
     ReadinessResponse,
 )
@@ -89,6 +91,93 @@ async def capabilities() -> CapabilitiesResponse:
         accepted_content_types=settings.ALLOWED_CONTENT_TYPES,
         max_upload_size_mb=settings.MAX_UPLOAD_SIZE_MB,
         max_image_pixels=settings.MAX_IMAGE_PIXELS,
+    )
+
+
+@router.get(
+    "/methodology",
+    response_model=MethodologyResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Intended Use and Pipeline Boundaries",
+    description=(
+        "Return the exact research task, pipeline coverage, and unsupported "
+        "clinical uses."
+    ),
+)
+async def methodology() -> MethodologyResponse:
+    """Expose safety-critical task boundaries in a machine-readable form."""
+    return MethodologyResponse(
+        pipeline=[
+            PipelineStage(
+                order=1,
+                stage="input_image",
+                status="implemented",
+                evidence="One uploaded encoded image is accepted.",
+            ),
+            PipelineStage(
+                order=2,
+                stage="image_quality_control",
+                status="partial",
+                evidence=(
+                    "Technical decoding checks exist; focus, stain, illumination, "
+                    "cell morphology, and acquisition quality are not validated."
+                ),
+            ),
+            PipelineStage(
+                order=3,
+                stage="cell_detection_or_segmentation",
+                status="missing",
+                evidence="The API requires a pre-cropped single-cell image.",
+            ),
+            PipelineStage(
+                order=4,
+                stage="cell_classification",
+                status="unvalidated",
+                evidence=(
+                    "Serving code exists, but no approved reproducible model or "
+                    "validation cohort is available."
+                ),
+            ),
+            PipelineStage(
+                order=5,
+                stage="slide_level_aggregation",
+                status="missing",
+                evidence=(
+                    "No slide identifier, sampling protocol, or aggregation exists."
+                ),
+            ),
+            PipelineStage(
+                order=6,
+                stage="patient_level_interpretation",
+                status="missing",
+                evidence="No patient-level reference standard or decision rule exists.",
+            ),
+            PipelineStage(
+                order=7,
+                stage="human_review",
+                status="partial",
+                evidence=(
+                    "The UI warns that review is required; no authenticated reviewer "
+                    "workflow or sign-off record exists."
+                ),
+            ),
+            PipelineStage(
+                order=8,
+                stage="clinical_action",
+                status="missing",
+                evidence="Clinical action is explicitly unsupported.",
+            ),
+        ],
+        domain_assumptions_unvalidated=[
+            "stain and staining protocol",
+            "microscope and objective",
+            "camera and acquisition pipeline",
+            "Plasmodium species and life-cycle stage",
+            "geography and care setting",
+            "age and patient subgroup",
+            "real-world prevalence",
+            "whole-slide and field-of-view inputs",
+        ],
     )
 
 

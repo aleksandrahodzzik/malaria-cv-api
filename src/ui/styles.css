@@ -558,6 +558,107 @@ h2 {
   font-size: 0.88rem;
 }
 
+.scope-confirmation {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  margin-top: 1rem;
+  padding: 0.9rem 1rem;
+  color: var(--ink);
+  background: var(--surface-soft);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  font-size: 0.88rem;
+}
+
+.scope-confirmation input {
+  width: 1.15rem;
+  height: 1.15rem;
+  margin-top: 0.15rem;
+  accent-color: var(--teal);
+}
+
+.pipeline-section {
+  margin-top: 1.4rem;
+  padding: 1.5rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+}
+
+.section-heading {
+  max-width: 760px;
+}
+
+.section-heading h2 {
+  margin-bottom: 0.35rem;
+}
+
+.section-heading > p:last-child {
+  margin-top: 0;
+  color: var(--muted);
+}
+
+.pipeline-list {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+  padding: 0;
+  margin: 1.25rem 0 0;
+  list-style: none;
+}
+
+.pipeline-stage,
+.pipeline-placeholder {
+  min-width: 0;
+  padding: 1rem;
+  background: var(--surface-soft);
+  border: 1px solid var(--line);
+  border-top: 4px solid var(--line);
+  border-radius: var(--radius-sm);
+}
+
+.pipeline-stage > div {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.pipeline-stage strong {
+  font-size: 0.9rem;
+}
+
+.pipeline-stage p {
+  margin: 0.65rem 0 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.pipeline-status {
+  flex: 0 0 auto;
+  padding: 0.15rem 0.4rem;
+  color: var(--muted);
+  background: white;
+  border-radius: 999px;
+  font-size: 0.65rem;
+  font-weight: 700;
+}
+
+.status-implemented {
+  border-top-color: var(--teal);
+}
+
+.status-partial,
+.status-unvalidated {
+  border-top-color: var(--warning);
+}
+
+.status-missing {
+  border-top-color: var(--danger);
+}
+
 .result-meta {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -639,6 +740,10 @@ footer p {
   .details-grid {
     grid-template-columns: 1fr;
   }
+
+  .pipeline-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 600px) {
@@ -678,6 +783,10 @@ footer p {
 
   .actions {
     flex-direction: column;
+  }
+
+  .pipeline-list {
+    grid-template-columns: 1fr;
   }
 }
 

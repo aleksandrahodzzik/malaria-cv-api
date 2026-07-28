@@ -39,6 +39,9 @@ Backend, UI и тестовый HTTP-контур реализованы. Утв
 - валидируемый `X-Request-ID`;
 - security headers;
 - dependency-free responsive UI;
+- machine-readable intended-use and pipeline boundaries;
+- explicit pre-cropped-cell acknowledgement in UI;
+- offline statistical validation toolkit;
 - non-root multi-stage Docker image;
 - Ruff, Mypy, Pytest и coverage gate.
 
@@ -57,6 +60,8 @@ http://localhost:8000/
 - отображает preview без сохранения истории;
 - поддерживает drag-and-drop и отмену запроса;
 - выводит model class и score;
+- требует подтверждения, что input является одной заранее вырезанной клеткой;
+- показывает реализованные, отсутствующие и невалидированные звенья pipeline;
 - явно сообщает ограничения и research-only назначение.
 
 API documentation:
@@ -140,6 +145,7 @@ MODEL_EXPECTED_LABELS=["Parasitized","Uninfected"]
 | GET | `/api/v1/health` | liveness |
 | GET | `/api/v1/ready` | readiness модели |
 | GET | `/api/v1/capabilities` | публичные limits/metadata |
+| GET | `/api/v1/methodology` | exact task и границы pipeline |
 | POST | `/api/v1/analyze` | research-only cell classification |
 
 Для совместимости те же endpoints пока доступны без `/api/v1`.
@@ -156,8 +162,10 @@ curl http://localhost:8000/api/v1/capabilities
 
 ```json
 {
-  "api_version": "1.1.0",
+  "api_version": "1.2.0",
   "intended_use": "research_only",
+  "task": "pre_cropped_single_cell_classification",
+  "analysis_level": "cell",
   "model_configured": false,
   "accepted_content_types": [
     "image/jpeg",
@@ -166,9 +174,28 @@ curl http://localhost:8000/api/v1/capabilities
   ],
   "max_upload_size_mb": 10,
   "max_image_pixels": 25000000,
-  "probabilities_calibrated": false
+  "probabilities_calibrated": false,
+  "patient_diagnosis_supported": false,
+  "slide_aggregation_supported": false,
+  "parasitemia_supported": false,
+  "human_review_required": true
 }
 ```
+
+### Methodology
+
+`GET /api/v1/methodology` возвращает машиночитаемую цепочку:
+
+```text
+input -> technical QC -> detection/segmentation -> cell classification
+      -> slide aggregation -> patient interpretation -> human review
+      -> clinical action
+```
+
+Реализованный software scope ограничен техническим приёмом изображения и
+research-only классификацией одной заранее вырезанной клетки. Biological
+quality control, detection, slide/patient aggregation и clinical action
+отсутствуют или не валидированы.
 
 ### Readiness без модели
 
@@ -197,7 +224,31 @@ curl -X POST http://localhost:8000/api/v1/analyze \
 - `probabilities` — scores всех классов;
 - `calibrated=false`;
 - `intended_use=research_only`;
+- `task=pre_cropped_single_cell_classification`;
+- `analysis_level=cell`;
+- `human_review_required=true`;
+- `patient_diagnosis_supported=false`;
+- `parasitemia_supported=false`;
 - обязательные limitations.
+
+## Offline statistical validation
+
+Модуль `src.validation.statistics` реализует проверяемые расчёты для будущего
+locked validation cohort:
+
+- confusion matrix и threshold metrics;
+- ROC/PR curve points и AUC;
+- Wilson и exact Clopper–Pearson intervals;
+- prevalence transport для PPV/NPV;
+- seeded patient/slide cluster bootstrap;
+- Brier, NLL, ECE и reliability bins;
+- risk–coverage baseline;
+- sample-size approximation с design effect;
+- expected-cost и exact McNemar.
+
+Наличие toolkit не является валидацией текущей модели. Без approved model,
+patient-linked данных и locked test predictions все model performance metrics
+остаются `NOT EXECUTED`.
 
 ### Error envelope
 
@@ -296,7 +347,10 @@ read-only и передавать соответствующие перемен�
 - [Claim-to-Evidence matrix](audit/phase3/CLAIM_TO_EVIDENCE_MATRIX.md);
 - [аудит архитектуры](audit/phase4/ARCHITECTURE_AUDIT.md);
 - [аудит provenance модели](audit/phase5/MODEL_PROVENANCE_AUDIT.md);
-- [model STOP-SHIP](audit/phase5/STOP_SHIP_DECISION.md).
+- [model STOP-SHIP](audit/phase5/STOP_SHIP_DECISION.md);
+- [аудит intended use](audit/phase6/INTENDED_USE_AUDIT.md);
+- [Dataset Datasheet](audit/phase7/DATASET_DATASHEET_CURRENT.md);
+- [статус математической валидации](audit/phase8/MATHEMATICAL_VALIDATION_STATUS.md).
 
 ## Лицензия
 

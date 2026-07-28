@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = Field(
         default="Malaria Cell Classification Microservice", description="Project name"
     )
-    VERSION: str = Field(default="1.1.0", description="API version")
+    VERSION: str = Field(default="1.2.0", description="API version")
     DESCRIPTION: str = Field(
         default=(
             "Research-only API prototype for classifying pre-cropped microscopic "

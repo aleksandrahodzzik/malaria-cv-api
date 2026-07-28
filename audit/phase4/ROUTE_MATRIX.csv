@@ -8,6 +8,7 @@ POST,/analyze,no-compatibility,none,"HTTP body + encoded file + decoded pixels",
 GET,/api/v1/health,yes,none,n/a,HealthResponse,500,no,Canonical versioned representation
 GET,/api/v1/ready,yes,none,n/a,ReadinessResponse,503,no,Canonical model readiness
 GET,/api/v1/capabilities,yes,none,n/a,CapabilitiesResponse,500,no,Non-sensitive runtime contract
+GET,/api/v1/methodology,yes,none,n/a,MethodologyResponse,500,no,Exact task pipeline boundaries and unsupported clinical uses
 POST,/api/v1/analyze,yes,none,"HTTP body + encoded file + decoded pixels",PredictionResponse,"400;413;415;422;500;503;504",yes,Research-only classification
 GET,/docs,development-public,none,n/a,HTML,404,no,Authentication policy required before public deployment
 GET,/redoc,development-public,none,n/a,HTML,404,no,Authentication policy required before public deployment

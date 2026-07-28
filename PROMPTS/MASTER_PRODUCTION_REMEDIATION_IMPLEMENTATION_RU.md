@@ -1,6 +1,6 @@
 # Мастер-промпт глубокой реализации и развития `malaria-cv-api`
 
-Версия: 1.0.0
+Версия: 2.0.0
 Язык выполнения и отчёта: русский
 Режим глубины: максимальный
 Тип работы: evidence-driven remediation and implementation
@@ -13,7 +13,7 @@
 ```text
 <MASTER_PROMPT>
   <ID>MALARIA_CV_API_PRODUCTION_REMEDIATION_IMPLEMENTATION_RU</ID>
-  <VERSION>1.0.0</VERSION>
+  <VERSION>2.0.0</VERSION>
   <LANGUAGE>ru-RU</LANGUAGE>
   <EXECUTION_DEPTH>MAXIMUM</EXECUTION_DEPTH>
   <EXECUTION_MODE>AUDIT_GATED_IMPLEMENTATION</EXECUTION_MODE>
@@ -1524,7 +1524,915 @@ audit/phase5/STOP_SHIP_DECISION.md
 
 ---
 
-# 13. ФАЗА 6 — формализация требований
+# 13. ФАЗА 6 — СООТВЕТСТВИЕ МОДЕЛИ ЗАДАЧЕ
+
+## 13.1. Цель
+
+Установи точное назначение фактически реализованного software/model pipeline.
+Не выводи назначение из названия репозитория, имени класса, label
+`Parasitized` или маркетингового текста.
+
+Проверь задачи независимо:
+
+```text
+A = классификация заранее вырезанной отдельной клетки;
+B = детекция заражённых клеток на полном поле микроскопа;
+C = подсчёт паразитемии;
+D = диагностика пациента;
+E = screening/triage;
+F = исследовательская демонстрация.
+```
+
+Одна система может иметь несколько заявленных задач, но каждая должна иметь
+собственный:
+
+- вход;
+- unit of analysis;
+- reference standard;
+- output;
+- sampling protocol;
+- operating threshold;
+- validation cohort;
+- performance claim;
+- benefit-risk analysis;
+- human workflow;
+- acceptance gate.
+
+Запрещено переносить evidence между задачами без отдельного bridging study.
+
+## 13.2. Протокол определения intended task
+
+Построй таблицу:
+
+| Code | Task | Claimed | Implemented | Validated | Evidence | Verdict |
+|---|---|---:|---:|---:|---|---|
+
+Verdict:
+
+```text
+SUPPORTED
+PARTIALLY_SUPPORTED
+UNSUPPORTED
+CONTRADICTED
+NOT_TESTABLE_WITH_CURRENT_EVIDENCE
+```
+
+Используй следующие evidence layers:
+
+1. request schema и endpoint contract;
+2. фактическая форма входа;
+3. preprocessing;
+4. architecture output tensor;
+5. response schema;
+6. UI wording;
+7. model card;
+8. dataset unit;
+9. validation unit;
+10. deployment workflow.
+
+Если API принимает один image upload и возвращает один binary class, это не
+доказывает whole-slide detection, parasitemia или patient diagnosis.
+
+## 13.3. Обязательная clinical pipeline chain
+
+Построй цепочку:
+
+```text
+input image
+  -> image quality control
+  -> cell detection/segmentation
+  -> cell classification
+  -> slide-level aggregation
+  -> patient-level interpretation
+  -> human review
+  -> clinical action
+```
+
+Для каждого звена зафиксируй:
+
+| Order | Stage | Status | Input | Output | Evidence | Missing control | Risk |
+|---:|---|---|---|---|---|---|---|
+
+Допустимые статусы:
+
+```text
+IMPLEMENTED
+PARTIAL
+MISSING
+UNVALIDATED
+INVALID_FOR_INTENDED_USE
+```
+
+Разделяй:
+
+```text
+technical file validation
+!= microscopy image-quality control
+!= model input applicability
+!= diagnostic-quality slide assessment
+```
+
+Technical validation может подтверждать декодируемость, MIME, размер и mode.
+Она не подтверждает:
+
+- правильный stain;
+- достаточный focus;
+- правильную экспозицию;
+- отсутствие precipitate;
+- видимость морфологии;
+- репрезентативность клетки;
+- корректность cell crop;
+- adequacy мазка;
+- достаточный объём просмотренного материала.
+
+## 13.4. Domain mismatch matrix
+
+Проверь минимум:
+
+| Domain axis | Training domain | Validation domain | Runtime domain | Evidence | Mismatch | Impact |
+|---|---|---|---|---|---|---|
+| cropped RBC vs whole slide | | | | | | |
+| thin vs thick smear | | | | | | |
+| laboratory microscope vs smartphone | | | | | | |
+| stain/protocol | | | | | | |
+| objective/magnification | | | | | | |
+| camera/sensor/compression | | | | | | |
+| Plasmodium species | | | | | | |
+| life-cycle stage | | | | | | |
+| geography/site | | | | | | |
+| adults vs children | | | | | | |
+| symptomatic vs screening population | | | | | | |
+| benchmark balance vs prevalence | | | | | | |
+| expert crop vs user crop | | | | | | |
+
+Каждое неизвестное поле = `UNKNOWN`, а не предполагаемое совпадение.
+
+Domain applicability score:
+
+```text
+AxisScore_j ∈ {0, 0.5, 1}
+
+DomainApplicability =
+  Σ_j Weight_j * AxisScore_j
+  / Σ_j Weight_j
+```
+
+Где:
+
+```text
+0   = mismatch или отсутствие обязательного evidence;
+0.5 = частичное/косвенное evidence;
+1   = прямое external validation evidence.
+```
+
+Safety override:
+
+```text
+если input unit, reference standard или patient-level aggregation
+не соответствует intended use:
+  patient/clinical GO = запрещён независимо от среднего score.
+```
+
+## 13.5. Cell-to-patient aggregation
+
+Если предлагается переход от клеток к мазку или пациенту, потребуй:
+
+- protocol выбора полей зрения;
+- число полей;
+- число клеток;
+- handling overlapping cells;
+- handling unreadable fields;
+- reference count;
+- slide identifier;
+- patient identifier;
+- stopping rule;
+- aggregation formula;
+- threshold;
+- uncertainty propagation;
+- mixed-species handling;
+- independent validation.
+
+Не принимай простое большинство классов или среднее softmax как валидированный
+patient rule.
+
+Для иллюстрации зависимости от cell-level errors:
+
+```text
+K = число просмотренных клеток
+q = истинная доля заражённых клеток
+Se_cell = cell sensitivity
+Sp_cell = cell specificity
+
+P(predicted positive cell)
+= q * Se_cell + (1 - q) * (1 - Sp_cell)
+```
+
+Но эта формула не определяет patient diagnosis без sampling design,
+cluster dependence, detection errors и validated slide-level threshold.
+
+## 13.6. UI/API safety contract
+
+Проверь, что UI и backend сообщают:
+
+- `task = pre_cropped_single_cell_classification`;
+- `analysis_level = cell`;
+- `intended_use = research_only`;
+- score не калиброван;
+- patient diagnosis отсутствует;
+- parasitemia отсутствует;
+- slide aggregation отсутствует;
+- требуется human review;
+- unsupported use перечислен явно;
+- model-unavailable state не скрывается.
+
+UI не должен:
+
+- писать «пациент заражён»;
+- отображать score как diagnostic probability;
+- автоматически рекомендовать treatment;
+- использовать зелёный/красный цвет как единственный носитель смысла;
+- разрешать пользователю принять whole-slide input за поддерживаемый;
+- скрывать отсутствие approved model.
+
+Backend должен предоставлять машиночитаемый intended-use contract.
+
+## 13.7. Выходные артефакты
+
+Создай:
+
+```text
+audit/phase6/INTENDED_USE_AUDIT.md
+audit/phase6/PIPELINE_CHAIN_MATRIX.csv
+audit/phase6/DOMAIN_MISMATCH_MATRIX.csv
+audit/phase6/UI_BACKEND_SAFETY_CONTRACT.md
+audit/phase6/FINDINGS.csv
+```
+
+Gate:
+
+```text
+exact task установлен;
+уровни анализа разделены;
+pipeline gaps перечислены;
+domain assumptions не скрыты;
+patient-level language отсутствует;
+UI/backend contract покрыт тестами.
+```
+
+---
+
+# 14. ФАЗА 7 — АУДИТ ДАННЫХ
+
+## 14.1. Scope и разделение datasets
+
+Различай:
+
+```text
+CURRENT_MODEL_TRAINING_DATASET
+CURRENT_MODEL_VALIDATION_DATASET
+REFERENCE_PUBLIC_DATASET
+PROPOSED_FUTURE_DATASET
+RUNTIME_USER_DATA
+```
+
+Наличие NIH/NLM dataset не доказывает, что неизвестная модель обучалась на нём.
+Не объединяй разные NLM resources:
+
+- cropped `cell_images.zip`;
+- whole thin-smear images;
+- thick-smear P. falciparum;
+- thick-smear P. vivax;
+- uninfected thick-smear images;
+- MalariaScreener resources.
+
+## 14.2. Dataset Datasheet
+
+Создай отдельный datasheet для каждого dataset:
+
+| Field | Value | Status | Evidence | Limitation |
+|---|---|---|---|---|
+
+Поля:
+
+- exact name/version;
+- source URL/repository;
+- immutable snapshot/checksum;
+- owner/maintainer;
+- creation purpose;
+- intended use;
+- prohibited/out-of-scope use;
+- consent;
+- IRB/ethics approval;
+- de-identification;
+- data protection controls;
+- license and redistribution;
+- commercial-use implications;
+- number of patients;
+- number of slides;
+- number of fields of view;
+- number of cell crops;
+- geography/site;
+- collection dates;
+- care setting;
+- age/sex/clinical subgroups;
+- symptomatic/asymptomatic status;
+- prevalence;
+- smear type;
+- stain and protocol;
+- magnification/objective;
+- microscope;
+- camera/sensor/adapter;
+- resolution and color space;
+- compression;
+- Plasmodium species;
+- life-cycle stages;
+- class definitions;
+- inclusion/exclusion criteria;
+- annotation tool/procedure;
+- number and qualification of annotators;
+- blinding;
+- inter-rater agreement;
+- adjudication;
+- reference standard;
+- missing values;
+- duplicates and near-duplicates;
+- artefacts;
+- class balance;
+- subgroup representation;
+- known revisions/errors.
+
+Status:
+
+```text
+VERIFIED
+OBSERVED
+INFERRED
+UNKNOWN
+NOT_APPLICABLE
+```
+
+## 14.3. Dataset lineage
+
+Построй lineage:
+
+```text
+patient
+  -> specimen
+  -> slide
+  -> field_of_view
+  -> original_image
+  -> cell_crop
+  -> augmentation
+  -> split
+  -> prediction
+```
+
+Для каждого asset должен существовать machine-readable lineage key.
+
+Minimum record:
+
+```text
+dataset_version
+patient_id_pseudonymous
+specimen_id
+slide_id
+field_id
+source_image_id
+crop_id
+augmentation_parent_id
+split
+label
+annotator/adjudication reference
+sha256
+```
+
+Не публикуй прямые patient identifiers.
+
+## 14.4. Data leakage protocol
+
+Split выполняй строго в порядке:
+
+```text
+patient
+  > slide
+  > field of view
+  > original image
+  > cell crop
+  > augmented variant
+```
+
+Все потомки одного верхнеуровневого объекта должны находиться в одном split.
+
+Главное invariant:
+
+```text
+∀ asset_i, asset_j:
+  Related(asset_i, asset_j) = true
+  => Split(asset_i) = Split(asset_j)
+```
+
+Проверь:
+
+1. exact SHA-256 duplicates;
+2. duplicate filenames с разным путём;
+3. perceptual hash;
+4. EXIF/acquisition metadata;
+5. identical dimensions/crops;
+6. embedding nearest neighbours;
+7. patient/slide mapping;
+8. augmentation parentage;
+9. background/stain/site fingerprints;
+10. temporal leakage;
+11. label-derived filenames;
+12. preprocessing до split.
+
+Если data доступны:
+
+```text
+exact_duplicate_rate =
+  duplicated_assets / total_assets
+
+cross_split_duplicate_rate =
+  cross_split_duplicate_assets / total_assets
+
+leakage_cluster_rate =
+  clusters_spanning_multiple_splits / all_related_clusters
+```
+
+`cross_split_duplicate_rate > 0` является STOP-SHIP для locked test set до
+расследования.
+
+Если patient identifiers отсутствуют:
+
+- leakage нельзя надёжно исключить;
+- image-level split не считается patient-independent;
+- perceptual/embedding analysis только снижает, но не устраняет неопределённость;
+- patient-level confidence intervals недоступны;
+- clinical generalization claim запрещён.
+
+## 14.5. Bias и quality audit
+
+Проверь независимо:
+
+- class imbalance;
+- spectrum bias;
+- selection bias;
+- verification bias;
+- incorporation bias;
+- label noise;
+- annotation drift;
+- prevalence distortion;
+- site/device confounding;
+- stain batch effects;
+- acquisition operator effects;
+- subgroup underrepresentation;
+- missing-not-at-random;
+- exclusion of hard/unreadable cases;
+- duplicated controls;
+- dataset shift.
+
+Для каждого риска:
+
+```text
+Risk ID
+Mechanism
+Evidence
+Affected estimand
+Direction of bias
+Severity
+Detectability
+Mitigation
+Acceptance criterion
+```
+
+## 14.6. Dataset quality gates
+
+```text
+D1 Provenance:
+  version, owner, source, license, ethics;
+
+D2 Lineage:
+  patient/slide/FOV/crop relationships;
+
+D3 Split:
+  patient-isolated locked test set;
+
+D4 Labels:
+  reference standard, annotators, adjudication;
+
+D5 Representativeness:
+  intended population/site/device/stain;
+
+D6 Integrity:
+  checksums, duplicate and leakage analysis;
+
+D7 Documentation:
+  complete datasheet and known limitations.
+```
+
+Если D1, D2 или D3 не пройден:
+
+```text
+independent model performance = NOT ESTABLISHED
+clinical use = NO-GO
+```
+
+## 14.7. Обязательные deliverables
+
+Создай:
+
+```text
+audit/phase7/DATASET_DATASHEET_CURRENT.md
+audit/phase7/DATASET_DATASHEET_NIH_REFERENCE.md
+audit/phase7/DATA_LINEAGE_REQUIREMENTS.md
+audit/phase7/LEAKAGE_AUDIT.md
+audit/phase7/BIAS_RISK_REGISTER.csv
+audit/phase7/DATASET_GATES.md
+```
+
+---
+
+# 15. ФАЗА 8 — МАТЕМАТИЧЕСКАЯ ВАЛИДАЦИЯ МОДЕЛИ
+
+## 15.1. Preconditions
+
+До вычисления метрик зафиксируй:
+
+```text
+model artifact SHA-256
+code commit
+environment/container digest
+dataset version and checksum
+locked split checksum
+analysis level
+positive class
+reference standard
+operating threshold
+seed
+exclusions
+failed cases policy
+```
+
+Если predictions/reference labels отсутствуют:
+
+```text
+result = NOT EXECUTED
+reason = INSUFFICIENT EVIDENCE
+```
+
+Запрещено генерировать synthetic metrics и выдавать их за model performance.
+Гипотетические числа разрешены только как явно маркированная математическая
+иллюстрация.
+
+## 15.2. Analysis levels
+
+Вычисляй отдельные отчёты:
+
+```text
+CELL_LEVEL
+SLIDE_LEVEL
+PATIENT_LEVEL
+```
+
+Каждый отчёт должен иметь собственные `N`, confusion matrix, CI и unit IDs.
+Нельзя использовать тысячи cell crops как независимые patient observations.
+
+## 15.3. Confusion matrix и основные метрики
+
+Пусть:
+
+```text
+TP = true positive
+TN = true negative
+FP = false positive
+FN = false negative
+```
+
+Рассчитай:
+
+```text
+Sensitivity = TP / (TP + FN)
+
+Specificity = TN / (TN + FP)
+
+PPV = TP / (TP + FP)
+
+NPV = TN / (TN + FN)
+
+F1 = 2TP / (2TP + FP + FN)
+
+BalancedAccuracy =
+  0.5 * (Sensitivity + Specificity)
+
+FPR = FP / (FP + TN)
+
+FNR = FN / (FN + TP)
+
+MCC =
+  (TP*TN - FP*FN)
+  / sqrt((TP+FP)(TP+FN)(TN+FP)(TN+FN))
+```
+
+Undefined denominator должен давать `UNDEFINED`, не `0`.
+
+Обязательно:
+
+- confusion matrix;
+- sensitivity;
+- specificity;
+- PPV;
+- NPV;
+- F1;
+- balanced accuracy;
+- MCC;
+- ROC curve;
+- AUROC;
+- PR curve;
+- AUPRC;
+- threshold;
+- 95% CI;
+- failed/rejected case count.
+
+Accuracy не является главной метрикой.
+
+## 15.4. Prevalence shift
+
+Для prevalence `π`:
+
+```text
+PPV(π) =
+  Sensitivity * π
+  / (
+      Sensitivity * π
+      + (1 - Specificity) * (1 - π)
+    )
+
+NPV(π) =
+  Specificity * (1 - π)
+  / (
+      (1 - Sensitivity) * π
+      + Specificity * (1 - π)
+    )
+```
+
+Покажи таблицу минимум для:
+
+```text
+π ∈ {0.01, 0.05, 0.10, 0.25, 0.50}
+```
+
+Добавь intended-setting prevalence только с источником.
+
+Balanced dataset:
+
+```text
+π_test = 0.50
+```
+
+не означает:
+
+```text
+π_deployment = 0.50
+```
+
+Поэтому test PPV нельзя автоматически переносить в clinical population.
+
+## 15.5. Confidence intervals
+
+Для sensitivity denominator:
+
+```text
+n_positive = число независимых положительных units
+```
+
+Для specificity:
+
+```text
+n_negative = число независимых отрицательных units
+```
+
+Выполни:
+
+1. Wilson interval;
+2. Clopper-Pearson interval;
+3. patient/slide-level cluster bootstrap;
+4. минимум 2000 resamples при достаточных ресурсах;
+5. seed по умолчанию `20260728`;
+6. percentile и при наличии tooling BCa sensitivity analysis.
+
+Если clusters содержат один outcome class, зафиксируй unstable/undefined
+bootstrap, не подменяй iid interval.
+
+## 15.6. Validation cohort size
+
+Первичная аппроксимация:
+
+```text
+n_positive ≈
+  z_(1-α/2)^2 * Se * (1-Se) / d_Se^2
+
+n_negative ≈
+  z_(1-α/2)^2 * Sp * (1-Sp) / d_Sp^2
+```
+
+Для clustering:
+
+```text
+DE = 1 + (m - 1) * ρ_ICC
+n_adjusted = ceil(n * DE)
+```
+
+Покажи sensitivity analysis по:
+
+- ожидаемым Se/Sp;
+- half-width;
+- cluster size;
+- ICC;
+- dropout/unreadable rate;
+- subgroup objectives.
+
+Это planning approximation, не окончательный clinical study design.
+Финальный protocol утверждает биостатистик.
+
+## 15.7. Calibration
+
+На независимом calibration split:
+
+```text
+BrierScore =
+  (1/N) * Σ_i (p_i - y_i)^2
+
+NLL =
+  -(1/N) * Σ_i [
+    y_i log(p_i)
+    + (1-y_i) log(1-p_i)
+  ]
+
+ECE =
+  Σ_b (n_b/N) * |accuracy(b) - confidence(b)|
+```
+
+Представь:
+
+- reliability diagram;
+- Brier;
+- NLL;
+- ECE с binning definition;
+- calibration intercept;
+- calibration slope;
+- confidence intervals, где применимо.
+
+Сравни:
+
+- uncalibrated;
+- temperature scaling;
+- Platt scaling;
+- isotonic regression.
+
+Правила:
+
+```text
+fit calibrator on calibration split only;
+select method without test leakage;
+evaluate final calibrator once on locked test;
+store calibrator artifact and checksum;
+do not call softmax a calibrated probability by default.
+```
+
+## 15.8. Threshold и clinical cost
+
+Не используй только `argmax`.
+
+```text
+ExpectedCost(t) =
+  C_FN * FN(t)
+  + C_FP * FP(t)
+  + C_REJECT * Reject(t)
+  + C_DELAY * Delay(t)
+```
+
+Оптимизация:
+
+```text
+minimize ExpectedCost(t)
+
+subject to:
+  Sensitivity(t) >= Se_min
+  Specificity(t) >= Sp_min
+```
+
+Costs и constraints должны происходить из intended use, clinical experts и
+risk management. Если они неизвестны:
+
+- threshold остаётся research-only;
+- проведи sensitivity analysis по сетке cost ratios;
+- не выбирай произвольный «оптимальный» threshold;
+- покажи Pareto frontier sensitivity/specificity/coverage.
+
+## 15.9. Selective classification
+
+```text
+accept(x) = 1, если uncertainty(x) <= τ
+reject(x) = 1, иначе
+
+Coverage(τ) =
+  accepted / N
+
+SelectiveRisk(τ) =
+  errors_among_accepted / accepted
+```
+
+Построй risk-coverage curve для:
+
+- max softmax probability baseline;
+- predictive entropy;
+- top-two margin;
+- temperature-scaled confidence;
+- deep ensemble, если trained replicas доступны;
+- approved OOD score.
+
+Укажи:
+
+- rejected count;
+- rejection handling;
+- human escalation;
+- delay;
+- subgroup coverage;
+- false reassurance risk.
+
+Softmax confidence не является автоматической оценкой эпистемической
+неопределённости.
+
+## 15.10. Model comparison
+
+Для одинаковых cases:
+
+- exact/standard McNemar для paired binary correctness;
+- DeLong для correlated AUROC;
+- cluster bootstrap для delta sensitivity/specificity;
+- CI для всех deltas;
+- correction for multiple comparisons;
+- predefined primary comparator;
+- clinically meaningful non-inferiority/superiority margin.
+
+Не объявляй победителя:
+
+- по третьему знаку;
+- без paired analysis;
+- без CI;
+- после post-hoc выбора subgroup;
+- при несовпадающих test sets.
+
+## 15.11. Исполняемый validation toolkit
+
+Реализуй dependency-minimal offline module, который:
+
+- валидирует binary labels/probabilities;
+- не скрывает undefined metrics;
+- вычисляет confusion matrix и threshold metrics;
+- строит ROC/PR curve points и AUC;
+- вычисляет prevalence transport;
+- вычисляет Wilson и exact Clopper-Pearson;
+- выполняет seeded cluster bootstrap;
+- вычисляет Brier/NLL/ECE/reliability;
+- строит MSP risk-coverage baseline;
+- вычисляет sample-size approximation;
+- вычисляет explicit expected cost;
+- поддерживает exact McNemar;
+- покрыт unit tests;
+- не принимает patient data через публичный endpoint;
+- не заявляет validation без настоящего locked cohort.
+
+## 15.12. Обязательные deliverables
+
+Создай:
+
+```text
+audit/phase8/MATHEMATICAL_VALIDATION_STATUS.md
+audit/phase8/STATISTICAL_ANALYSIS_PLAN.md
+audit/phase8/PREVALENCE_SHIFT_ILLUSTRATION.csv
+audit/phase8/SAMPLE_SIZE_SCENARIOS.csv
+audit/phase8/CALIBRATION_AND_SELECTIVE_PLAN.md
+audit/phase8/MODEL_COMPARISON_PLAN.md
+audit/phase8/VALIDATION_TOOLKIT_VERIFICATION.md
+audit/phase8/VARIATION_REPORT.md
+```
+
+Gate:
+
+```text
+calculations unit-tested;
+analysis levels explicit;
+no invented model metrics;
+all unavailable analyses marked NOT EXECUTED;
+seed/method recorded;
+clinical threshold remains unapproved without cost evidence;
+GO/NO-GO updated.
+```
+
+---
+
+# 16. ФАЗА 9 — формализация требований
 
 Создай requirements registry:
 
@@ -1572,7 +2480,7 @@ reason отображается в aria-live,
 
 ---
 
-# 14. Математическая приоритизация
+# 17. Математическая приоритизация
 
 Используй несколько моделей одновременно.
 
@@ -1664,7 +2572,7 @@ Priority_i =
 
 ---
 
-# 15. Архитектурные варианты
+# 18. Архитектурные варианты
 
 Для каждой крупной функции сравни:
 
@@ -1705,7 +2613,7 @@ Complexity     0.05
 
 ---
 
-# 16. ADR
+# 19. ADR
 
 Для архитектурных решений создай ADR:
 
@@ -1737,7 +2645,7 @@ Verification
 
 ---
 
-# 17. Backend remediation
+# 20. Backend remediation
 
 ## 17.1. API surface
 
@@ -1840,7 +2748,7 @@ Semaphore/queue slot нельзя освобождать до фактическ
 
 ---
 
-# 18. Model/MLOps gate
+# 21. Model/MLOps gate
 
 ## 18.1. Нельзя подменять модель
 
@@ -1905,7 +2813,7 @@ approval
 
 ---
 
-# 19. UI implementation
+# 22. UI implementation
 
 ## 19.1. Product semantics
 
@@ -1993,7 +2901,7 @@ UI должен ясно показывать:
 
 ---
 
-# 20. Authentication and authorization
+# 23. Authentication and authorization
 
 Не внедряй случайную auth-систему без deployment context.
 
@@ -2030,7 +2938,7 @@ UI должен ясно показывать:
 
 ---
 
-# 21. Reliability и performance
+# 24. Reliability и performance
 
 ## 21.1. Capacity model
 
@@ -2110,7 +3018,7 @@ request_peak_memory ≈
 
 ---
 
-# 22. Observability
+# 25. Observability
 
 Проверить/реализовать:
 
@@ -2154,7 +3062,7 @@ Errors
 
 ---
 
-# 23. Dependency и build reproducibility
+# 26. Dependency и build reproducibility
 
 Проверить:
 
@@ -2188,7 +3096,7 @@ input constraints
 
 ---
 
-# 24. Container/CI/CD
+# 27. Container/CI/CD
 
 ## 24.1. Docker
 
@@ -2251,7 +3159,7 @@ input constraints
 
 ---
 
-# 25. Security threat model
+# 28. Security threat model
 
 Построй:
 
@@ -2291,7 +3199,7 @@ residual risk
 
 ---
 
-# 26. Тестовая архитектура
+# 29. Тестовая архитектура
 
 ## 26.1. Pyramid
 
@@ -2368,7 +3276,7 @@ static
 
 ---
 
-# 27. Statistical/clinical track
+# 30. Statistical/clinical track
 
 Этот track не блокирует улучшение software skeleton, но блокирует claims.
 
@@ -2439,7 +3347,7 @@ clinical gate = FAIL
 
 ---
 
-# 28. Implementation batching
+# 31. Implementation batching
 
 ## Batch A — correctness/safety
 
@@ -2489,7 +3397,7 @@ diff review
 
 ---
 
-# 29. Вариационная проверка
+# 32. Вариационная проверка
 
 Проведи минимум четыре review passes.
 
@@ -2540,7 +3448,7 @@ find
 
 ---
 
-# 30. Definition of Done
+# 33. Definition of Done
 
 Software increment завершён только если:
 
@@ -2584,7 +3492,7 @@ Clinical readiness завершена только если:
 
 ---
 
-# 31. Обязательные deliverables
+# 34. Обязательные deliverables
 
 Создай:
 
@@ -2619,7 +3527,7 @@ docs/
 
 ---
 
-# 32. Формат implementation log
+# 35. Формат implementation log
 
 | Change ID | Requirement | Risk | Files | Behavior | Tests | Status | Residual |
 |---|---|---|---|---|---|---|---|
@@ -2639,7 +3547,7 @@ Verification
 
 ---
 
-# 33. Финальный GO/NO-GO
+# 36. Финальный GO/NO-GO
 
 Дай отдельный verdict:
 
@@ -2670,7 +3578,7 @@ Verdicts:
 
 ---
 
-# 34. Финальный ответ пользователю
+# 37. Финальный ответ пользователю
 
 Начни с результата:
 
@@ -2693,7 +3601,7 @@ Verdicts:
 
 ---
 
-# 35. Команда начала
+# 38. Команда начала
 
 После явной команды пользователя применить этот prompt:
 
@@ -2702,12 +3610,16 @@ Verdicts:
 2. Прочитай текущие audit artifacts.
 3. Выполни preflight.
 4. Зафиксируй baseline.
-5. Создай requirements/prioritization.
-6. Покажи или зафиксируй выбранные batches.
-7. Реализуй разрешённые changes.
-8. Проведи четыре review passes.
-9. Исправь defects.
-10. Сформируй final evidence и GO/NO-GO.
+5. Выполни claim, architecture и model provenance gates.
+6. Установи exact task и clinical pipeline gaps.
+7. Выполни dataset/leakage gates.
+8. Выполни mathematical validation или честно зафиксируй NOT_EXECUTED.
+9. Создай requirements/prioritization.
+10. Покажи или зафиксируй выбранные batches.
+11. Реализуй разрешённые changes.
+12. Проведи четыре review passes.
+13. Исправь defects.
+14. Сформируй final evidence и GO/NO-GO.
 ```
 
 Не останавливайся после написания плана, когда пользователь отдельно

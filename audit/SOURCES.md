@@ -1,6 +1,6 @@
 # Доказательная база
 
-Дата актуализации: 2026-07-27.
+Дата актуализации: 2026-07-28.
 
 Источники ниже использованы только в пределах их назначения. Reporting
 guidelines не интерпретированы как доказательство качества конкретной модели,
@@ -36,6 +36,22 @@ guidelines не интерпретированы как доказательст
    https://doi.org/10.1117/1.JMI.5.4.044506  
    Применимость: detection/counting в thin smears; подчёркивает отличие
    whole-smear workflow от isolated-cell classification.
+
+5a. WHO. Malaria parasite counting, microscopy SOP 09. 2016.
+    https://www.who.int/publications/i/item/HTM-GMP-MM-SOP-09
+    Применимость: counting thick/thin films является отдельной процедурой;
+    single-cell classifier её не реализует.
+
+5b. WHO/TDR. Microscopy for detection, identification and quantification of
+    malaria parasites on stained thick and thin blood films in research
+    settings. 2015.
+    https://apo.who.int/publications/i/item/2015-04-28-microscopy-for-the-detection-identification-and-quantification-of-malaria-parasites-on-stained-thick-and-thin-blood-films-in-research-settings
+    Применимость: research microscopy quality and reporting standards.
+
+5c. NLM. NIH-NLM Thin Blood Smears Pf ReadMe.
+    https://data.lhncbc.nlm.nih.gov/public/Malaria/NIH-NLM-ThinBloodSmearsPf/ReadMe.pdf
+    Применимость: отдельный whole thin-smear detection resource с patient
+    directories; не смешивать с cropped `cell_images.zip`.
 
 ## 2. Reporting и risk of bias
 

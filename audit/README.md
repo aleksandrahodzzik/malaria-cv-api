@@ -12,6 +12,10 @@
 > model provenance находятся в [`audit/phase3/`](phase3/CLAIM_TO_EVIDENCE_MATRIX.md),
 > [`audit/phase4/`](phase4/ARCHITECTURE_AUDIT.md) и
 > [`audit/phase5/`](phase5/MODEL_PROVENANCE_AUDIT.md).
+> Фазы intended use, datasets и математической валидации находятся в
+> [`audit/phase6/`](phase6/INTENDED_USE_AUDIT.md),
+> [`audit/phase7/`](phase7/DATASET_DATASHEET_CURRENT.md) и
+> [`audit/phase8/`](phase8/MATHEMATICAL_VALIDATION_STATUS.md).
 
 ## Итог
 

@@ -91,6 +91,9 @@ def test_research_ui_and_static_assets(client: TestClient) -> None:
     assert 'document.createElement("progress")' in script.text
     assert "elements.fileInput.disabled = loading" in script.text
     assert 'elements.dropZone.setAttribute("aria-disabled"' in script.text
+    assert "scopeAccepted" in script.text
+    assert "resetScopeConfirmation" in script.text
+    assert "/api/v1/methodology" in script.text
 
 
 def test_health_check_and_tracking_headers(client: TestClient) -> None:
@@ -98,7 +101,7 @@ def test_health_check_and_tracking_headers(client: TestClient) -> None:
     assert response.status_code == 200
     data = response.json()
     assert data["status"] == "healthy"
-    assert data["version"] == "1.1.0"
+    assert data["version"] == "1.2.0"
     assert "timestamp" in data
     assert re.fullmatch(
         r"[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}",
@@ -125,10 +128,37 @@ def test_capabilities_are_explicitly_research_only(client: TestClient) -> None:
     assert response.status_code == 200
     data = response.json()
     assert data["intended_use"] == "research_only"
+    assert data["task"] == "pre_cropped_single_cell_classification"
+    assert data["analysis_level"] == "cell"
     assert data["probabilities_calibrated"] is False
+    assert data["patient_diagnosis_supported"] is False
+    assert data["slide_aggregation_supported"] is False
+    assert data["parasitemia_supported"] is False
+    assert data["human_review_required"] is True
     assert data["model_configured"] is False
     assert data["max_upload_size_mb"] == settings.MAX_UPLOAD_SIZE_MB
     assert data["accepted_content_types"] == settings.ALLOWED_CONTENT_TYPES
+
+
+def test_methodology_separates_pipeline_levels(client: TestClient) -> None:
+    response = client.get("/api/v1/methodology")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["intended_task"] == "pre_cropped_single_cell_classification"
+    assert data["deployment_scope"] == "research_demonstration"
+    assert data["supported_task_codes"] == ["A", "F"]
+    assert data["unsupported_task_codes"] == ["B", "C", "D", "E"]
+    assert data["clinical_action_supported"] is False
+    assert data["human_review_required"] is True
+
+    stages = {item["stage"]: item["status"] for item in data["pipeline"]}
+    assert stages["input_image"] == "implemented"
+    assert stages["image_quality_control"] == "partial"
+    assert stages["cell_detection_or_segmentation"] == "missing"
+    assert stages["cell_classification"] == "unvalidated"
+    assert stages["slide_level_aggregation"] == "missing"
+    assert stages["patient_level_interpretation"] == "missing"
+    assert stages["clinical_action"] == "missing"
 
 
 def test_openapi_documents_safe_contract(client: TestClient) -> None:
@@ -142,6 +172,10 @@ def test_openapi_documents_safe_contract(client: TestClient) -> None:
     assert "predicted_cell_class" in prediction
     assert prediction["diagnosis"]["deprecated"] is True
     assert prediction["calibrated"]["const"] is False
+    assert prediction["analysis_level"]["const"] == "cell"
+    assert prediction["human_review_required"]["const"] is True
+    assert prediction["patient_diagnosis_supported"]["const"] is False
+    assert "/api/v1/methodology" in schema["paths"]
 
     error = schema["components"]["schemas"]["ErrorResponse"]
     assert {"code", "detail"} <= set(error["required"])
@@ -244,6 +278,12 @@ def test_analyze_success_is_research_only(
     assert data["confidence"] == 0.985
     assert data["calibrated"] is False
     assert data["intended_use"] == "research_only"
+    assert data["task"] == "pre_cropped_single_cell_classification"
+    assert data["analysis_level"] == "cell"
+    assert data["technical_input_validation_passed"] is True
+    assert data["human_review_required"] is True
+    assert data["patient_diagnosis_supported"] is False
+    assert data["parasitemia_supported"] is False
     assert len(data["limitations"]) == 3
 
 

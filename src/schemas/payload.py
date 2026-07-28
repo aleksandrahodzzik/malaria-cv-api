@@ -20,7 +20,7 @@ class HealthResponse(BaseModel):
         json_schema_extra={
             "example": {
                 "status": "healthy",
-                "version": "1.0.0",
+                "version": "1.2.0",
                 "timestamp": "2026-07-27T18:00:00Z",
             }
         }
@@ -104,6 +104,33 @@ class PredictionResponse(BaseModel):
         default="research_only",
         description="This prototype is restricted to research and engineering use",
     )
+    task: Literal["pre_cropped_single_cell_classification"] = Field(
+        default="pre_cropped_single_cell_classification",
+        description="Exact task implemented by this endpoint",
+    )
+    analysis_level: Literal["cell"] = Field(
+        default="cell",
+        description="Unit represented by this prediction",
+    )
+    technical_input_validation_passed: Literal[True] = Field(
+        default=True,
+        description=(
+            "Encoded file and serving-contract checks passed. This is not "
+            "microscopy quality control."
+        ),
+    )
+    human_review_required: Literal[True] = Field(
+        default=True,
+        description="The research output must not trigger an automated clinical action",
+    )
+    patient_diagnosis_supported: Literal[False] = Field(
+        default=False,
+        description="A single-cell output is not a patient diagnosis",
+    )
+    parasitemia_supported: Literal[False] = Field(
+        default=False,
+        description="The endpoint does not count cells or estimate parasitemia",
+    )
     limitations: list[str] = Field(
         default_factory=lambda: [
             "Not a patient-level diagnosis.",
@@ -133,6 +160,12 @@ class PredictionResponse(BaseModel):
                 ],
                 "calibrated": False,
                 "intended_use": "research_only",
+                "task": "pre_cropped_single_cell_classification",
+                "analysis_level": "cell",
+                "technical_input_validation_passed": True,
+                "human_review_required": True,
+                "patient_diagnosis_supported": False,
+                "parasitemia_supported": False,
                 "limitations": [
                     "Not a patient-level diagnosis.",
                     "Not validated for treatment decisions.",
@@ -160,8 +193,45 @@ class CapabilitiesResponse(BaseModel):
 
     api_version: str
     intended_use: Literal["research_only"] = "research_only"
+    task: Literal["pre_cropped_single_cell_classification"] = (
+        "pre_cropped_single_cell_classification"
+    )
+    analysis_level: Literal["cell"] = "cell"
     model_configured: bool
     accepted_content_types: list[str]
     max_upload_size_mb: int
     max_image_pixels: int
     probabilities_calibrated: Literal[False] = False
+    patient_diagnosis_supported: Literal[False] = False
+    slide_aggregation_supported: Literal[False] = False
+    parasitemia_supported: Literal[False] = False
+    human_review_required: Literal[True] = True
+
+
+class PipelineStage(BaseModel):
+    """One explicit link in the microscopy-to-clinical-action chain."""
+
+    order: int = Field(..., ge=1)
+    stage: str
+    status: Literal["implemented", "partial", "missing", "unvalidated"]
+    evidence: str
+
+
+class MethodologyResponse(BaseModel):
+    """Exact intended task and unsupported downstream clinical workflow."""
+
+    intended_task: Literal["pre_cropped_single_cell_classification"] = (
+        "pre_cropped_single_cell_classification"
+    )
+    deployment_scope: Literal["research_demonstration"] = "research_demonstration"
+    supported_task_codes: list[Literal["A", "F"]] = ["A", "F"]
+    unsupported_task_codes: list[Literal["B", "C", "D", "E"]] = [
+        "B",
+        "C",
+        "D",
+        "E",
+    ]
+    pipeline: list[PipelineStage]
+    domain_assumptions_unvalidated: list[str]
+    clinical_action_supported: Literal[False] = False
+    human_review_required: Literal[True] = True

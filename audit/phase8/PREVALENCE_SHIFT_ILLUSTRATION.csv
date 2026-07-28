@@ -1,0 +1,6 @@
+Scenario,Status,Sensitivity,Specificity,Prevalence,PPV,NPV,Interpretation
+HYPOTHETICAL_ONLY,NOT_MODEL_PERFORMANCE,0.95,0.90,0.01,0.087558,0.999439,"At 1% prevalence most positive outputs would be false positives despite high hypothetical sensitivity"
+HYPOTHETICAL_ONLY,NOT_MODEL_PERFORMANCE,0.95,0.90,0.05,0.333333,0.997085,"PPV differs materially from a balanced benchmark"
+HYPOTHETICAL_ONLY,NOT_MODEL_PERFORMANCE,0.95,0.90,0.10,0.513514,0.993865,"About half of positive outputs are true under these hypothetical assumptions"
+HYPOTHETICAL_ONLY,NOT_MODEL_PERFORMANCE,0.95,0.90,0.25,0.760000,0.981818,"Predictive values depend on population prevalence"
+HYPOTHETICAL_ONLY,NOT_MODEL_PERFORMANCE,0.95,0.90,0.50,0.904762,0.947368,"Balanced prevalence resembles benchmark composition but not necessarily deployment"

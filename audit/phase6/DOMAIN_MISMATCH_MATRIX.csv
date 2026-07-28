@@ -1,0 +1,15 @@
+DomainAxis,TrainingDomain,ValidationDomain,RuntimeDomain,Evidence,Mismatch,Impact
+input_unit,UNKNOWN,UNKNOWN,pre-cropped single-cell upload,API contract only,UNKNOWN,critical
+cropped_vs_whole_slide,UNKNOWN,UNKNOWN,whole-slide unsupported,code inspection,UNKNOWN,critical
+smear_type,UNKNOWN,UNKNOWN,user-controlled and unverified,no model card,UNKNOWN,critical
+laboratory_vs_smartphone,UNKNOWN,UNKNOWN,user-controlled and unverified,no acquisition metadata,UNKNOWN,high
+stain_protocol,UNKNOWN,UNKNOWN,user-controlled and unverified,no biological QC,UNKNOWN,critical
+objective_magnification,UNKNOWN,UNKNOWN,user-controlled and unverified,no acquisition metadata,UNKNOWN,high
+camera_compression,UNKNOWN,UNKNOWN,JPEG PNG or WEBP,no training provenance,UNKNOWN,high
+Plasmodium_species,UNKNOWN,UNKNOWN,not collected,no model card,UNKNOWN,critical
+life_cycle_stage,UNKNOWN,UNKNOWN,not collected,no model card,UNKNOWN,high
+geography_site,UNKNOWN,UNKNOWN,not collected,no model card,UNKNOWN,critical
+age_subgroup,UNKNOWN,UNKNOWN,not collected,no model card,UNKNOWN,high
+symptomatic_vs_screening,UNKNOWN,UNKNOWN,not collected,no intended population,UNKNOWN,critical
+benchmark_vs_prevalence,UNKNOWN,UNKNOWN,not collected,no deployment cohort,UNKNOWN,critical
+expert_crop_vs_user_crop,UNKNOWN,UNKNOWN,user-selected crop,UI and API behavior,LIKELY,high

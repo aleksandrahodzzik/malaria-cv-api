@@ -13,6 +13,7 @@ const elements = {
   cancelButton: document.querySelector("#cancel-button"),
   buttonLabel: document.querySelector(".button-label"),
   formError: document.querySelector("#form-error"),
+  scopeConfirmation: document.querySelector("#scope-confirmation"),
   statusDot: document.querySelector("#status-dot"),
   statusText: document.querySelector("#service-status-text"),
   limitsLabel: document.querySelector("#limits-label"),
@@ -24,6 +25,7 @@ const elements = {
   scoreList: document.querySelector("#score-list"),
   resultFile: document.querySelector("#result-file"),
   executionTime: document.querySelector("#execution-time"),
+  pipelineList: document.querySelector("#pipeline-list"),
 };
 
 const state = {
@@ -31,6 +33,7 @@ const state = {
   previewUrl: null,
   requestController: null,
   ready: false,
+  scopeAccepted: false,
   capabilities: {
     accepted_content_types: ["image/jpeg", "image/png", "image/webp"],
     max_upload_size_mb: 10,
@@ -71,7 +74,8 @@ function setReadiness(ready, reason = null) {
 
 function updateSubmitState() {
   const loading = state.requestController !== null;
-  elements.analyzeButton.disabled = !state.selectedFile || !state.ready || loading;
+  elements.analyzeButton.disabled =
+    !state.selectedFile || !state.ready || !state.scopeAccepted || loading;
 }
 
 function revokePreview() {
@@ -81,8 +85,14 @@ function revokePreview() {
   }
 }
 
+function resetScopeConfirmation() {
+  state.scopeAccepted = false;
+  elements.scopeConfirmation.checked = false;
+}
+
 function clearFile() {
   revokePreview();
+  resetScopeConfirmation();
   state.selectedFile = null;
   elements.fileInput.value = "";
   elements.preview.removeAttribute("src");
@@ -116,6 +126,7 @@ function selectFile(file) {
   }
 
   revokePreview();
+  resetScopeConfirmation();
   state.selectedFile = file;
   state.previewUrl = URL.createObjectURL(file);
   elements.preview.src = state.previewUrl;
@@ -170,6 +181,44 @@ function renderResult(result) {
   elements.resultContent.focus?.();
 }
 
+function renderPipeline(methodology) {
+  const labels = {
+    input_image: "Входное изображение",
+    image_quality_control: "Контроль качества изображения",
+    cell_detection_or_segmentation: "Детекция / сегментация клетки",
+    cell_classification: "Классификация клетки",
+    slide_level_aggregation: "Агрегация на уровне мазка",
+    patient_level_interpretation: "Интерпретация пациента",
+    human_review: "Проверка человеком",
+    clinical_action: "Клиническое действие",
+  };
+  const statuses = {
+    implemented: "Реализовано",
+    partial: "Частично",
+    missing: "Отсутствует",
+    unvalidated: "Не валидировано",
+  };
+
+  elements.pipelineList.replaceChildren();
+  methodology.pipeline.forEach((item) => {
+    const row = document.createElement("li");
+    row.className = `pipeline-stage status-${item.status}`;
+
+    const header = document.createElement("div");
+    const title = document.createElement("strong");
+    title.textContent = labels[item.stage] || item.stage;
+    const status = document.createElement("span");
+    status.className = "pipeline-status";
+    status.textContent = statuses[item.status] || item.status;
+    header.append(title, status);
+
+    const evidence = document.createElement("p");
+    evidence.textContent = item.evidence;
+    row.append(header, evidence);
+    elements.pipelineList.append(row);
+  });
+}
+
 async function fetchJson(url, options = {}) {
   const response = await fetch(url, {
     ...options,
@@ -198,6 +247,18 @@ async function loadCapabilities() {
       `До ${state.capabilities.max_upload_size_mb} MB на файл`;
   } catch {
     elements.fileHelp.textContent = "Не удалось получить ограничения API";
+  }
+}
+
+async function loadMethodology() {
+  try {
+    renderPipeline(await fetchJson("/api/v1/methodology"));
+  } catch {
+    elements.pipelineList.replaceChildren();
+    const error = document.createElement("li");
+    error.className = "pipeline-placeholder";
+    error.textContent = "Не удалось получить описание границ системы.";
+    elements.pipelineList.append(error);
   }
 }
 
@@ -282,6 +343,10 @@ elements.dropZone.addEventListener("drop", (event) => {
 });
 
 elements.removeFile.addEventListener("click", clearFile);
+elements.scopeConfirmation.addEventListener("change", () => {
+  state.scopeAccepted = elements.scopeConfirmation.checked;
+  updateSubmitState();
+});
 elements.form.addEventListener("submit", analyze);
 elements.cancelButton.addEventListener("click", () => {
   state.requestController?.abort();
@@ -294,6 +359,7 @@ document.addEventListener("visibilitychange", () => {
 window.addEventListener("beforeunload", revokePreview);
 
 void loadCapabilities();
+void loadMethodology();
 void checkReadiness();
 window.setInterval(() => {
   if (!document.hidden && state.requestController === null) {
