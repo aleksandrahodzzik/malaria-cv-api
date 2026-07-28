@@ -1,0 +1,59 @@
+# Полный аудит `malaria-cv-api`
+
+Версия отчёта: 1.0.0  
+Дата фиксации: 2026-07-27  
+Режим: READ-ONLY для production-кода  
+Корень: `C:\Users\Oleksandra\OneDrive\Desktop\biologi_test1`
+
+## Итог
+
+Проект представляет собой аккуратно оформленный API-каркас, но не является
+работоспособной и доказанной медицинской ML-системой. Итоговый вердикт:
+**NO-GO для production, публичного ML API, исследований с выводами об
+эффективности и любого клинического применения**.
+
+Главная блокирующая причина: настроенная модель
+`trpakov/vit-malaria-classification` не обнаружена в публичном профиле автора,
+не находится в локальном Hugging Face cache, а тесты намеренно подменяют
+загрузку и инференс. Следовательно, реальный путь
+`image -> processor -> model -> logits -> label` не был воспроизведён.
+
+## Состав отчёта
+
+- [EXECUTIVE_SUMMARY.md](EXECUTIVE_SUMMARY.md) — управленческий вывод,
+  оценка готовности и stop-ship условия.
+- [REPOSITORY_INVENTORY.md](REPOSITORY_INVENTORY.md) — baseline, структура,
+  версии и границы проверенного окружения.
+- [EXECUTION_LOG.md](EXECUTION_LOG.md) — воспроизводимый журнал команд и
+  статусы `PASS/FAIL/NOT EXECUTED`.
+- [TECHNICAL_AUDIT.md](TECHNICAL_AUDIT.md) — код, API, тесты, зависимости,
+  контейнер и CI/CD.
+- [MODEL_DATA_STATISTICAL_AUDIT.md](MODEL_DATA_STATISTICAL_AUDIT.md) —
+  происхождение модели, данные, математический протокол оценки, калибровка,
+  OOD и клиническая полезность.
+- [SECURITY_RELIABILITY_AUDIT.md](SECURITY_RELIABILITY_AUDIT.md) — threat
+  model, abuse cases, отказоустойчивость и нагрузочная валидация.
+- [CLINICAL_REGULATORY_AUDIT.md](CLINICAL_REGULATORY_AUDIT.md) — intended
+  use, клинические ограничения и регуляторные разрывы.
+- [DEVELOPMENT_ROADMAP.md](DEVELOPMENT_ROADMAP.md) — приоритетный план
+  0/30/60/90/180 дней.
+- [EVIDENCE_MATRIX.csv](EVIDENCE_MATRIX.csv) — трассировка заявлений к
+  доказательствам.
+- [RISK_REGISTER.csv](RISK_REGISTER.csv) — реестр рисков и критерии закрытия.
+- [SOURCES.md](SOURCES.md) — проверенная доказательная база и область
+  применимости источников.
+- [FINAL_GO_NO_GO.md](FINAL_GO_NO_GO.md) — отдельные решения по сценариям
+  эксплуатации.
+
+## Легенда достоверности
+
+- `OBSERVED` — непосредственно найдено в репозитории или выводе команды.
+- `VERIFIED` — подтверждено воспроизводимым тестом или первоисточником.
+- `INFERRED` — логический вывод из нескольких доказательств.
+- `HYPOTHESIS` — проверяемое предположение.
+- `RECOMMENDATION` — предлагаемое действие.
+- `UNKNOWN` — данных недостаточно.
+
+Зелёный unit-тест не интерпретировался как подтверждение медицинской
+эффективности. Reporting guidelines использованы как контроль полноты
+отчётности, а не как сертификат качества.
