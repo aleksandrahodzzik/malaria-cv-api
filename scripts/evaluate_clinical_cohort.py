@@ -30,8 +30,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--output",
         type=Path,
-        default=PROJECT_ROOT
-        / "audit/remediation/CLINICAL_VALIDATION_REPORT.md",
+        default=PROJECT_ROOT / "audit/remediation/CLINICAL_VALIDATION_REPORT.md",
     )
     parser.add_argument("--threshold", type=float, default=0.5)
     parser.add_argument("--generate-synthetic", action="store_true")

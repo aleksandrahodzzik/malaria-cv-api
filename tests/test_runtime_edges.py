@@ -236,9 +236,7 @@ def test_model_contract_failure_variants(
 
 def _ready_service_with_logits(logits: torch.Tensor) -> MalariaClassifierService:
     service = MalariaClassifierService("approved")
-    service.processor = MagicMock(
-        return_value={"pixel_values": torch.ones(1, 3, 2, 2)}
-    )
+    service.processor = MagicMock(return_value={"pixel_values": torch.ones(1, 3, 2, 2)})
     service.model = MagicMock(return_value=MagicMock(logits=logits))
     service._id2label = {0: "Parasitized", 1: "Uninfected"}
     service._is_ready = True

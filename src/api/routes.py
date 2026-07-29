@@ -248,9 +248,7 @@ async def readiness_check(
             registry.independent_trust_anchor if registry is not None else False
         ),
         model_revision=manifest.revision if manifest is not None else None,
-        manifest_sha256=(
-            registry.manifest_sha256 if registry is not None else None
-        ),
+        manifest_sha256=(registry.manifest_sha256 if registry is not None else None),
         registry_kind=registry.kind.value if registry is not None else None,
     )
 

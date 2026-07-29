@@ -4,6 +4,16 @@
 
 ## Final commands
 
+### Ruff formatting
+
+```text
+Command: .venv\Scripts\python.exe -m ruff format --check src tests scripts
+Exit code: 0
+Relevant stdout: 41 files already formatted
+Relevant stderr: empty
+Interpretation: PASS
+```
+
 ### Ruff
 
 ```text
@@ -107,6 +117,10 @@ Interpretation: PASS for software/statistical pipeline; NOT clinical evidence
 
 Variation: первый expansion `git diff --check` обнаружил два Markdown trailing
 spaces. Они удалены; повторный запуск завершился с exit code 0.
+
+Variation: первый GitHub Actions run для expansion остановился на `Check
+Formatting`. Локальный запуск воспроизвёл расхождение, `ruff format` исправил
+10 файлов, после чего format check, Ruff, mypy и все 185 тестов прошли повторно.
 
 ## Not executed
 

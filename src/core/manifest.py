@@ -131,9 +131,7 @@ def verify_model_manifest(
     if expected_revision is not None and manifest.revision != expected_revision.lower():
         raise ModelArtifactVerificationError("Manifest revision mismatch.")
 
-    actual_labels = [
-        manifest.id2label[index] for index in sorted(manifest.id2label)
-    ]
+    actual_labels = [manifest.id2label[index] for index in sorted(manifest.id2label)]
     if set(manifest.id2label) != set(range(len(manifest.id2label))):
         raise ModelArtifactVerificationError(
             "Manifest label indices must be contiguous from zero."

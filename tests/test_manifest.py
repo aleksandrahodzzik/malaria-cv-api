@@ -80,8 +80,7 @@ def test_sha256_file_streams_stable_digest(tmp_path: Path) -> None:
     artifact = tmp_path / "artifact.bin"
     artifact.write_bytes(b"abc")
     assert sha256_file(artifact, chunk_size=1) == (
-        "ba7816bf8f01cfea414140de5dae2223"
-        "b00361a396177a9cb410ff61f20015ad"
+        "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
     )
 
 
@@ -201,11 +200,14 @@ def test_manifest_can_skip_model_id_and_revision_comparison(tmp_path: Path) -> N
 
 def test_resolve_local_remote_and_failure_paths(tmp_path: Path) -> None:
     root, _ = _write_release(tmp_path)
-    assert resolve_model_root(
-        str(root),
-        revision=None,
-        local_files_only=True,
-    ) == root.resolve()
+    assert (
+        resolve_model_root(
+            str(root),
+            revision=None,
+            local_files_only=True,
+        )
+        == root.resolve()
+    )
 
     with pytest.raises(ModelArtifactVerificationError, match="does not exist"):
         resolve_model_root(
@@ -225,11 +227,14 @@ def test_resolve_local_remote_and_failure_paths(tmp_path: Path) -> None:
         "src.core.manifest.snapshot_download",
         return_value=str(root),
     ) as downloader:
-        assert resolve_model_root(
-            "approved/model",
-            revision=REVISION,
-            local_files_only=True,
-        ) == root.resolve()
+        assert (
+            resolve_model_root(
+                "approved/model",
+                revision=REVISION,
+                local_files_only=True,
+            )
+            == root.resolve()
+        )
     downloader.assert_called_once_with(
         repo_id="approved/model",
         revision=REVISION,

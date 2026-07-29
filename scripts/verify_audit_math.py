@@ -17,6 +17,7 @@ adjusted_rpn = _prioritization.adjusted_rpn
 priority_score = _prioritization.priority_score
 quality_score = _prioritization.quality_score
 
+
 def _rows(relative_path: str) -> list[dict[str, str]]:
     with (ROOT / relative_path).open(encoding="utf-8", newline="") as handle:
         return list(csv.DictReader(handle))

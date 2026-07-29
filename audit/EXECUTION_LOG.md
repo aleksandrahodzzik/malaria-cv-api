@@ -6,6 +6,7 @@
 |---|---|---|
 | Baseline pytest branch coverage | PASS | 78 passed; 88.52% |
 | Post-expansion pytest branch coverage | PASS | 185 passed; 98.29%; gate 95 |
+| `ruff format --check src tests scripts` | PASS | 41 files formatted |
 | `ruff check src tests scripts` | PASS | no issues |
 | `mypy --strict src` | PASS | 26 source files |
 | Manifest negative/positive tests | PASS | missing/tampered/mismatch/offline/unsafe branches |

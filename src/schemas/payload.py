@@ -277,9 +277,9 @@ class SlideAnalysisResponse(BaseModel):
     parasitemia_percent: float = Field(ge=0.0, le=100.0)
     wilson_95_interval: WilsonIntervalResponse
     cell_predictions: list[PredictionResponse]
-    claim_boundary: Literal[
+    claim_boundary: Literal["RESEARCH_ONLY_UNCALIBRATED_SLIDE_SUMMARY"] = (
         "RESEARCH_ONLY_UNCALIBRATED_SLIDE_SUMMARY"
-    ] = "RESEARCH_ONLY_UNCALIBRATED_SLIDE_SUMMARY"
+    )
     calibrated: Literal[False] = False
     patient_diagnosis_supported: Literal[False] = False
     clinically_validated_parasitemia: Literal[False] = False

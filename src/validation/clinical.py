@@ -149,8 +149,7 @@ def load_cohort_csv(
             missing = _REQUIRED_COLUMNS - columns
             if missing:
                 raise ValueError(
-                    "Cohort is missing required columns: "
-                    + ", ".join(sorted(missing))
+                    "Cohort is missing required columns: " + ", ".join(sorted(missing))
                 )
             rows = list(reader)
     except OSError as exc:

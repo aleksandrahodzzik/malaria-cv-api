@@ -21,9 +21,7 @@ def crisp_smear_like_image(width: int = 64, height: int = 64) -> Image.Image:
     for y_pos in range(height):
         for x_pos in range(width):
             pixels[x_pos, y_pos] = (
-                (210, 90, 170)
-                if (x_pos // 4 + y_pos // 4) % 2
-                else (245, 210, 225)
+                (210, 90, 170) if (x_pos // 4 + y_pos // 4) % 2 else (245, 210, 225)
             )
     return image
 

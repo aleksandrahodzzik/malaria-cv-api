@@ -53,10 +53,7 @@ def wilson_score_interval(
     center = (proportion + z_squared / (2 * total)) / denominator
     margin = (
         z_score
-        * math.sqrt(
-            proportion * (1 - proportion) / total
-            + z_squared / (4 * total**2)
-        )
+        * math.sqrt(proportion * (1 - proportion) / total + z_squared / (4 * total**2))
         / denominator
     )
     return WilsonInterval(
