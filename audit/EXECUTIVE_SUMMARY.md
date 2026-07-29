@@ -41,7 +41,7 @@ clinical validation и не юридическое заключение.
 - API/UI research-only contract, upload safeguards и bounded inference.
 - Privacy-safe JSON logs, no-store/version/request headers.
 - 78 tests, 88.52% branch coverage, Ruff, strict mypy, `pip check`.
-- Python 3.11/3.12 GitHub Actions success на `fc47dac`.
+- Python 3.11/3.12 GitHub Actions success подтверждён для phase19 revision.
 - T0/T1 synthetic benchmark и offline math/robustness planning utilities.
 
 ## UNKNOWN / NOT EXECUTED
