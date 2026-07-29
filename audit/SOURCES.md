@@ -217,6 +217,11 @@ guidelines не интерпретированы как доказательст
 38. GitHub Docs, policy for requiring actions pinned to full-length commit SHA.
     https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/enabling-features-for-your-repository/managing-github-actions-settings-for-a-repository
 
+39. Hugging Face, public profile `trpakov`, model inventory.
+    https://huggingface.co/trpakov
+    Accessed: 2026-07-29. Profile listed `vit-face-expression` and
+    `vit-pneumonia`; the requested malaria repository was not listed.
+
 ## 8. Что не следует выводить из источников
 
 - Публикация о NIH dataset не доказывает происхождение текущей модели.

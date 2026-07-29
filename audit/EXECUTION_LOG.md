@@ -1,20 +1,19 @@
-# Execution log — current canonical status
+# Execution log
 
-Дата: 2026-07-29.
+Дата актуального remediation run: 2026-07-29.
 
-| Command/check | Status | Current result |
+| Command/check | Result | Evidence |
 |---|---|---|
-| Ruff format/check `src tests scripts` | PASS | no findings |
-| Strict mypy `src scripts` | PASS | no issues |
-| Pytest with branch coverage | PASS | 78 passed; 88.52% branch coverage |
-| `pip check` | PASS | no broken requirements |
-| `compileall src tests scripts` | PASS | no errors |
-| `scripts.verify_audit_math` | PASS | 16 recommendations; weights 100; score 36.3; 12 risks |
-| Master-prompt headings/fences | PASS | headings 0–48; paired fences |
-| CSV parser/local links/diff check | PASS | 31 CSV parsed; final link count in phase19 report |
-| Real-model smoke | NOT EXECUTED | approved artifact absent |
-| T2/T3/Docker benchmark | NOT EXECUTED | artifact/Docker environment absent |
-| External patient validation | NOT EXECUTED | cohort absent |
+| Baseline pytest branch coverage | PASS | 78 passed; 88.52% |
+| Post-remediation pytest branch coverage | PASS | 163 passed; 98.11%; gate 95 |
+| `ruff check src tests scripts` | PASS | no issues |
+| `mypy --strict src` | PASS | 24 source files |
+| Manifest negative/positive tests | PASS | missing/tampered/mismatch/offline/unsafe branches |
+| QC tests | PASS | crisp/blur/contrast/color/resolution branches |
+| Slide aggregation tests | PASS | Wilson boundaries and route guardrails |
+| Auth/rate-limit tests | PASS | 401/403/429/expiry/cardinality |
+| `scripts/verify_audit_math.py` | PASS | weights 100; score 51.02 |
+| Markdown/CSV consistency | PASS | re-evaluated canonical artifacts |
 
-Exact command output before phase19 is retained in `phase18/EXECUTION_LOG.md`.
-The phase19 final verification report records the new full release run.
+Точные финальные stdout/stderr и длительности находятся в
+`remediation/VERIFICATION.md`.

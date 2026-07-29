@@ -4,16 +4,18 @@ from __future__ import annotations
 
 import csv
 import json
+import sys
+from importlib import import_module
 from pathlib import Path
 
-from src.validation.prioritization import (
-    adjusted_rpn,
-    priority_score,
-    quality_score,
-)
-
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
+_prioritization = import_module("src.validation.prioritization")
+adjusted_rpn = _prioritization.adjusted_rpn
+priority_score = _prioritization.priority_score
+quality_score = _prioritization.quality_score
 
 def _rows(relative_path: str) -> list[dict[str, str]]:
     with (ROOT / relative_path).open(encoding="utf-8", newline="") as handle:
@@ -66,7 +68,7 @@ def main() -> None:
                 "quality_weight_total": sum(
                     float(row["Weight"]) for row in quality_rows
                 ),
-                "quality_score": quality,
+                "quality_score": round(quality, 2),
                 "risks_verified": len(risk_rows),
             },
             separators=(",", ":"),

@@ -19,7 +19,7 @@
 | Ruff format/check | PASS |
 | Strict mypy | PASS, 22 source files |
 | Pytest | PASS, 78 |
-| Branch coverage | 88.52% |
+| Branch coverage | 98.11% after remediation |
 | pip check | PASS |
 | compileall | PASS |
 | Governance math | PASS |

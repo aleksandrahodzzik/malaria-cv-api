@@ -1,56 +1,82 @@
 # Executive summary
 
-Дата среза: 2026-07-29. Классификация: evidence-backed technical audit, не
-clinical validation и не юридическое заключение.
+Дата повторной оценки: 2026-07-29. Классификация: evidence-backed software
+remediation; не clinical validation и не юридическое заключение.
 
 ## Verdict
 
-- Technical production readiness: **NO-GO**.
+- Software remediation: **PASS** для заявленного локального scope.
+- Technical production readiness: **NO-GO** без утверждённого model release.
 - Clinical readiness: **NO-GO**.
-- Local/mock research prototype: **CONDITIONAL GO**.
-- Quality Score: **36.3/100**, с override failed safety gates.
+- Local no-model research UI: **GO**.
+- Quality Score: **51.02/100**, с override незакрытых safety gates.
+- Branch coverage: **98.11%**, 163 tests.
 
-## STOP-SHIP
+Цель 95/100 не присвоена: 40 из 100 весовых баллов относятся к
+clinical/model evidence и data governance, которых невозможно создать
+рефакторингом API.
 
-1. Утверждённый лицензированный immutable model artifact отсутствует.
-2. End-to-end real inference не воспроизведён.
-3. Независимая patient-level external validation отсутствует.
-4. Biological QC/OOD/reject отсутствует.
-5. Cell score нельзя преобразовывать в patient diagnosis.
+## Реализовано и VERIFIED
 
-## Top-5 risks
+1. Fail-closed model governance:
+   - exact 40-hex revision;
+   - локальный `model_manifest.json`;
+   - независимый manifest SHA-256 trust anchor;
+   - streaming checksum всех заявленных artifacts;
+   - проверка model ID, revision, labels, input resolution и license metadata;
+   - запрет unsafe paths, undeclared safetensors, pickle и remote code;
+   - `/ready` возвращает `MODEL_ARTIFACT_NOT_VERIFIED` при failure.
+2. Engineering QC до processor/model:
+   - discrete Laplacian variance;
+   - contrast;
+   - stain-like color ratio;
+   - resolution и aspect ratio;
+   - HTTP 422 с ordered reasons и QC metrics.
+3. Research-only slide summary:
+   - bounded multiple uploads;
+   - predicted-cell counts;
+   - Wilson 95% interval;
+   - `RESEARCH_ONLY_UNCALIBRATED_SLIDE_SUMMARY`;
+   - явный запрет patient diagnosis и clinically validated parasitemia claim.
+4. Security:
+   - optional API-key authentication;
+   - constant-time comparison;
+   - per-process sliding-window quota;
+   - invalid key не создаёт отдельный quota bucket;
+   - bounded client-key cardinality.
+5. Verification:
+   - 163 tests;
+   - 98.11% branch coverage;
+   - Ruff PASS;
+   - strict mypy PASS;
+   - coverage gate повышен с 80 до 95.
 
-| Risk | Severity | Evidence |
+## Residual STOP-SHIP
+
+1. Утверждённый лицензированный malaria model artifact отсутствует.
+2. `trpakov/vit-malaria-classification` не обнаружен в публичном профиле,
+   где на дату проверки перечислены только `vit-face-expression` и
+   `vit-pneumonia`; SHA намеренно не выдуман.
+3. Real-model clean/offline end-to-end inference не выполнен.
+4. Независимая patient-level external validation отсутствует.
+5. QC thresholds являются инженерными эвристиками, не clinically validated OOD.
+6. Patient-level aggregation, reference standard и decision rule отсутствуют.
+
+## Safety gates
+
+| Gate | Status | Evidence |
 |---|---|---|
-| Нет external patient validation | Critical | G2 FAIL |
-| Опасный false negative при misuse | Critical | QC/OOD и clinical controls отсутствуют |
-| Cell result принят за patient diagnosis | High/STOP-SHIP | нет aggregation/clinical workflow |
-| Mutable/unverified model chain | High/STOP-SHIP | artifact manifest отсутствует |
-| Anonymous resource exhaustion | High | нет auth/global quota |
+| G0 model exists/licensed/verified | FAIL | verifier реализован, release отсутствует |
+| G1 real end-to-end reproducible | FAIL | только mocked/synthetic tests |
+| G2 independent external validation | FAIL | cohort/predictions отсутствуют |
+| G3 safe rejection | PARTIAL | deterministic QC есть; clinical/OOD validation нет |
+| G4 baseline security | PARTIAL | auth/quota есть; global gateway/TLS/deployment не проверены |
+| G5 intended use | PASS | research-only cell/slide-summary boundaries |
+| G6 claims match evidence | PASS | score и verdict не повышены искусственно |
 
-## Top-5 recommendations
+## Следующий обязательный шаг
 
-1. Утвердить model/license/revision/checksum/labels/preprocessing.
-2. Утвердить intended purpose и claim boundary.
-3. Выполнить clean/offline real-model smoke.
-4. Создать leakage-safe patient/slide/cell registry и external validation.
-5. Реализовать QC/OOD/selective reject с human review.
-
-## VERIFIED
-
-- API/UI research-only contract, upload safeguards и bounded inference.
-- Privacy-safe JSON logs, no-store/version/request headers.
-- 78 tests, 88.52% branch coverage, Ruff, strict mypy, `pip check`.
-- Python 3.11/3.12 GitHub Actions success подтверждён для phase19 revision.
-- T0/T1 synthetic benchmark и offline math/robustness planning utilities.
-
-## UNKNOWN / NOT EXECUTED
-
-- Реальная accuracy/Se/Sp/AUROC/calibration модели.
-- Labels, preprocessing, license и size отсутствующего artifact.
-- Data leakage и subgroup performance.
-- T2/T3 model/container capacity, Docker build/CVE scan.
-- External-site robustness, prospective workflow и regulatory classification.
-
-Полные findings: `phase19/CONSOLIDATED_FINDINGS.csv`. Рекомендации:
-`phase19/PRIORITIZED_RECOMMENDATIONS.csv`.
+Владелец модели должен предоставить controlled release bundle: artifact,
+model card, license evidence, exact revision, patient/slide-safe provenance и
+manifest trust-anchor approval. После этого выполняются clean/offline smoke,
+golden regression, T2/T3 capacity и независимая внешняя валидация.

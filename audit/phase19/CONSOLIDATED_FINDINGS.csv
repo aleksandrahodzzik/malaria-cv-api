@@ -10,4 +10,4 @@ F-008,Robustness,High,VERIFIED,"Corruption harness exists; real-model QC/OOD ben
 F-009,Observability,High,VERIFIED,"JSON event logs exist; protected metrics/alerts/runbooks absent","Slow detection and recovery","REC-012 internal telemetry and drills"
 F-010,Performance,High,VERIFIED,"Only T0/T1 synthetic ASGI benchmark exists","Real capacity/RSS/threads unknown","REC-013 T2/T3 benchmark before optimization"
 F-011,Privacy/regulatory,High,UNKNOWN,"Deployment controller/legal basis/retention/encryption evidence absent","GDPR/QMS/regulatory readiness cannot be claimed","REC-006 plus deployment DPIA/governance"
-F-012,Software,Low,VERIFIED,"78 local tests; 88.52% branch coverage; Python 3.11/3.12 phase19 CI passed","Strong prototype contract but mocks do not validate model","Keep gates; add artifact-backed integration test"
+F-012,Software,Low,VERIFIED,"163 local tests; 98.11% branch coverage; Ruff and strict mypy pass","Strong software contract but mocks do not validate model","Keep 95% gate; add artifact-backed integration test"

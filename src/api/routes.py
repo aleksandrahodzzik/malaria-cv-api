@@ -3,12 +3,13 @@
 import logging
 import unicodedata
 from pathlib import PurePath
-from typing import Annotated
+from typing import Annotated, Any
 
 from fastapi import (
     APIRouter,
     Depends,
     File,
+    Form,
     HTTPException,
     Request,
     Response,
@@ -16,7 +17,7 @@ from fastapi import (
     status,
 )
 
-from src.api.dependencies import get_classifier_service
+from src.api.dependencies import get_classifier_service, require_api_key
 from src.core.config import settings
 from src.core.logging import safe_extra
 from src.schemas.payload import (
@@ -27,12 +28,16 @@ from src.schemas.payload import (
     PipelineStage,
     PredictionResponse,
     ReadinessResponse,
+    SlideAnalysisResponse,
+    WilsonIntervalResponse,
 )
+from src.services.aggregation import aggregate_slide_predictions
 from src.services.inference import (
     InferenceCapacityError,
     InferenceTimeoutError,
     MalariaClassifierService,
 )
+from src.services.qc import QualityControlError
 
 logger = logging.getLogger("malaria_api.routes")
 
@@ -60,6 +65,21 @@ def _public_model_reference() -> str | None:
     if settings.MODEL_LOCAL_FILES_ONLY or PurePath(configured).is_absolute():
         return "local-artifact"
     return configured
+
+
+def _sanitize_slide_id(slide_id: str) -> str:
+    """Return a non-empty, bounded identifier without control characters."""
+    sanitized = "".join(
+        character
+        for character in slide_id
+        if not unicodedata.category(character).startswith("C")
+    ).strip()
+    if not sanitized:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail="slide_id must contain a visible non-control character.",
+        )
+    return sanitized[: settings.MAX_SLIDE_ID_LENGTH]
 
 
 @router.get(
@@ -120,8 +140,9 @@ async def methodology() -> MethodologyResponse:
                 stage="image_quality_control",
                 status="partial",
                 evidence=(
-                    "Technical decoding checks exist; focus, stain, illumination, "
-                    "cell morphology, and acquisition quality are not validated."
+                    "Deterministic blur, contrast, stain-color, resolution and "
+                    "aspect-ratio rejection exists; thresholds are not clinically "
+                    "validated and do not constitute a proven OOD detector."
                 ),
             ),
             PipelineStage(
@@ -142,9 +163,11 @@ async def methodology() -> MethodologyResponse:
             PipelineStage(
                 order=5,
                 stage="slide_level_aggregation",
-                status="missing",
+                status="partial",
                 evidence=(
-                    "No slide identifier, sampling protocol, or aggregation exists."
+                    "Uploaded pre-cropped cell predictions can be counted with a "
+                    "Wilson interval; sampling, model error, clustering and clinical "
+                    "parasitemia remain unvalidated."
                 ),
             ),
             PipelineStage(
@@ -211,58 +234,9 @@ async def readiness_check(
     )
 
 
-@router.post(
-    "/analyze",
-    response_model=PredictionResponse,
-    status_code=status.HTTP_200_OK,
-    summary="Analyze Malaria Cell Image",
-    description=(
-        "Upload a microscopic blood smear cell image (JPEG/PNG/WEBP). "
-        "Returns a research-only cell-class prediction with uncalibrated "
-        "softmax scores. This endpoint does not diagnose a patient."
-    ),
-    responses={
-        400: {
-            "model": ErrorResponse,
-            "description": "Invalid image payload or content type",
-        },
-        413: {
-            "model": ErrorResponse,
-            "description": "Uploaded image file exceeds size limit",
-        },
-        415: {
-            "model": ErrorResponse,
-            "description": "Unsupported media type",
-        },
-        422: {
-            "model": ErrorResponse,
-            "description": "Request validation failed",
-        },
-        503: {"model": ErrorResponse, "description": "Inference engine uninitialized"},
-        504: {
-            "model": ErrorResponse,
-            "description": "Inference exceeded the configured request timeout",
-        },
-        500: {
-            "model": ErrorResponse,
-            "description": "Safe internal inference failure",
-        },
-    },
-)
-async def analyze_cell_image(
-    file: Annotated[
-        UploadFile,
-        File(description="Microscopic cell image file upload"),
-    ],
-    service: Annotated[
-        MalariaClassifierService,
-        Depends(get_classifier_service),
-    ],
-) -> PredictionResponse:
-    """Offload synchronous decode, preprocessing and compute from the event loop."""
+async def _read_upload(file: UploadFile) -> tuple[str, bytes, str]:
+    """Read one bounded upload and return its safe name, bytes and MIME type."""
     filename = _sanitize_filename(file.filename or "unknown_image.png")
-
-    # Validate MIME Content Type
     if (
         not file.content_type
         or file.content_type.lower() not in settings.ALLOWED_CONTENT_TYPES
@@ -275,8 +249,6 @@ async def analyze_cell_image(
             ),
         )
 
-    # Read incrementally so an oversized request is rejected without retaining
-    # the entire payload in application memory.
     max_bytes = settings.MAX_UPLOAD_SIZE_MB * 1024 * 1024
     contents = bytearray()
     try:
@@ -316,19 +288,27 @@ async def analyze_cell_image(
 
     image_bytes = bytes(contents)
     del contents
+    return filename, image_bytes, file.content_type.lower()
 
-    # Perform inference via bounded, offloaded thread execution.
+
+async def _execute_inference(
+    *,
+    service: MalariaClassifierService,
+    image_bytes: bytes,
+    filename: str,
+    declared_content_type: str,
+) -> PredictionResponse:
+    """Execute inference and translate internal failures to stable HTTP contracts."""
     try:
-        prediction = await service.analyze_image(
+        return await service.analyze_image(
             image_bytes=image_bytes,
             filename=filename,
-            declared_content_type=file.content_type.lower(),
+            declared_content_type=declared_content_type,
         )
-        return prediction
+    except QualityControlError:
+        raise
     except ValueError as val_err:
-        logger.info(
-            "Invalid image payload.",
-        )
+        logger.info("Invalid image payload.")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid or unsupported image payload.",
@@ -360,3 +340,120 @@ async def analyze_cell_image(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Inference failed.",
         ) from exc
+
+
+_ANALYZE_ERROR_RESPONSES: dict[int | str, dict[str, Any]] = {
+    400: {"model": ErrorResponse, "description": "Invalid image payload"},
+    401: {"model": ErrorResponse, "description": "API key required"},
+    403: {"model": ErrorResponse, "description": "API key forbidden"},
+    413: {"model": ErrorResponse, "description": "Upload exceeds size limit"},
+    415: {"model": ErrorResponse, "description": "Unsupported media type"},
+    422: {"model": ErrorResponse, "description": "Validation or QC rejection"},
+    429: {"model": ErrorResponse, "description": "Inference quota exceeded"},
+    500: {"model": ErrorResponse, "description": "Safe internal failure"},
+    503: {"model": ErrorResponse, "description": "Inference engine unavailable"},
+    504: {"model": ErrorResponse, "description": "Inference timeout"},
+}
+
+
+@router.post(
+    "/analyze",
+    response_model=PredictionResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Analyze Malaria Cell Image",
+    description=(
+        "Upload one pre-cropped microscopic cell image. Deterministic engineering "
+        "QC runs before uncalibrated model inference. Not a patient diagnosis."
+    ),
+    responses=_ANALYZE_ERROR_RESPONSES,
+)
+async def analyze_cell_image(
+    file: Annotated[
+        UploadFile,
+        File(description="Microscopic cell image file upload"),
+    ],
+    _auth: Annotated[None, Depends(require_api_key)],
+    service: Annotated[
+        MalariaClassifierService,
+        Depends(get_classifier_service),
+    ],
+) -> PredictionResponse:
+    """Validate, authenticate and classify one pre-cropped cell image."""
+    filename, image_bytes, content_type = await _read_upload(file)
+    return await _execute_inference(
+        service=service,
+        image_bytes=image_bytes,
+        filename=filename,
+        declared_content_type=content_type,
+    )
+
+
+@router.post(
+    "/analyze/slide",
+    response_model=SlideAnalysisResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Aggregate Pre-cropped Cells for One Slide",
+    description=(
+        "Classify multiple pre-cropped cell images and return a research-only "
+        "observed positive-cell fraction with a Wilson 95% interval. The interval "
+        "does not incorporate model error, cell dependence or sampling bias."
+    ),
+    responses=_ANALYZE_ERROR_RESPONSES,
+)
+async def analyze_slide(
+    files: Annotated[
+        list[UploadFile],
+        File(description="Pre-cropped cell images from one slide"),
+    ],
+    slide_id: Annotated[
+        str,
+        Form(description="Pseudonymous slide identifier; do not submit patient PII"),
+    ],
+    _auth: Annotated[None, Depends(require_api_key)],
+    service: Annotated[
+        MalariaClassifierService,
+        Depends(get_classifier_service),
+    ],
+) -> SlideAnalysisResponse:
+    """Create a bounded, sequential slide summary without patient interpretation."""
+    if not settings.SLIDE_MIN_CELLS <= len(files) <= settings.SLIDE_MAX_CELLS:
+        for upload in files:
+            await upload.close()
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=(
+                f"Slide analysis requires {settings.SLIDE_MIN_CELLS} to "
+                f"{settings.SLIDE_MAX_CELLS} cell images."
+            ),
+        )
+
+    predictions: list[PredictionResponse] = []
+    try:
+        safe_slide_id = _sanitize_slide_id(slide_id)
+        for file in files:
+            filename, image_bytes, content_type = await _read_upload(file)
+            predictions.append(
+                await _execute_inference(
+                    service=service,
+                    image_bytes=image_bytes,
+                    filename=filename,
+                    declared_content_type=content_type,
+                )
+            )
+    finally:
+        for upload in files:
+            await upload.close()
+
+    aggregation = aggregate_slide_predictions(predictions)
+    return SlideAnalysisResponse(
+        slide_id=safe_slide_id,
+        total_cells=aggregation.total_cells,
+        predicted_parasitized_cells=aggregation.parasitized_cells,
+        predicted_uninfected_cells=aggregation.uninfected_cells,
+        parasitemia_percent=round(aggregation.parasitemia_fraction * 100, 4),
+        wilson_95_interval=WilsonIntervalResponse(
+            lower_percent=round(aggregation.wilson_95.lower * 100, 4),
+            upper_percent=round(aggregation.wilson_95.upper * 100, 4),
+        ),
+        cell_predictions=predictions,
+    )

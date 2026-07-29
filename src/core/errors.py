@@ -10,6 +10,7 @@ from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from src.schemas.payload import ErrorResponse
+from src.services.qc import QualityControlError
 
 logger = logging.getLogger("malaria_api.errors")
 
@@ -40,15 +41,19 @@ def _error_response(
     code: str,
     detail: str,
     headers: Mapping[str, str] | None = None,
+    reasons: list[str] | None = None,
+    qc_metrics: dict[str, float | int] | None = None,
 ) -> JSONResponse:
     payload = ErrorResponse(
         code=code,
         detail=detail,
         request_id=_request_id(request),
+        reasons=reasons,
+        qc_metrics=qc_metrics,
     )
     return JSONResponse(
         status_code=status_code,
-        content=payload.model_dump(mode="json"),
+        content=payload.model_dump(mode="json", exclude_none=True),
         headers=headers,
     )
 
@@ -84,6 +89,19 @@ def register_exception_handlers(app: FastAPI) -> None:
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             code="VALIDATION_ERROR",
             detail="Request validation failed.",
+        )
+
+    @app.exception_handler(QualityControlError)
+    async def quality_control_exception_handler(
+        request: Request, exc: QualityControlError
+    ) -> JSONResponse:
+        return _error_response(
+            request,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            code=exc.primary_reason,
+            detail="Image rejected by the pre-inference quality-control policy.",
+            reasons=[reason.value for reason in exc.reasons],
+            qc_metrics=exc.metrics.as_dict(),
         )
 
     @app.exception_handler(Exception)

@@ -1,5 +1,7 @@
 """Tests for aggregation, robustness and capacity planning helpers."""
 
+import math
+
 import pytest
 from PIL import Image, ImageChops
 
@@ -208,4 +210,69 @@ def test_governance_score_formulas_and_domains() -> None:
             occurrence=1,
             detectability=1,
             confidence=1,
+        )
+
+
+def test_aggregation_planning_edge_cases() -> None:
+    with pytest.raises(ValueError, match="At least one"):
+        apparent_positive_rate(0, 0)
+    with pytest.raises(ValueError, match="non-negative"):
+        false_positive_accumulation(specificity=0.9, examined_cells=-1)
+    with pytest.raises(ValueError, match=r"within \(0, 1\)"):
+        minimum_cells_for_detection(
+            true_cell_rate=0.1,
+            cell_sensitivity=0.9,
+            target_detection_probability=1.0,
+        )
+    assert (
+        minimum_cells_for_detection(
+            true_cell_rate=1.0,
+            cell_sensitivity=1.0,
+            target_detection_probability=0.9,
+        )
+        == 1
+    )
+    with pytest.raises(ValueError, match="examined_cells"):
+        beta_binomial_moments(0, alpha=1, beta=1)
+    with pytest.raises(ValueError, match="alpha"):
+        beta_binomial_moments(10, alpha=0, beta=1)
+    with pytest.raises(ValueError, match="finite"):
+        false_positive_accumulation(specificity=math.nan, examined_cells=1)
+
+
+def test_capacity_planning_edge_cases() -> None:
+    with pytest.raises(ValueError, match="non-negative"):
+        little_law(throughput=-1, mean_time_in_system=1)
+    with pytest.raises(ValueError, match="Memory"):
+        ram_estimate(
+            workers=0,
+            model_per_worker=1,
+            runtime_per_worker=1,
+            activation_peak_per_worker=1,
+            shared=1,
+            upload_buffers=1,
+            safety_margin=1,
+        )
+    with pytest.raises(ValueError, match="Finite"):
+        summarize_latency([])
+    with pytest.raises(ValueError, match="Finite"):
+        summarize_latency([math.inf])
+    single = summarize_latency([5.0])
+    assert single.standard_deviation == 0
+    assert single.p99 == 5
+    with pytest.raises(ValueError, match="arrival_rate"):
+        utilization(arrival_rate=-1, service_rate_per_worker=1, workers=1)
+
+
+def test_governance_score_edge_cases() -> None:
+    with pytest.raises(ValueError, match="At least one"):
+        quality_score([])
+    with pytest.raises(ValueError, match="Weights"):
+        quality_score([(100, math.nan)])
+    with pytest.raises(ValueError, match="confidence"):
+        adjusted_rpn(
+            severity=1,
+            occurrence=1,
+            detectability=1,
+            confidence=math.inf,
         )

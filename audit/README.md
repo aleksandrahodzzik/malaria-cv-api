@@ -35,6 +35,10 @@
 > измеримый roadmap, продуктовые стратегии, counterfactual tests и четыре
 > независимых review-pass:
 > [`phase19`](phase19/RECOMMENDATION_PORTFOLIO.md).
+>
+> Post-remediation пакет 2026-07-29 содержит manifest/QC/slide/auth/quota
+> traceability, финальные команды и counterfactual review:
+> [`remediation`](remediation/IMPLEMENTATION_REPORT.md).
 
 ## Канонический текущий пакет
 

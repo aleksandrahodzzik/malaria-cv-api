@@ -4,6 +4,7 @@ import asyncio
 import io
 import logging
 import time
+from pathlib import Path
 from typing import Any
 
 import torch
@@ -11,7 +12,18 @@ from PIL import Image, UnidentifiedImageError
 from transformers import AutoImageProcessor, AutoModelForImageClassification
 
 from src.core.config import settings
-from src.schemas.payload import ClassProbability, PredictionResponse
+from src.core.manifest import (
+    ModelArtifactVerificationError,
+    ModelManifest,
+    resolve_model_root,
+    verify_model_manifest,
+)
+from src.schemas.payload import (
+    ClassProbability,
+    PredictionResponse,
+    QualityControlSummary,
+)
+from src.services.qc import QCResult, evaluate_image_quality
 
 logger = logging.getLogger("malaria_api.inference")
 
@@ -40,6 +52,7 @@ class MalariaClassifierService:
         self.model: Any = None
         self._is_ready: bool = False
         self._id2label: dict[int, str] = {}
+        self._manifest: ModelManifest | None = None
         self._inference_semaphore = asyncio.Semaphore(
             settings.MAX_CONCURRENT_INFERENCES
         )
@@ -56,24 +69,44 @@ class MalariaClassifierService:
         start_time = time.perf_counter()
 
         try:
-            load_options: dict[str, Any] = {
-                "local_files_only": settings.MODEL_LOCAL_FILES_ONLY
-            }
-            if settings.MODEL_REVISION:
-                load_options["revision"] = settings.MODEL_REVISION
+            model_root = resolve_model_root(
+                self.model_name,
+                revision=settings.MODEL_REVISION,
+                local_files_only=settings.MODEL_LOCAL_FILES_ONLY,
+            )
+            manifest_path = (
+                Path(settings.MODEL_MANIFEST_PATH)
+                if settings.MODEL_MANIFEST_PATH.strip()
+                else model_root / "model_manifest.json"
+            )
+            if settings.MODEL_REQUIRE_MANIFEST:
+                expected_model_id = settings.MODEL_SOURCE_ID.strip()
+                if not expected_model_id and not Path(self.model_name).is_absolute():
+                    expected_model_id = self.model_name
+                self._manifest = verify_model_manifest(
+                    model_root=model_root,
+                    manifest_path=manifest_path,
+                    expected_manifest_sha256=settings.MODEL_MANIFEST_SHA256,
+                    expected_model_id=expected_model_id,
+                    expected_revision=settings.MODEL_REVISION,
+                    expected_labels=settings.MODEL_EXPECTED_LABELS,
+                )
+
+            load_options: dict[str, Any] = {"local_files_only": True}
 
             self.processor = AutoImageProcessor.from_pretrained(
-                self.model_name,
+                str(model_root),
                 trust_remote_code=False,
                 **load_options,
             )
             self.model = AutoModelForImageClassification.from_pretrained(
-                self.model_name,
+                str(model_root),
                 trust_remote_code=False,
                 use_safetensors=True,
                 **load_options,
             )
             self._id2label = self._validate_model_contract()
+            self._validate_processor_contract()
             self.model.eval()  # Set PyTorch model to evaluation mode
             self._is_ready = True
 
@@ -82,6 +115,9 @@ class MalariaClassifierService:
                 "Approved model loaded in %.2f seconds.",
                 elapsed,
             )
+        except ModelArtifactVerificationError:
+            self._is_ready = False
+            raise
         except Exception as exc:
             self._is_ready = False
             logger.error(
@@ -89,6 +125,25 @@ class MalariaClassifierService:
                 type(exc).__name__,
             )
             raise RuntimeError("Model initialization failure.") from exc
+
+    def _validate_processor_contract(self) -> None:
+        """Ensure processor dimensions agree with the verified manifest."""
+        if self._manifest is None:
+            return
+        size = getattr(self.processor, "size", None)
+        if not isinstance(size, dict):
+            raise RuntimeError("Image processor does not expose a size contract.")
+        if "height" in size and "width" in size:
+            actual = (int(size["height"]), int(size["width"]))
+        elif "shortest_edge" in size:
+            edge = int(size["shortest_edge"])
+            actual = (edge, edge)
+        else:
+            raise RuntimeError("Image processor size contract is unsupported.")
+        if actual != self._manifest.input_resolution:
+            raise RuntimeError(
+                "Image processor resolution does not match the verified manifest."
+            )
 
     def _validate_model_contract(self) -> dict[int, str]:
         """Validate class count, indices and labels before accepting the model."""
@@ -193,6 +248,10 @@ class MalariaClassifierService:
         except (UnidentifiedImageError, OSError) as exc:
             raise ValueError(f"Invalid image file: {exc}") from exc
 
+        qc_result: QCResult | None = (
+            evaluate_image_quality(rgb_image) if settings.QC_ENABLED else None
+        )
+
         # Feature extraction & tensor conversion
         inputs = self.processor(images=rgb_image, return_tensors="pt")
 
@@ -232,6 +291,7 @@ class MalariaClassifierService:
             "predicted_cell_class": top_prediction.label,
             "confidence": top_prediction.confidence,
             "probabilities": class_probabilities,
+            "quality_control": qc_result,
         }
 
     async def analyze_image(
@@ -286,11 +346,24 @@ class MalariaClassifierService:
 
         elapsed_ms = (time.perf_counter() - start_time) * 1000.0
 
+        qc_result = prediction_data.get("quality_control")
+        quality_control = (
+            QualityControlSummary(
+                passed=True,
+                policy_version=qc_result.policy_version,
+                clinically_validated=False,
+                metrics=qc_result.metrics.as_dict(),
+            )
+            if isinstance(qc_result, QCResult)
+            else None
+        )
+
         return PredictionResponse(
             filename=filename,
             predicted_cell_class=prediction_data["predicted_cell_class"],
             diagnosis=prediction_data["predicted_cell_class"],
             confidence=prediction_data["confidence"],
             probabilities=prediction_data["probabilities"],
+            quality_control=quality_control,
             execution_time_ms=round(elapsed_ms, 2),
         )

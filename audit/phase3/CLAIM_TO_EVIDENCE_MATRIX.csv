@@ -23,7 +23,7 @@ C-001,CURRENT,CRITICAL,"Сервис имеет research-only назначени
 C-002,CURRENT,CRITICAL,"По умолчанию модель не настроена","src/core/config.py; .env.example","Effective settings probe","MODEL_NAME='' и .env отсутствует",SUPPORTED
 C-003,CURRENT,MEDIUM,"Без модели /health возвращает 200","README.md; routes.py","TestClient clean lifespan","Получен 200 healthy",SUPPORTED
 C-004,CURRENT,LOW,"Без модели UI доступен на /","README.md; main.py","UI/static asset API test","HTML, JS и CSS возвращают 200",SUPPORTED
-C-005,CURRENT,CRITICAL,"Без модели /ready возвращает 503 с reason","README.md; routes.py","Readiness tests","503, model_loaded=false, model_not_configured",SUPPORTED
+C-005,CURRENT,CRITICAL,"Без модели /ready возвращает 503 с reason","README.md; routes.py","Readiness tests","503, model_loaded=false, MODEL_NOT_CONFIGURED",SUPPORTED
 C-006,CURRENT,CRITICAL,"Без модели /analyze возвращает 503","README.md; dependency.py","API test без ready service","Fail-closed dependency возвращает SERVICE_UNAVAILABLE",SUPPORTED
 C-007,CURRENT,CRITICAL,"Приложение не создаёт фиктивные predictions","README.md; main.py","Поиск fallback/mock в runtime path","Runtime fallback отсутствует; mocks ограничены tests",SUPPORTED
 C-008,CURRENT,MEDIUM,"Есть application factory и lifespan","README.md; main.py","Static call-path inspection","create_application и async lifespan подключены",SUPPORTED

@@ -129,7 +129,7 @@ License = 0
 ```text
 startup: succeeds without model
 /health: 200
-/ready: 503 model_not_configured
+/ready: 503 MODEL_NOT_CONFIGURED
 /analyze: 503
 ```
 

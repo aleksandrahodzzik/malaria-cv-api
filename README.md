@@ -16,7 +16,7 @@ Backend, UI и тестовый HTTP-контур реализованы. Утв
 
 - `/health` возвращает `200`;
 - UI доступен на `/`;
-- `/ready` возвращает `503` с `reason=model_not_configured`;
+- `/ready` возвращает `503` с `reason=MODEL_NOT_CONFIGURED`;
 - `/analyze` возвращает `503`, пока не предоставлен проверенный model artifact.
 
 Такое поведение намеренно: приложение не подменяет отсутствующую модель и не
@@ -34,7 +34,11 @@ Backend, UI и тестовый HTTP-контур реализованы. Утв
 - bounded inference concurrency на процесс;
 - queue и execution timeouts с корректным учётом native worker;
 - fail-closed проверка `id2label`;
+- fail-closed SHA-256 manifest и immutable model revision;
 - обязательные `safetensors` и запрет remote code;
+- инженерный QC: blur, contrast, stain-color, resolution и aspect ratio;
+- research-only slide summary с Wilson 95% interval;
+- optional API-key authentication и bounded sliding-window quota;
 - централизованный error envelope;
 - валидируемый `X-Request-ID`;
 - security headers;
@@ -118,7 +122,11 @@ fail-closed.
 
 ```dotenv
 MODEL_NAME=C:\models\approved-malaria-cell-model
+MODEL_SOURCE_ID=organization/approved-malaria-cell-model
+MODEL_REVISION=0123456789abcdef0123456789abcdef01234567
 MODEL_LOCAL_FILES_ONLY=true
+MODEL_MANIFEST_PATH=C:\models\approved-malaria-cell-model\model_manifest.json
+MODEL_MANIFEST_SHA256=REPLACE_WITH_VERIFIED_64_HEX_DIGEST
 MODEL_EXPECTED_LABELS=["Parasitized","Uninfected"]
 ```
 
@@ -128,6 +136,8 @@ MODEL_EXPECTED_LABELS=["Parasitized","Uninfected"]
 MODEL_NAME=organization/approved-malaria-cell-model
 MODEL_REVISION=0123456789abcdef0123456789abcdef01234567
 MODEL_LOCAL_FILES_ONLY=false
+MODEL_MANIFEST_PATH=C:\model-trust\model_manifest.json
+MODEL_MANIFEST_SHA256=REPLACE_WITH_VERIFIED_64_HEX_DIGEST
 MODEL_EXPECTED_LABELS=["Parasitized","Uninfected"]
 ```
 
@@ -135,6 +145,11 @@ MODEL_EXPECTED_LABELS=["Parasitized","Uninfected"]
 запускать с `MODEL_LOCAL_FILES_ONLY=true`.
 
 Полный пример находится в [.env.example](.env.example).
+
+Структура trust document показана в
+[`model_manifest.example.json`](model_manifest.example.json). Это только
+шаблон: нулевые revision/checksums и `REPLACE_*` значения не являются
+утверждённым release и не пройдут artifact verification.
 
 ## API
 
@@ -147,6 +162,7 @@ MODEL_EXPECTED_LABELS=["Parasitized","Uninfected"]
 | GET | `/api/v1/capabilities` | публичные limits/metadata |
 | GET | `/api/v1/methodology` | exact task и границы pipeline |
 | POST | `/api/v1/analyze` | research-only cell classification |
+| POST | `/api/v1/analyze/slide` | research-only aggregation of pre-cropped cells |
 
 Для совместимости те же endpoints пока доступны без `/api/v1`.
 Legacy `/ready`, `/capabilities` и `/analyze` исключены из canonical OpenAPI и
@@ -162,7 +178,7 @@ curl http://localhost:8000/api/v1/capabilities
 
 ```json
 {
-  "api_version": "1.3.0",
+  "api_version": "1.4.0",
   "intended_use": "research_only",
   "task": "pre_cropped_single_cell_classification",
   "analysis_level": "cell",
@@ -176,7 +192,8 @@ curl http://localhost:8000/api/v1/capabilities
   "max_image_pixels": 25000000,
   "probabilities_calibrated": false,
   "patient_diagnosis_supported": false,
-  "slide_aggregation_supported": false,
+  "slide_aggregation_supported": true,
+  "research_parasitemia_summary_supported": true,
   "parasitemia_supported": false,
   "human_review_required": true
 }
@@ -193,9 +210,9 @@ input -> technical QC -> detection/segmentation -> cell classification
 ```
 
 Реализованный software scope ограничен техническим приёмом изображения и
-research-only классификацией одной заранее вырезанной клетки. Biological
-quality control, detection, slide/patient aggregation и clinical action
-отсутствуют или не валидированы.
+research-only классификацией одной заранее вырезанной клетки. Инженерные
+QC-эвристики и slide summary реализованы, но не клинически валидированы.
+Detection, patient-level interpretation и clinical action отсутствуют.
 
 ### Readiness без модели
 
@@ -204,7 +221,7 @@ quality control, detection, slide/patient aggregation и clinical action
   "status": "not_ready",
   "model_loaded": false,
   "model_name": null,
-  "reason": "model_not_configured"
+  "reason": "MODEL_NOT_CONFIGURED"
 }
 ```
 
@@ -360,10 +377,11 @@ read-only и передавать соответствующие перемен�
 - транзитивные версии зафиксированы в `constraints.txt`, bootstrap `pip`
   проверяется по hash, но полного hash-verified cross-platform lock пока нет;
 - нет real-model smoke test;
-- нет authentication/rate limiting для публичного deployment;
-- per-process semaphore не заменяет внешний global quota;
+- API-key authentication опциональна, а in-memory rate limiter действует
+  только внутри одного процесса и не заменяет gateway/Redis global quota;
 - нет external clinical evaluation, calibration, OOD или abstention;
-- нет patient/slide aggregation;
+- research-only slide summary не является клинически валидированной
+  parasitemia или patient-level aggregation;
 - Docker build и load tests требуют отдельного окружения.
 
 Полные findings и roadmap: [audit/README.md](audit/README.md).

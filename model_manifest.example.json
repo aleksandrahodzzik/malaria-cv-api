@@ -1,0 +1,25 @@
+{
+  "schema_version": "1.0",
+  "model_id": "REPLACE_WITH_APPROVED_REGISTRY_ID",
+  "revision": "0000000000000000000000000000000000000000",
+  "artifacts": {
+    "config.json": "0000000000000000000000000000000000000000000000000000000000000000",
+    "preprocessor_config.json": "0000000000000000000000000000000000000000000000000000000000000000",
+    "model.safetensors": "0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "id2label": {
+    "0": "Parasitized",
+    "1": "Uninfected"
+  },
+  "input_resolution": [
+    224,
+    224
+  ],
+  "processor_type": "ViTImageProcessor",
+  "license": {
+    "name": "REPLACE_AFTER_LICENSE_REVIEW",
+    "spdx_id": "NOASSERTION",
+    "source_url": "REPLACE_WITH_PRIMARY_LICENSE_URL",
+    "commercial_use": "unknown"
+  }
+}

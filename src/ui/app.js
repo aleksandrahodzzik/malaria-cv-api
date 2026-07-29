@@ -61,10 +61,11 @@ function setReadiness(ready, reason = null) {
   elements.statusDot.className = `status-dot ${ready ? "ready" : "unavailable"}`;
 
   const messages = {
-    model_not_configured: "Модель не настроена",
-    model_initialization_failed: "Ошибка загрузки модели",
+    MODEL_NOT_CONFIGURED: "Модель не настроена",
+    MODEL_ARTIFACT_NOT_VERIFIED: "Артефакт модели не прошёл проверку",
+    MODEL_INITIALIZATION_FAILED: "Ошибка загрузки модели",
+    SERVICE_STOPPED: "Сервис остановлен",
     model_unavailable: "Модель недоступна",
-    service_stopped: "Сервис остановлен",
   };
   elements.statusText.textContent = ready
     ? "Готова к анализу"
@@ -231,6 +232,9 @@ async function fetchJson(url, options = {}) {
   if (!response.ok) {
     const error = new Error(body?.detail || `HTTP ${response.status}`);
     error.status = response.status;
+    error.code = body?.code;
+    error.reasons = Array.isArray(body?.reasons) ? body.reasons : [];
+    error.retryAfter = response.headers.get("Retry-After");
     throw error;
   }
   return body;
@@ -308,6 +312,11 @@ async function analyze(event) {
     } else if (error.status === 503) {
       showError("Модель недоступна или занята. Повторите позже.");
       await checkReadiness();
+    } else if (error.status === 422 && error.reasons?.length) {
+      showError(`Изображение отклонено QC: ${error.reasons.join(", ")}.`);
+    } else if (error.status === 429) {
+      const retry = error.retryAfter ? ` Через ${error.retryAfter} с.` : "";
+      showError(`Превышена квота запросов.${retry}`);
     } else {
       showError(error.message || "Не удалось выполнить анализ.");
     }

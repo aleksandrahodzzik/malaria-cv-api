@@ -60,7 +60,7 @@ ASGI server
 
 ```text
 classifier_service = None
-model_error_code = model_not_configured
+model_error_code = MODEL_NOT_CONFIGURED
 health = 200
 ready = 503
 analyze = 503

@@ -12,7 +12,7 @@ cluster-CI, prevalence, calibration, thresholds и external validation.
 - cell/slide/patient уровни разделены;
 - patient independence не заявлена;
 - текущие performance metrics остаются NOT EXECUTED;
-- 36.3/100 не является accuracy;
+- 51.02/100 после remediation не является accuracy;
 - обнаружен риск, что старые summary/roadmap создают ложный current baseline;
   канонические отчёты обновлены.
 
@@ -48,7 +48,7 @@ automation bias, evidence и change/monitoring controls.
 Результат:
 
 - веса quality score = 100;
-- contribution = 36.3;
+- post-remediation contribution = 51.02;
 - adjusted RPN не уменьшается при uncertainty;
 - recommendation scores воспроизводимы;
 - policy overrides отделены от numeric score;
@@ -57,5 +57,5 @@ automation bias, evidence и change/monitoring controls.
 ## Исправленные противоречия
 
 Исторические 28/100, 9 tests и 74% coverage удалены из канонических summary.
-Текущий доказанный baseline: 36.3/100, 78 tests, 88.52% branch coverage; это не
+Текущий доказанный baseline: 51.02/100, 163 tests, 98.11% branch coverage; это не
 меняет clinical NO-GO.

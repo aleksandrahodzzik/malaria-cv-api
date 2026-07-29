@@ -1,25 +1,18 @@
 # Mathematical verification
 
-Command:
-
-`.\.venv\Scripts\python.exe -m scripts.verify_audit_math`
-
-Exit code: 0.
-
-Result:
+Актуальная проверка: 2026-07-29.
 
 ```json
-{"status":"PASS","recommendations_verified":16,"quality_weight_total":100.0,"quality_score":36.3,"risks_verified":12}
+{"status":"PASS","recommendations_verified":16,"quality_weight_total":100.0,"quality_score":51.02,"risks_verified":12}
 ```
 
-Verified equations:
+Проверено:
 
-- `PriorityScore = I*U*E/sqrt(F*D)`;
-- `QualityScore = sum(weight*score/5)`;
-- `AdjustedRPN = S*O*D*(2-confidence)`.
+- `PriorityScore = I * U * E / sqrt(F * D)` для 16 рекомендаций;
+- сумма Quality Score weights = 100;
+- post-remediation Quality Score = 51.02;
+- `AdjustedPriority = S * O * D * (2 - confidence)` для 12 рисков;
+- Wilson interval unit tests для boundary и central cases.
 
-Domain checks are unit-tested: integer scales 1–5, evidence 0.25–1.0,
-confidence 0–1 and quality weights exactly 100.
-
-Policy order is not computed from these equations. STOP-SHIP, regulatory
-mandatory and patient-safety overrides remain explicit governance decisions.
+95/100 не присвоено: математическая цель не может заменять отсутствующие
+clinical/model/data evidence.

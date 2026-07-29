@@ -1,13 +1,13 @@
 ID,Risk,S,O,D,RPN,Confidence,Uncertainty,AdjustedPriority,Category,STOP-SHIP,Control/next action
-R-001,Approved model artifact absent,5,5,2,50,1.00,0.00,50.0,High,YES,Approve licensed immutable safetensors artifact and manifest
+R-001,Approved model artifact absent,5,5,2,50,1.00,0.00,50.0,High,YES,Approve licensed immutable safetensors release and manifest trust anchor
 R-002,No independent patient-level external validation,5,5,4,100,1.00,0.00,100.0,Critical,YES,Prespecified multi-site locked patient cohort
-R-003,Potential dangerous false negative if clinically misused,5,4,5,100,0.80,0.20,120.0,Critical,YES,Safe intended use QC reject human review validation
-R-004,Cell result misread as patient diagnosis,5,4,4,80,0.95,0.05,84.0,High,YES,Terminology and patient-level gate
+R-003,Potential dangerous false negative if clinically misused,5,4,5,100,0.80,0.20,120.0,Critical,YES,External QC/OOD and patient-level validation plus human workflow
+R-004,Cell or slide summary misread as patient diagnosis,5,2,3,30,0.95,0.05,31.5,Medium,YES,Maintain claim boundary and validate human factors
 R-005,Patient/slide data leakage unknown,4,4,4,64,0.60,0.40,89.6,High,NO,Patient-grouped lineage and duplicate analysis
-R-006,Anonymous resource exhaustion,4,4,3,48,0.90,0.10,52.8,High,NO,Gateway identity quotas global rate/resource limits
-R-007,Mutable/unverified model supply chain,5,4,4,80,0.95,0.05,84.0,High,YES,Revision checksum signature fail-closed startup
-R-008,Dependency/base image non-reproducibility,4,3,4,48,0.90,0.10,52.8,High,NO,Hash lock base digest scan attestation
-R-009,No biological quality/OOD rejection,5,4,4,80,0.90,0.10,88.0,High,YES,QC OOD selective prediction external validation
-R-010,Operational degradation not alerted,4,3,4,48,0.90,0.10,52.8,High,NO,Internal metrics alerts dashboard runbook
+R-006,Anonymous resource exhaustion,4,2,3,24,0.90,0.10,26.4,Medium,NO,Deploy global gateway quota and resource limits
+R-007,Model supply-chain tampering,5,2,2,20,0.95,0.05,21.0,Medium,YES,Use implemented verifier with approved signed release
+R-008,Dependency/base image non-reproducibility,4,3,4,48,0.90,0.10,52.8,High,NO,Base digest scan and artifact attestation
+R-009,QC heuristic fails on shifted microscopy domain,5,3,4,60,0.90,0.10,66.0,High,YES,External corruption/OOD study and selective reject calibration
+R-010,Operational degradation not alerted,4,3,4,48,0.90,0.10,52.8,High,NO,Metrics alerts dashboard and runbook
 R-011,Health-data governance undefined in deployment,5,3,4,60,0.75,0.25,75.0,High,NO,DPIA access retention encryption incident plan
 R-012,Real model capacity unknown,4,4,3,48,1.00,0.00,48.0,Medium,NO,T2/T3 load RSS thread soak benchmark

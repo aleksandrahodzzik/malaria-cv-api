@@ -1,5 +1,6 @@
 """Main FastAPI Application Entrypoint with Lifespan Context Manager."""
 
+import hashlib
 import logging
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
@@ -14,11 +15,13 @@ from src.api.routes import router as api_router
 from src.core.config import settings
 from src.core.errors import register_exception_handlers
 from src.core.logging import configure_logging, safe_extra
+from src.core.manifest import ModelArtifactVerificationError
 from src.core.middleware import (
     LegacyRouteDeprecationMiddleware,
     RequestBodyLimitMiddleware,
     RequestTrackingMiddleware,
 )
+from src.core.ratelimit import RateLimitMiddleware, SlidingWindowRateLimiter
 from src.services.inference import MalariaClassifierService
 
 logger = logging.getLogger("malaria_api.main")
@@ -44,7 +47,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
             "MODEL_NAME is provided."
         )
         app.state.classifier_service = None
-        app.state.model_error_code = "model_not_configured"
+        app.state.model_error_code = "MODEL_NOT_CONFIGURED"
         yield
         app.state.classifier_service = None
         return
@@ -54,6 +57,17 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         app.state.classifier_service = classifier_service
         app.state.model_error_code = None
         logger.info("Lifespan startup complete: ML Model ready for requests.")
+    except ModelArtifactVerificationError as exc:
+        logger.critical(
+            "Model artifact trust verification failed.",
+            extra=safe_extra(
+                event="model_artifact_not_verified",
+                error_type=type(exc).__name__,
+                model_status="not_ready",
+            ),
+        )
+        app.state.classifier_service = None
+        app.state.model_error_code = ModelArtifactVerificationError.code
     except RuntimeError as exc:
         logger.critical(
             "Approved model initialization failed.",
@@ -64,14 +78,14 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
             ),
         )
         app.state.classifier_service = None
-        app.state.model_error_code = "model_initialization_failed"
+        app.state.model_error_code = "MODEL_INITIALIZATION_FAILED"
 
     yield  # Application processes requests here
 
     # Lifespan Shutdown Teardown
     logger.info("Tearing down lifespan context and cleaning up resources...")
     app.state.classifier_service = None
-    app.state.model_error_code = "service_stopped"
+    app.state.model_error_code = "SERVICE_STOPPED"
 
 
 def create_application() -> FastAPI:
@@ -93,7 +107,12 @@ def create_application() -> FastAPI:
             allow_origins=settings.CORS_ORIGINS,
             allow_credentials=True,
             allow_methods=["GET", "POST", "OPTIONS"],
-            allow_headers=["Accept", "Content-Type", "X-Request-ID"],
+            allow_headers=[
+                "Accept",
+                "Content-Type",
+                "X-API-Key",
+                "X-Request-ID",
+            ],
         )
 
     # Add the body boundary first so request tracking remains the outer layer and
@@ -108,11 +127,39 @@ def create_application() -> FastAPI:
         limited_paths={"/analyze", f"{settings.API_V1_STR}/analyze"},
     )
     app.add_middleware(
+        RequestBodyLimitMiddleware,
+        max_body_bytes=settings.MAX_SLIDE_UPLOAD_SIZE_MB * 1024 * 1024,
+        limited_paths={
+            "/analyze/slide",
+            f"{settings.API_V1_STR}/analyze/slide",
+        },
+    )
+    app.add_middleware(
         LegacyRouteDeprecationMiddleware,
         successors={
             "/analyze": f"{settings.API_V1_STR}/analyze",
+            "/analyze/slide": f"{settings.API_V1_STR}/analyze/slide",
             "/ready": f"{settings.API_V1_STR}/ready",
             "/capabilities": f"{settings.API_V1_STR}/capabilities",
+        },
+    )
+    app.add_middleware(
+        RateLimitMiddleware,
+        limiter=SlidingWindowRateLimiter(
+            limit=settings.RATE_LIMIT_REQUESTS,
+            window_seconds=settings.RATE_LIMIT_WINDOW_SECONDS,
+            max_keys=settings.RATE_LIMIT_MAX_KEYS,
+        ),
+        limited_paths={
+            "/analyze",
+            "/analyze/slide",
+            f"{settings.API_V1_STR}/analyze",
+            f"{settings.API_V1_STR}/analyze/slide",
+        },
+        enabled=settings.RATE_LIMIT_ENABLED,
+        trusted_api_key_digests={
+            hashlib.sha256(key.get_secret_value().encode("utf-8")).hexdigest()
+            for key in settings.API_KEYS
         },
     )
 

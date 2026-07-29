@@ -6,6 +6,7 @@ import json
 import re
 import threading
 from collections.abc import Generator
+from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock, patch
 
@@ -16,6 +17,7 @@ from pydantic import ValidationError
 from starlette.testclient import TestClient
 
 from src.core.config import Settings, settings
+from src.core.manifest import ModelManifest
 from src.core.middleware import RequestBodyLimitMiddleware
 from src.main import app
 from src.schemas.payload import ClassProbability, PredictionResponse
@@ -24,6 +26,7 @@ from src.services.inference import (
     InferenceTimeoutError,
     MalariaClassifierService,
 )
+from src.services.qc import QCMetrics, QCReason, QualityControlError
 
 
 @pytest.fixture
@@ -94,6 +97,9 @@ def test_research_ui_and_static_assets(client: TestClient) -> None:
     assert "scopeAccepted" in script.text
     assert "resetScopeConfirmation" in script.text
     assert "/api/v1/methodology" in script.text
+    assert "Изображение отклонено QC" in script.text
+    assert "Превышена квота запросов" in script.text
+    assert "MODEL_ARTIFACT_NOT_VERIFIED" in script.text
 
 
 def test_health_check_and_tracking_headers(client: TestClient) -> None:
@@ -101,14 +107,14 @@ def test_health_check_and_tracking_headers(client: TestClient) -> None:
     assert response.status_code == 200
     data = response.json()
     assert data["status"] == "healthy"
-    assert data["version"] == "1.3.0"
+    assert data["version"] == "1.4.0"
     assert "timestamp" in data
     assert re.fullmatch(
         r"[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}",
         response.headers["X-Request-ID"],
     )
     assert "X-Response-Time-Ms" in response.headers
-    assert response.headers["X-Service-Version"] == "1.3.0"
+    assert response.headers["X-Service-Version"] == "1.4.0"
     assert response.headers["X-Content-Type-Options"] == "nosniff"
     assert response.headers["Cache-Control"] == "no-store"
 
@@ -134,7 +140,8 @@ def test_capabilities_are_explicitly_research_only(client: TestClient) -> None:
     assert data["analysis_level"] == "cell"
     assert data["probabilities_calibrated"] is False
     assert data["patient_diagnosis_supported"] is False
-    assert data["slide_aggregation_supported"] is False
+    assert data["slide_aggregation_supported"] is True
+    assert data["research_parasitemia_summary_supported"] is True
     assert data["parasitemia_supported"] is False
     assert data["human_review_required"] is True
     assert data["model_configured"] is False
@@ -158,7 +165,7 @@ def test_methodology_separates_pipeline_levels(client: TestClient) -> None:
     assert stages["image_quality_control"] == "partial"
     assert stages["cell_detection_or_segmentation"] == "missing"
     assert stages["cell_classification"] == "unvalidated"
-    assert stages["slide_level_aggregation"] == "missing"
+    assert stages["slide_level_aggregation"] == "partial"
     assert stages["patient_level_interpretation"] == "missing"
     assert stages["clinical_action"] == "missing"
 
@@ -178,6 +185,7 @@ def test_openapi_documents_safe_contract(client: TestClient) -> None:
     assert prediction["human_review_required"]["const"] is True
     assert prediction["patient_diagnosis_supported"]["const"] is False
     assert "/api/v1/methodology" in schema["paths"]
+    assert "/api/v1/analyze/slide" in schema["paths"]
 
     error = schema["components"]["schemas"]["ErrorResponse"]
     assert {"code", "detail"} <= set(error["required"])
@@ -202,7 +210,7 @@ def test_settings_reject_wildcard_cors() -> None:
 
 
 def test_production_remote_model_requires_revision() -> None:
-    with pytest.raises(ValidationError, match="immutable MODEL_REVISION"):
+    with pytest.raises(ValidationError, match="exact 40-character"):
         Settings(
             ENVIRONMENT="production",
             MODEL_NAME="organization/model",
@@ -211,12 +219,14 @@ def test_production_remote_model_requires_revision() -> None:
         )
 
 
-def test_production_local_only_model_does_not_require_revision() -> None:
+def test_production_local_model_requires_complete_trust_configuration() -> None:
     configured = Settings(
         ENVIRONMENT="production",
         MODEL_NAME="C:\\models\\approved",
+        MODEL_SOURCE_ID="approved/malaria",
         MODEL_LOCAL_FILES_ONLY=True,
-        MODEL_REVISION=None,
+        MODEL_REVISION="a" * 40,
+        MODEL_MANIFEST_SHA256="0" * 64,
     )
     assert configured.MODEL_LOCAL_FILES_ONLY is True
 
@@ -255,10 +265,10 @@ def test_readiness_does_not_disclose_local_model_path(
 
 def test_readiness_without_configured_model(client: TestClient) -> None:
     app.state.classifier_service = None
-    app.state.model_error_code = "model_not_configured"
+    app.state.model_error_code = "MODEL_NOT_CONFIGURED"
     response = client.get("/ready")
     assert response.status_code == 503
-    assert response.json()["reason"] == "model_not_configured"
+    assert response.json()["reason"] == "MODEL_NOT_CONFIGURED"
     assert response.json()["model_loaded"] is False
 
 
@@ -585,16 +595,28 @@ def test_load_model_requires_explicit_artifact() -> None:
 
 def test_load_model_uses_revision_and_validates_contract() -> None:
     processor = MagicMock()
+    processor.size = {"height": 224, "width": 224}
     model = MagicMock()
     model.config.id2label = {0: "Parasitized", 1: "Uninfected"}
     model.config.num_labels = 2
+    manifest = MagicMock(spec=ModelManifest)
+    manifest.input_resolution = (224, 224)
+    model_root = Path("C:\\approved-model")
 
     with (
         patch(
             "src.services.inference.settings.MODEL_REVISION",
-            "0123456789abcdef",
+            "a" * 40,
         ),
         patch("src.services.inference.settings.MODEL_LOCAL_FILES_ONLY", True),
+        patch(
+            "src.services.inference.resolve_model_root",
+            return_value=model_root,
+        ),
+        patch(
+            "src.services.inference.verify_model_manifest",
+            return_value=manifest,
+        ),
         patch(
             "src.services.inference.AutoImageProcessor.from_pretrained",
             return_value=processor,
@@ -608,13 +630,12 @@ def test_load_model_uses_revision_and_validates_contract() -> None:
         service.load_model()
 
     common_options = {
-        "revision": "0123456789abcdef",
         "local_files_only": True,
         "trust_remote_code": False,
     }
-    processor_loader.assert_called_once_with("approved/model", **common_options)
+    processor_loader.assert_called_once_with(str(model_root), **common_options)
     model_loader.assert_called_once_with(
-        "approved/model",
+        str(model_root),
         use_safetensors=True,
         **common_options,
     )
@@ -629,7 +650,8 @@ def test_predict_sync_returns_validated_labels(sample_image_bytes: bytes) -> Non
     service._id2label = {0: "Parasitized", 1: "Uninfected"}
     service._is_ready = True
 
-    result = service._predict_sync(sample_image_bytes, "image/png")
+    with patch("src.services.inference.settings.QC_ENABLED", False):
+        result = service._predict_sync(sample_image_bytes, "image/png")
 
     assert result["predicted_cell_class"] == "Parasitized"
     assert result["probabilities"][0].label == "Parasitized"
@@ -691,7 +713,8 @@ def test_predict_sync_normalizes_supported_image_modes(mode: str) -> None:
     service._id2label = {0: "Parasitized", 1: "Uninfected"}
     service._is_ready = True
 
-    result = service._predict_sync(buffer.getvalue(), "image/png")
+    with patch("src.services.inference.settings.QC_ENABLED", False):
+        result = service._predict_sync(buffer.getvalue(), "image/png")
 
     assert result["predicted_cell_class"] == "Parasitized"
     processed_image = service.processor.call_args.kwargs["images"]
@@ -831,3 +854,121 @@ async def test_cancellation_does_not_release_capacity_before_thread_finishes() -
             await request_task
 
     assert service._inference_semaphore.locked() is False
+
+
+def test_qc_rejection_uses_structured_422_contract(
+    client: TestClient,
+    sample_image_bytes: bytes,
+) -> None:
+    service = MagicMock(spec=MalariaClassifierService)
+    service.is_ready.return_value = True
+    metrics = QCMetrics(64, 64, 1.0, 2.0, 1.0, 0.0)
+    service.analyze_image.side_effect = QualityControlError(
+        [QCReason.BLURRY_IMAGE, QCReason.NON_MICROSCOPIC_PAYLOAD],
+        metrics,
+    )
+    app.state.classifier_service = service
+
+    response = client.post(
+        "/api/v1/analyze",
+        files={"file": ("blurred.png", sample_image_bytes, "image/png")},
+    )
+
+    assert response.status_code == 422
+    assert response.json()["code"] == "BLURRY_IMAGE"
+    assert response.json()["reasons"] == [
+        "BLURRY_IMAGE",
+        "NON_MICROSCOPIC_PAYLOAD",
+    ]
+    assert response.json()["qc_metrics"]["laplacian_variance"] == 1.0
+    assert response.json()["request_id"] == response.headers["X-Request-ID"]
+
+
+def test_slide_analysis_aggregates_predictions_with_guardrails(
+    client: TestClient,
+    sample_image_bytes: bytes,
+) -> None:
+    service = MagicMock(spec=MalariaClassifierService)
+    service.is_ready.return_value = True
+
+    async def classify(
+        image_bytes: bytes,
+        filename: str,
+        declared_content_type: str | None = None,
+    ) -> PredictionResponse:
+        parasitized = int(filename.removeprefix("cell").removesuffix(".png")) < 3
+        label = "Parasitized" if parasitized else "Uninfected"
+        return PredictionResponse(
+            filename=filename,
+            predicted_cell_class=label,
+            diagnosis=label,
+            confidence=0.9,
+            probabilities=[
+                ClassProbability(label=label, confidence=0.9),
+                ClassProbability(
+                    label="Uninfected" if parasitized else "Parasitized",
+                    confidence=0.1,
+                ),
+            ],
+            execution_time_ms=1.0,
+        )
+
+    service.analyze_image.side_effect = classify
+    app.state.classifier_service = service
+    uploads = [
+        ("files", (f"cell{index}.png", sample_image_bytes, "image/png"))
+        for index in range(10)
+    ]
+
+    response = client.post(
+        "/api/v1/analyze/slide",
+        data={"slide_id": "research-slide-01"},
+        files=uploads,
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["slide_id"] == "research-slide-01"
+    assert data["total_cells"] == 10
+    assert data["predicted_parasitized_cells"] == 3
+    assert data["predicted_uninfected_cells"] == 7
+    assert data["parasitemia_percent"] == 30.0
+    assert data["wilson_95_interval"]["lower_percent"] == pytest.approx(
+        10.7791,
+        abs=0.0001,
+    )
+    assert data["wilson_95_interval"]["upper_percent"] == pytest.approx(
+        60.3222,
+        abs=0.0001,
+    )
+    assert data["claim_boundary"] == "RESEARCH_ONLY_UNCALIBRATED_SLIDE_SUMMARY"
+    assert data["patient_diagnosis_supported"] is False
+    assert data["clinically_validated_parasitemia"] is False
+    assert data["human_review_required"] is True
+
+
+def test_slide_analysis_rejects_count_and_blank_identifier(
+    client: TestClient,
+    mock_classifier_service: MagicMock,
+    sample_image_bytes: bytes,
+) -> None:
+    app.state.classifier_service = mock_classifier_service
+    too_few = client.post(
+        "/api/v1/analyze/slide",
+        data={"slide_id": "slide"},
+        files=[("files", ("cell.png", sample_image_bytes, "image/png"))],
+    )
+    assert too_few.status_code == 422
+    assert "requires" in too_few.json()["detail"]
+
+    uploads = [
+        ("files", (f"cell{index}.png", sample_image_bytes, "image/png"))
+        for index in range(settings.SLIDE_MIN_CELLS)
+    ]
+    blank = client.post(
+        "/api/v1/analyze/slide",
+        data={"slide_id": "\u0001"},
+        files=uploads,
+    )
+    assert blank.status_code == 422
+    assert "visible" in blank.json()["detail"]

@@ -192,3 +192,85 @@ def test_invalid_statistical_inputs_fail_closed(
 ) -> None:
     with pytest.raises(ValueError):
         confusion_counts(targets, scores, threshold=0.5)
+
+
+def test_statistical_boundary_failures_are_explicit() -> None:
+    with pytest.raises(ValueError, match="negative"):
+        ConfusionCounts(-1, 0, 0, 0)
+    with pytest.raises(ValueError, match="threshold"):
+        confusion_counts([0, 1], [0.1, 0.9], threshold=1.1)
+    with pytest.raises(ValueError, match="undefined"):
+        prevalence_predictive_values(0.0, 0.0, 0.0)
+    with pytest.raises(ValueError, match="total > 0"):
+        wilson_interval(0, 0)
+    with pytest.raises(ValueError, match="total > 0"):
+        clopper_pearson_interval(0, 0)
+    with pytest.raises(ValueError, match="both positive"):
+        roc_curve([1, 1], [0.8, 0.9])
+    with pytest.raises(ValueError, match="positive examples"):
+        precision_recall_curve([0, 0], [0.1, 0.2])
+    with pytest.raises(ValueError, match="At least two"):
+        area_under_curve([], x_key="x", y_key="y")
+    with pytest.raises(ValueError, match="not ordered"):
+        area_under_curve(
+            [{"x": 1.0, "y": 1.0}, {"x": 0.0, "y": 0.0}],
+            x_key="x",
+            y_key="y",
+        )
+
+
+def test_calibration_and_bootstrap_validation_branches() -> None:
+    with pytest.raises(ValueError, match="bins"):
+        calibration_metrics([0, 1], [0.1, 0.9], bins=0)
+    single_class = calibration_metrics([1, 1], [0.8, 0.9], bins=2)
+    assert single_class["calibration_intercept"] is None
+    singular = calibration_metrics([0, 1], [0.5, 0.5], bins=2)
+    assert singular["calibration_slope"] is None
+
+    common = {
+        "y_true": [0, 1],
+        "scores": [0.1, 0.9],
+        "threshold": 0.5,
+        "resamples": 2,
+    }
+    with pytest.raises(ValueError, match="length"):
+        cluster_bootstrap_intervals(
+            **common,
+            cluster_ids=["only-one"],
+        )
+    with pytest.raises(ValueError, match="non-empty cluster"):
+        cluster_bootstrap_intervals(
+            **common,
+            cluster_ids=["a", ""],
+        )
+    with pytest.raises(ValueError, match="at least 2"):
+        cluster_bootstrap_intervals(
+            [0, 1],
+            [0.1, 0.9],
+            ["a", "b"],
+            threshold=0.5,
+            resamples=1,
+        )
+    with pytest.raises(ValueError, match="did not contain both"):
+        cluster_bootstrap_intervals(
+            [1, 1],
+            [0.8, 0.9],
+            ["a", "b"],
+            threshold=0.5,
+            resamples=2,
+        )
+
+
+def test_sample_size_mcnemar_and_confidence_boundaries() -> None:
+    with pytest.raises(ValueError, match="half_width"):
+        sample_size_for_proportion(0.9, 0)
+    with pytest.raises(ValueError, match="mean_cluster_size"):
+        sample_size_for_proportion(0.9, 0.1, mean_cluster_size=0.5)
+    with pytest.raises(ValueError, match="Paired"):
+        mcnemar_exact([], [])
+    no_disagreement = mcnemar_exact([True, False], [True, False])
+    assert no_disagreement["p_value_two_sided_exact"] == 1.0
+    with pytest.raises(ValueError, match="successes"):
+        wilson_interval(2, 1)
+    with pytest.raises(ValueError, match="confidence"):
+        wilson_interval(1, 2, confidence=1.0)

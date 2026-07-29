@@ -1,9 +1,9 @@
 Category,Weight,Score,Contribution
 Clinical/model evidence,25,0.0,0.0
 Data quality/governance,15,0.5,1.5
-Software correctness,12,4.0,9.6
-Security/privacy,12,2.5,6.0
-Reliability/performance,10,2.0,4.0
-MLOps/reproducibility,10,2.0,4.0
-Testing/CI,8,4.0,6.4
-Documentation/regulatory readiness,8,3.0,4.8
+Software correctness,12,4.8,11.52
+Security/privacy,12,4.0,9.6
+Reliability/performance,10,3.5,7.0
+MLOps/reproducibility,10,3.5,7.0
+Testing/CI,8,5.0,8.0
+Documentation/regulatory readiness,8,4.0,6.4

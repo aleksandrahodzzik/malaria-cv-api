@@ -20,7 +20,7 @@ class HealthResponse(BaseModel):
         json_schema_extra={
             "example": {
                 "status": "healthy",
-                "version": "1.3.0",
+                "version": "1.4.0",
                 "timestamp": "2026-07-27T18:00:00Z",
             }
         }
@@ -71,6 +71,15 @@ class ClassProbability(BaseModel):
     )
 
 
+class QualityControlSummary(BaseModel):
+    """Deterministic engineering QC attached to an accepted image."""
+
+    passed: Literal[True] = True
+    policy_version: str
+    clinically_validated: Literal[False] = False
+    metrics: dict[str, float | int]
+
+
 class PredictionResponse(BaseModel):
     """Schema for research-only cell-image classification response."""
 
@@ -95,6 +104,13 @@ class PredictionResponse(BaseModel):
     )
     probabilities: list[ClassProbability] = Field(
         ..., description="Uncalibrated softmax scores for every model class"
+    )
+    quality_control: QualityControlSummary | None = Field(
+        default=None,
+        description=(
+            "Engineering QC measurements when QC is enabled. Passing this policy "
+            "does not establish microscopy suitability or clinical validity."
+        ),
     )
     calibrated: Literal[False] = Field(
         default=False,
@@ -186,6 +202,14 @@ class ErrorResponse(BaseModel):
     request_id: str | None = Field(
         default=None, description="Unique correlation request ID"
     )
+    reasons: list[str] | None = Field(
+        default=None,
+        description="Stable rejection reasons when more than one QC rule failed",
+    )
+    qc_metrics: dict[str, float | int] | None = Field(
+        default=None,
+        description="Non-sensitive deterministic measurements for QC rejection",
+    )
 
 
 class CapabilitiesResponse(BaseModel):
@@ -203,9 +227,46 @@ class CapabilitiesResponse(BaseModel):
     max_image_pixels: int
     probabilities_calibrated: Literal[False] = False
     patient_diagnosis_supported: Literal[False] = False
-    slide_aggregation_supported: Literal[False] = False
+    slide_aggregation_supported: Literal[True] = True
+    research_parasitemia_summary_supported: Literal[True] = True
     parasitemia_supported: Literal[False] = False
     human_review_required: Literal[True] = True
+
+
+class WilsonIntervalResponse(BaseModel):
+    """Wilson 95% interval expressed as percentage points."""
+
+    lower_percent: float = Field(ge=0.0, le=100.0)
+    upper_percent: float = Field(ge=0.0, le=100.0)
+    confidence_level: float = Field(default=0.95, ge=0.95, le=0.95)
+
+
+class SlideAnalysisResponse(BaseModel):
+    """Research-only aggregation of model-predicted pre-cropped cells."""
+
+    slide_id: str
+    analysis_level: Literal["slide_summary"] = "slide_summary"
+    total_cells: int = Field(ge=1)
+    predicted_parasitized_cells: int = Field(ge=0)
+    predicted_uninfected_cells: int = Field(ge=0)
+    parasitemia_percent: float = Field(ge=0.0, le=100.0)
+    wilson_95_interval: WilsonIntervalResponse
+    cell_predictions: list[PredictionResponse]
+    claim_boundary: Literal[
+        "RESEARCH_ONLY_UNCALIBRATED_SLIDE_SUMMARY"
+    ] = "RESEARCH_ONLY_UNCALIBRATED_SLIDE_SUMMARY"
+    calibrated: Literal[False] = False
+    patient_diagnosis_supported: Literal[False] = False
+    clinically_validated_parasitemia: Literal[False] = False
+    human_review_required: Literal[True] = True
+    limitations: list[str] = Field(
+        default_factory=lambda: [
+            "Counts are based only on uploaded pre-cropped cells.",
+            "Wilson bounds quantify binomial sampling only; model error and "
+            "within-slide dependence are not included.",
+            "This response is not a patient diagnosis or validated parasitemia result.",
+        ]
+    )
 
 
 class PipelineStage(BaseModel):

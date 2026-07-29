@@ -1,0 +1,9 @@
+Blocker ID,Initial condition,Implemented control,Verification,Status,Residual risk
+REM-001,Mutable or unverifiable model loading,Exact revision plus independently anchored SHA-256 manifest and declared-artifact verification,tests/test_manifest.py and runtime failure tests,SOFTWARE_CONTROL_COMPLETE,Approved artifact and license evidence absent
+REM-002,Readiness could not distinguish trust failure,MODEL_ARTIFACT_NOT_VERIFIED 503 state,tests/test_runtime_edges.py,COMPLETE,Deployment monitoring not verified
+REM-003,No pre-inference biological QC,Versioned blur contrast color resolution and aspect rules,tests/test_qc.py and QC route test,ENGINEERING_CONTROL_COMPLETE,Thresholds are not clinically validated OOD
+REM-004,No slide aggregation,Bounded multi-file route plus Wilson interval and research-only schema,tests/test_aggregation.py and slide API test,RESEARCH_CONTROL_COMPLETE,Sampling model error and clustering excluded
+REM-005,Anonymous resource exhaustion,Bounded sliding window trusted-key identity and cardinality cap,tests/test_middleware.py,PROCESS_CONTROL_COMPLETE,Not global across workers or replicas
+REM-006,No API-key authentication,Optional X-API-Key with constant-time comparison,401/403/valid dependency tests,COMPLETE,Production policy and key rotation external
+REM-007,Branch coverage below target,Expanded meaningful negative-path suite and fail_under 95,163 tests and 98.11 branch coverage,COMPLETE,Real model smoke still absent
+REM-008,Clinical evidence absent,None can be created from code alone,Audit gate G2,OPEN_STOP_SHIP,External patient-level validation required

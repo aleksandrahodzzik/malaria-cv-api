@@ -9,7 +9,8 @@
 - `analysis_level = cell`;
 - `probabilities_calibrated = false`;
 - `patient_diagnosis_supported = false`;
-- `slide_aggregation_supported = false`;
+- `slide_aggregation_supported = true`, но только как
+  `RESEARCH_ONLY_UNCALIBRATED_SLIDE_SUMMARY`;
 - `parasitemia_supported = false`;
 - `human_review_required = true`.
 

@@ -1,16 +1,19 @@
-# Final GO/NO-GO
+# Final GO/NO-GO after remediation
 
 Дата: 2026-07-29.
 
 | Scenario | Verdict | Evidence | Blocker/condition |
 |---|---|---|---|
-| Local no-model UI/demo | GO | readiness failure and research UI verified | Не выдавать mocked output за model result |
-| Local mocked API testing | GO | 78 local tests; Python 3.11/3.12 CI release gate | Только software contract |
-| Public non-clinical API | NO-GO | no model/auth/global quota/T2-T3 | Artifact + security + capacity gates |
-| Research cell use | CONDITIONAL GO | task boundary/toolkit documented | Approved model/data/protocol; no clinical claim |
-| Retrospective clinical research | INSUFFICIENT EVIDENCE | no cohort/model | Ethics/data/model/statistical protocol |
-| Prospective silent evaluation | INSUFFICIENT EVIDENCE | workflow not built | Prior retrospective/QC/human-factor gates |
-| Clinical decision support | NO-GO | G2/G3 fail | External/prospective evidence + QMS/human review |
-| Autonomous diagnosis | NO-GO | outside evidence/intended scope | Not an authorized development target |
+| Local no-model UI/demo | GO | fail-closed readiness, UI и safety contract verified | Не показывать mock как model result |
+| Local mocked API testing | GO | 163 tests; 98.11% branch coverage | Только software contract |
+| Public non-clinical API | NO-GO | approved model отсутствует; quota per-process | Model release + gateway/global quota + deployment verification |
+| Research single-cell use | CONDITIONAL GO | QC/manifest/contracts реализованы | Approved model, protocol, model card; no clinical claim |
+| Research slide summary | CONDITIONAL GO | Wilson/counting implementation verified | Только pre-cropped cells; sampling/model error disclosed |
+| Retrospective clinical research | INSUFFICIENT EVIDENCE | model/cohort отсутствуют | Ethics, data lineage, reference standard, locked SAP |
+| Prospective silent evaluation | INSUFFICIENT EVIDENCE | G0–G2 FAIL | Сначала retrospective external validation |
+| Clinical decision support | NO-GO | G0/G1/G2 FAIL, G3 PARTIAL | External/prospective evidence, QMS, human workflow |
+| Autonomous diagnosis | NO-GO | вне intended scope | Не является разрешённой product strategy |
 
-Quality Score: **36.3/100**. G0/G1/G2/G3 failures override the arithmetic.
+Quality Score: **51.02/100**. Цель 95/100 не достигнута и не заявлена:
+clinical/model evidence, data governance и external validation отсутствуют.
+Coverage: **98.11%** при обязательном gate `fail_under=95`.

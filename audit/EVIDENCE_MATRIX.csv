@@ -1,13 +1,14 @@
 Evidence ID,Statement,Classification,Source,Result,Limitation
 E-001,Configured historical model is available,VERIFIED,phase5 model provenance,False in checked public/local scope,Private external artifact may exist
-E-002,Software contract passes tests,VERIFIED,phase19 release verification,78 passed and 88.52% branch coverage,Mostly mocked model
-E-003,Python compatibility,VERIFIED,GitHub Actions run 30436050922,3.11 and 3.12 success,No real-model artifact
-E-004,Cell-to-patient aggregation exists,VERIFIED,phase9 chain matrix,False,Planning math only
-E-005,Model clinical performance known,UNKNOWN,phase8 status,NOT EXECUTED,No predictions/cohort
-E-006,T0/T1 framework performance measured,VERIFIED,phase11 benchmark,600 HTTP 200 with recorded latency,Synthetic in-process ASGI only
-E-007,Real-model capacity known,UNKNOWN,phase11,NOT EXECUTED,Model/Docker absent
-E-008,Structured logs protect sensitive fields,VERIFIED,code and tests,Allowlist/no filename/error text,Deployment collectors unverified
-E-009,CI actions immutable,VERIFIED,workflow and official tag refs,Full SHA pins,Dependency/base/model chain incomplete
-E-010,Clinical/regulatory readiness,VERIFIED,phases16-18,NO-GO/conditional applicability,Not legal advice
-E-011,Quality score calculation,VERIFIED,phase19 input and verification script,36.3 with weights 100,Safety gates override
-E-012,Recommendations are measurable,VERIFIED,phase19 priority/roadmap CSV,Acceptance and measurement recorded,Effort estimates require resourcing
+E-002,Software contract passes tests,VERIFIED,2026-07-29 remediation verification,163 passed and 98.11% branch coverage,Model inference remains mocked
+E-003,Static quality gates,VERIFIED,Ruff and strict mypy commands,PASS on 24 source files,Does not establish runtime model validity
+E-004,Slide aggregation exists,VERIFIED,src/services/aggregation.py and API tests,Predicted-cell counts and Wilson interval verified,Not patient aggregation or clinical parasitemia
+E-005,Model clinical performance known,UNKNOWN,phase8 status,NOT EXECUTED,No real predictions or cohort
+E-006,Model manifest verification exists,VERIFIED,src/core/manifest.py and 16 manifest tests,Fail-closed SHA revision label resolution and license metadata checks,No approved release bundle supplied
+E-007,Biological/OOD validity known,UNKNOWN,QC tests and phase10,Engineering heuristic works on controlled fixtures,External microscopy/OOD validation absent
+E-008,Rate limiting prevents simple per-client bursts,VERIFIED,src/core/ratelimit.py tests,429 retry window bounded key store,Per-process only
+E-009,API-key control exists,VERIFIED,dependency and negative tests,401 missing 403 invalid constant-time match,Optional and deployment policy not verified
+E-010,Real-model capacity known,UNKNOWN,phase11,NOT EXECUTED,Model/Docker absent
+E-011,Clinical/regulatory readiness,VERIFIED,phases16-18 and re-evaluation,NO-GO/conditional applicability,Not legal advice
+E-012,Quality score calculation,VERIFIED,phase19 input and verification script,51.02 with weights 100,Safety gates override
+E-013,UI surfaces QC and quota errors,VERIFIED,src/ui/app.js and API test,Uses textContent-compatible error path,No slide batch UI

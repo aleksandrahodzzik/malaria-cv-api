@@ -3521,7 +3521,7 @@ Domains:
 
 ```text
 UI-007:
-При model_not_configured primary action disabled,
+При MODEL_NOT_CONFIGURED primary action disabled,
 reason отображается в aria-live,
 горизонтальный overflow отсутствует при 320 CSS px.
 ```
