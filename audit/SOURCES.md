@@ -178,7 +178,44 @@ guidelines не интерпретированы как доказательст
     cybersecurity.
     https://health.ec.europa.eu/medical-devices-sector/new-regulations/guidance-mdcg-endorsed-documents-and-other-guidance_en
 
-## 7. Что не следует выводить из источников
+## 7. Дополнительные официальные источники, проверенные 2026-07-28
+
+29. ISO 13485:2016, Medical devices — Quality management systems —
+    Requirements for regulatory purposes, edition 3.
+    https://www.iso.org/standard/59752.html
+
+30. ISO 14971:2019, Medical devices — Application of risk management to
+    medical devices, edition 3, confirmed.
+    https://www.iso.org/standard/72704.html
+
+31. IEC 62304:2006+A1:2015, Medical device software — Software life cycle
+    processes, consolidated edition 1.1.
+    https://webstore.iec.ch/en/publication/22794
+
+32. IEC 62366-1:2015+A1:2020, Application of usability engineering to medical
+    devices.
+    https://webstore.iec.ch/en/publication/59980
+
+33. IEC 81001-5-1:2021, Security — Activities in the product life cycle.
+    https://webstore.iec.ch/en/publication/63293
+
+34. ISO/IEC 27001:2022, Information security management systems, edition 3.
+    https://www.iso.org/standard/27001
+
+35. WHO, Malaria microscopy quality assurance manual, version 2.
+    https://www.who.int/publications/i/item/9789241549394
+
+36. FDA, Software as a Medical Device (SaMD).
+    https://www.fda.gov/medical-devices/digital-health-center-excellence/software-medical-device-samd
+
+37. FDA, Transparency for Machine Learning-Enabled Medical Devices: Guiding
+    Principles.
+    https://www.fda.gov/medical-devices/software-medical-device-samd/transparency-machine-learning-enabled-medical-devices-guiding-principles
+
+38. GitHub Docs, policy for requiring actions pinned to full-length commit SHA.
+    https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/enabling-features-for-your-repository/managing-github-actions-settings-for-a-repository
+
+## 8. Что не следует выводить из источников
 
 - Публикация о NIH dataset не доказывает происхождение текущей модели.
 - Высокая accuracy из другой статьи не переносится на данный artifact.

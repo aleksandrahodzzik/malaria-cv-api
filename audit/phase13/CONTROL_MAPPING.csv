@@ -1,0 +1,8 @@
+Control,OWASP API 2023,NIST SSDF/NIST AI RMF,Current,Gap
+Authentication/authorization,API1/API2,Protect,ABSENT,Identity and least privilege
+Resource consumption,API4,Protect,PARTIAL,Edge rate/concurrency/RSS limits
+Inventory/versioning,API9,Identify/Govern,PARTIAL,Deployment/model registry inventory
+Unsafe API consumption,API10,Protect,PARTIAL,Remote registry egress/integrity
+Secure development pipeline,Supply-chain related,PO/PS,PARTIAL,Hashes/attestation/base digest
+AI validity/robustness,Not primary API control,Measure/Manage,BLOCKED,External model evidence
+Monitoring,API threat detection,Detect/Manage,PARTIAL,Metrics/alerts/runbooks

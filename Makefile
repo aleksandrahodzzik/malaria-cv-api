@@ -35,17 +35,17 @@ test: ## Execute pytest test suite with coverage report
 	$(VENV_PYTHON) -m pytest --cov=src --cov-report=term-missing --cov-report=html --cov-fail-under=80 tests/
 
 lint: ## Run code linters (ruff) and type checker (mypy)
-	$(VENV_PYTHON) -m ruff format --check src tests
-	$(VENV_PYTHON) -m ruff check src tests
-	$(VENV_PYTHON) -m mypy src
+	$(VENV_PYTHON) -m ruff format --check src tests scripts
+	$(VENV_PYTHON) -m ruff check src tests scripts
+	$(VENV_PYTHON) -m mypy src scripts
 
 format: ## Format source code and tests
-	$(VENV_PYTHON) -m ruff format src tests
-	$(VENV_PYTHON) -m ruff check --fix src tests
+	$(VENV_PYTHON) -m ruff format src tests scripts
+	$(VENV_PYTHON) -m ruff check --fix src tests scripts
 
 check: lint test ## Run all local release checks
 	$(VENV_PYTHON) -m pip check
-	$(VENV_PYTHON) -m compileall -q src tests
+	$(VENV_PYTHON) -m compileall -q src tests scripts
 
 docker-build: ## Build the multi-stage non-root Docker image
 	docker build -t $(IMAGE_NAME):$(IMAGE_TAG) .

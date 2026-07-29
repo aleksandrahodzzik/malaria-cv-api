@@ -52,7 +52,7 @@ class MalariaClassifierService:
                 "MODEL_NAME is not configured. Provide an approved model artifact."
             )
 
-        logger.info(f"Loading HuggingFace vision model: '{self.model_name}'...")
+        logger.info("Loading approved image-classification model.")
         start_time = time.perf_counter()
 
         try:
@@ -79,12 +79,16 @@ class MalariaClassifierService:
 
             elapsed = time.perf_counter() - start_time
             logger.info(
-                f"Successfully loaded '{self.model_name}' in {elapsed:.2f} seconds."
+                "Approved model loaded in %.2f seconds.",
+                elapsed,
             )
         except Exception as exc:
             self._is_ready = False
-            logger.error(f"Failed to load HuggingFace model '{self.model_name}': {exc}")
-            raise RuntimeError(f"Model initialization failure: {exc}") from exc
+            logger.error(
+                "Approved model load failed with %s.",
+                type(exc).__name__,
+            )
+            raise RuntimeError("Model initialization failure.") from exc
 
     def _validate_model_contract(self) -> dict[int, str]:
         """Validate class count, indices and labels before accepting the model."""

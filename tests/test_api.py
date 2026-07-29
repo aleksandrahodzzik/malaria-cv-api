@@ -101,14 +101,16 @@ def test_health_check_and_tracking_headers(client: TestClient) -> None:
     assert response.status_code == 200
     data = response.json()
     assert data["status"] == "healthy"
-    assert data["version"] == "1.2.0"
+    assert data["version"] == "1.3.0"
     assert "timestamp" in data
     assert re.fullmatch(
         r"[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}",
         response.headers["X-Request-ID"],
     )
     assert "X-Response-Time-Ms" in response.headers
+    assert response.headers["X-Service-Version"] == "1.3.0"
     assert response.headers["X-Content-Type-Options"] == "nosniff"
+    assert response.headers["Cache-Control"] == "no-store"
 
 
 def test_valid_client_request_id_is_preserved(client: TestClient) -> None:

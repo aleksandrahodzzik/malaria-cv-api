@@ -12,12 +12,10 @@ from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
-# Configure logger
+from src.core.config import settings
+from src.core.logging import safe_extra
+
 logger = logging.getLogger("malaria_api.middleware")
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
-)
 
 _REQUEST_ID_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,63}$")
 
@@ -183,8 +181,15 @@ class RequestTrackingMiddleware(BaseHTTPMiddleware):
         except Exception as exc:
             duration_ms = (time.perf_counter() - start_time) * 1000.0
             logger.error(
-                f"Request failed | ID: {request_id} | Path: {request.url.path} | "
-                f"Latency: {duration_ms:.2f}ms | Error: {exc}"
+                "Request failed.",
+                extra=safe_extra(
+                    event="request_failed",
+                    request_id=request_id,
+                    method=request.method,
+                    path=request.url.path,
+                    duration_ms=round(duration_ms, 2),
+                    error_type=type(exc).__name__,
+                ),
             )
             raise
 
@@ -193,12 +198,19 @@ class RequestTrackingMiddleware(BaseHTTPMiddleware):
         # Inject tracing headers
         response.headers["X-Request-ID"] = request_id
         response.headers["X-Response-Time-Ms"] = f"{process_time_ms:.2f}"
+        response.headers["X-Service-Version"] = settings.VERSION
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["Referrer-Policy"] = "no-referrer"
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["Permissions-Policy"] = (
             "camera=(), microphone=(), geolocation=()"
         )
+        if request.url.path.startswith("/api/") or request.url.path in {
+            "/health",
+            "/ready",
+            "/analyze",
+        }:
+            response.headers["Cache-Control"] = "no-store"
         if request.url.path == "/" or request.url.path.startswith("/assets/"):
             response.headers["Content-Security-Policy"] = (
                 "default-src 'self'; img-src 'self' blob: data:; "
@@ -207,9 +219,15 @@ class RequestTrackingMiddleware(BaseHTTPMiddleware):
             )
 
         logger.info(
-            f"Method: {request.method} | Path: {request.url.path} | "
-            f"Status: {response.status_code} | "
-            f"Latency: {process_time_ms:.2f}ms | ID: {request_id}"
+            "Request completed.",
+            extra=safe_extra(
+                event="request_completed",
+                request_id=request_id,
+                method=request.method,
+                path=request.url.path,
+                status=response.status_code,
+                duration_ms=round(process_time_ms, 2),
+            ),
         )
 
         return response

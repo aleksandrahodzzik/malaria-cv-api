@@ -1,0 +1,4 @@
+Architecture,Input,Strengths,Primary limitations,Clinical evidence needed,Current fit
+A cropped-cell classifier,Pre-cropped RBC,"Минимальная инженерная сложность; удобно исследовать representation","Нет поиска клеток; sampling bias; нет паразитемии или patient result","External cell-level validation и запрет patient claims","Текущий прототип"
+B detection/segmentation + classification + counting,Field/slide images,"Аудируемые компоненты; counting; quality flags","Propagation ошибок; сложная разметка; detector shift","Component и end-to-end slide/patient validation","Рекомендуемый исследовательский следующий этап"
+C field/whole-slide end-to-end detector,Field/WSI,"Контекст и потенциально меньше ручной подготовки","Большие данные/compute; труднее failure attribution; scanner dependence","Multi-site external patient validation и workflow study","Долгосрочная R&D гипотеза"

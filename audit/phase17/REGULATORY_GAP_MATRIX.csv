@@ -1,0 +1,11 @@
+Requirement area,Potential applicability,Current evidence,Gap,Required artifact
+Intended purpose,All pathways,Research-only wording,Population/user/setting/sample undefined,Approved intended-purpose statement
+QMS,Medical/IVD product,None,QMS absent,ISO 13485-aligned QMS scope
+Risk management,Medical/IVD product,Audit risk registers only,No controlled risk management file,ISO 14971 process and benefit-risk
+Software lifecycle,Medical software,Git/tests/CI,No controlled plans/traceability/change records,IEC 62304 lifecycle artifacts
+Performance evaluation,IVD,No approved model/cohort,Analytical/clinical/scientific evidence plan,IVDR performance evaluation package
+Usability,Intended users,UI scope warning,No formative/summative study,IEC 62366-1 usability file
+Cybersecurity,Connected software,Threat model and partial controls,No secure lifecycle/postmarket process,IEC 81001-5-1 evidence
+Data protection,Health data,No app persistence,Deployment/controller evidence absent,DPIA/ROPA/contracts/retention
+Post-market,Marketed device,None,No monitoring/vigilance/PMS,PMS and incident process
+AI governance,AI system,Technical audit,No deployer/manufacturer role analysis,EU AI Act applicability and technical file

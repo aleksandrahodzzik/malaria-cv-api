@@ -13,6 +13,7 @@ from fastapi.staticfiles import StaticFiles
 from src.api.routes import router as api_router
 from src.core.config import settings
 from src.core.errors import register_exception_handlers
+from src.core.logging import configure_logging, safe_extra
 from src.core.middleware import (
     LegacyRouteDeprecationMiddleware,
     RequestBodyLimitMiddleware,
@@ -22,6 +23,7 @@ from src.services.inference import MalariaClassifierService
 
 logger = logging.getLogger("malaria_api.main")
 UI_ROOT = Path(__file__).resolve().parent / "ui"
+configure_logging(getattr(logging, settings.LOG_LEVEL))
 
 
 @asynccontextmanager
@@ -53,7 +55,14 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         app.state.model_error_code = None
         logger.info("Lifespan startup complete: ML Model ready for requests.")
     except RuntimeError as exc:
-        logger.critical(f"Failed to load ML Model during startup lifespan: {exc}")
+        logger.critical(
+            "Approved model initialization failed.",
+            extra=safe_extra(
+                event="model_initialization_failed",
+                error_type=type(exc).__name__,
+                model_status="not_ready",
+            ),
+        )
         app.state.classifier_service = None
         app.state.model_error_code = "model_initialization_failed"
 

@@ -42,11 +42,6 @@ ENV PYTHONUNBUFFERED=1 \
     PATH="/opt/venv/bin:$PATH" \
     PORT=8000
 
-# Install lightweight runtime utilities (curl for healthchecks)
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
-
 # Copy python virtual environment from builder stage
 COPY --from=builder /opt/venv /opt/venv
 
@@ -62,10 +57,12 @@ USER appuser
 
 EXPOSE 8000
 
-# Container liveness health check
+# Container liveness health check uses the Python standard library, avoiding an
+# additional runtime OS package solely for probing localhost.
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
-    CMD curl -f http://localhost:8000/health || exit 1
+    CMD ["python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3).read()"]
 
 # One worker is the conservative default because every worker owns a model copy.
 # Increase only after measuring peak RSS and latency with the approved model.
-ENTRYPOINT ["gunicorn", "-w", "1", "-k", "uvicorn.workers.UvicornWorker", "--access-logfile", "-", "--error-logfile", "-", "-b", "0.0.0.0:8000", "src.main:app"]
+STOPSIGNAL SIGTERM
+ENTRYPOINT ["gunicorn", "-w", "1", "-k", "uvicorn.workers.UvicornWorker", "--timeout", "45", "--graceful-timeout", "30", "--error-logfile", "-", "-b", "0.0.0.0:8000", "src.main:app"]

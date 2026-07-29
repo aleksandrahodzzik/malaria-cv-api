@@ -20,7 +20,7 @@ class HealthResponse(BaseModel):
         json_schema_extra={
             "example": {
                 "status": "healthy",
-                "version": "1.2.0",
+                "version": "1.3.0",
                 "timestamp": "2026-07-27T18:00:00Z",
             }
         }

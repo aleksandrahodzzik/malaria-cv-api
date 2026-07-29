@@ -162,7 +162,7 @@ curl http://localhost:8000/api/v1/capabilities
 
 ```json
 {
-  "api_version": "1.2.0",
+  "api_version": "1.3.0",
   "intended_use": "research_only",
   "task": "pre_cropped_single_cell_classification",
   "analysis_level": "cell",
@@ -250,6 +250,28 @@ locked validation cohort:
 patient-linked данных и locked test predictions все model performance metrics
 остаются `NOT EXECUTED`.
 
+## Offline aggregation, robustness и capacity planning
+
+Дополнительные модули предназначены только для воспроизводимого проектирования
+будущей валидации:
+
+- `src.validation.aggregation` — apparent/corrected rate, Rogan–Gladen,
+  beta-binomial moments, false-positive accumulation и minimum cell count;
+- `src.validation.robustness` — детерминированные offline-corruptions с
+  severity 0–5;
+- `src.validation.capacity` — utilization, Little/Erlang-C, RAM и latency
+  summaries;
+- `scripts/benchmark_api.py` — явно маркированный T0/T1 ASGI benchmark.
+
+Эти утилиты не создают patient-level diagnosis и не подтверждают robustness или
+capacity реальной модели. Зафиксированный T0/T1 baseline использует synthetic
+classifier; T2/T3 остаются `NOT EXECUTED`.
+
+Application logs выводятся как privacy-conscious JSON с allowlist полей.
+API-ответы имеют `Cache-Control: no-store`, `X-Request-ID` и
+`X-Service-Version`. Изображения, filenames, токены и exception messages в
+структурированные логи не включаются.
+
 ### Error envelope
 
 ```json
@@ -275,9 +297,9 @@ make check
 Напрямую в Windows:
 
 ```powershell
-.\.venv\Scripts\python.exe -m ruff format --check src tests
-.\.venv\Scripts\python.exe -m ruff check src tests
-.\.venv\Scripts\python.exe -m mypy src
+.\.venv\Scripts\python.exe -m ruff format --check src tests scripts
+.\.venv\Scripts\python.exe -m ruff check src tests scripts
+.\.venv\Scripts\python.exe -m mypy src scripts
 .\.venv\Scripts\python.exe -m pytest --cov=src --cov-report=term-missing --cov-fail-under=80 tests
 .\.venv\Scripts\python.exe -m pip check
 ```
@@ -351,6 +373,16 @@ read-only и передавать соответствующие перемен�
 - [аудит intended use](audit/phase6/INTENDED_USE_AUDIT.md);
 - [Dataset Datasheet](audit/phase7/DATASET_DATASHEET_CURRENT.md);
 - [статус математической валидации](audit/phase8/MATHEMATICAL_VALIDATION_STATUS.md).
+- [агрегация cell → slide/patient](audit/phase9/AGGREGATION_AUDIT.md);
+- [robustness/OOD protocol](audit/phase10/ROBUSTNESS_OOD_PLAN.md);
+- [performance/capacity baseline](audit/phase11/BENCHMARK_PROTOCOL.md);
+- [reliability/observability](audit/phase12/RELIABILITY_OBSERVABILITY_AUDIT.md);
+- [STRIDE/security/privacy](audit/phase13/STRIDE_THREAT_MODEL.md);
+- [Docker/supply chain](audit/phase14/SUPPLY_CHAIN_AUDIT.md);
+- [test strategy](audit/phase15/TEST_STRATEGY.md);
+- [clinical workflow/human factors](audit/phase16/CLINICAL_WORKFLOW.md);
+- [regulatory applicability](audit/phase17/REGULATORY_APPLICABILITY.md);
+- [quality score и safety gates](audit/phase18/FINAL_GO_NO_GO.md).
 
 ## Лицензия
 

@@ -18,6 +18,7 @@ from fastapi import (
 
 from src.api.dependencies import get_classifier_service
 from src.core.config import settings
+from src.core.logging import safe_extra
 from src.schemas.payload import (
     CapabilitiesResponse,
     ErrorResponse,
@@ -293,9 +294,12 @@ async def analyze_cell_image(
         raise
     except Exception as exc:
         logger.exception(
-            "Failed to read upload buffer | Filename: %s",
-            filename,
-            exc_info=exc,
+            "Failed to read upload buffer.",
+            extra=safe_extra(
+                event="upload_read_failed",
+                error_type=type(exc).__name__,
+            ),
+            exc_info=True,
         )
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -323,9 +327,7 @@ async def analyze_cell_image(
         return prediction
     except ValueError as val_err:
         logger.info(
-            "Invalid image payload | Filename: %s | Reason: %s",
-            filename,
-            val_err,
+            "Invalid image payload.",
         )
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -347,9 +349,12 @@ async def analyze_cell_image(
         ) from timeout_err
     except Exception as exc:
         logger.exception(
-            "Inference pipeline execution error | Filename: %s",
-            filename,
-            exc_info=exc,
+            "Inference pipeline execution error.",
+            extra=safe_extra(
+                event="inference_failed",
+                error_type=type(exc).__name__,
+            ),
+            exc_info=True,
         )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

@@ -8,10 +8,18 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   quality-and-test:
     name: Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
@@ -19,10 +27,12 @@ jobs:
 
     steps:
       - name: Checkout Source Code
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version: ${{ matrix.python-version }}
           cache: 'pip'
@@ -36,20 +46,21 @@ jobs:
         run: python -m pip check
 
       - name: Check Formatting
-        run: ruff format --check src tests
+        run: ruff format --check src tests scripts
 
       - name: Run Ruff Linter
-        run: ruff check src tests
+        run: ruff check src tests scripts
 
       - name: Run Mypy Static Type Checker
-        run: mypy src
+        run: mypy src scripts
 
       - name: Run Pytest Test Suite
         run: pytest --cov=src --cov-report=xml --cov-report=term-missing --cov-fail-under=80 tests/
 
       - name: Upload Coverage XML to GitHub Artifacts
         if: matrix.python-version == '3.11'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: coverage-report
           path: coverage.xml
+          retention-days: 7

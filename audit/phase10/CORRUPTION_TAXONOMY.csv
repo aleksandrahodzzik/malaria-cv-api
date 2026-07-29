@@ -1,0 +1,12 @@
+Family,Variant,Severity 0-5,Clinical relevance,Required metric,Status
+Focus,Gaussian blur,yes,Defocus/optics,delta sensitivity and reject rate,HARNESS VERIFIED
+Motion,Directional motion blur,planned,Handheld capture,delta sensitivity,NOT IMPLEMENTED
+Photometric,Brightness/contrast,yes,Illumination drift,delta ECE and AUROC,HARNESS VERIFIED
+Color,Color cast/white balance,yes,Stain/device shift,subgroup Se/Sp,HARNESS VERIFIED
+Compression,JPEG recompression,yes,Messaging/export pipeline,delta AUPRC,HARNESS VERIFIED
+Geometry,Rotation/scale/crop shift,yes,Cell crop errors,delta MCC,HARNESS VERIFIED
+Occlusion,Central patch,yes,Overlap/debris,reject rate,HARNESS VERIFIED
+Noise,Pixel noise,yes,Sensor noise,OOD and degradation,HARNESS VERIFIED
+Biological,Leukocytes/platelets/overlap,no,Confounders,false-positive rate,DATA REQUIRED
+OOD,Non-blood/documents/faces/noise,no,Unsafe input,FPR95 and OOD AUROC,DATA REQUIRED
+Institution,New microscope/site/stain,no,Domain shift,external patient metrics,DATA REQUIRED

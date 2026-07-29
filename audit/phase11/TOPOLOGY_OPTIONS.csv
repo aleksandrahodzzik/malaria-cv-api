@@ -1,0 +1,8 @@
+Option,Strength,Cost/Risk,Decision trigger
+1 process + bounded concurrency,One model copy and simple backpressure,Single-process fault domain and CPU ceiling,Default until real baseline
+Multiple processes,Isolation and multicore throughput,Per-worker model RAM and thread oversubscription,Only after RAM/throughput measurements
+Dedicated inference worker,Central admission and API isolation,IPC/network complexity and new failure modes,When API and inference scaling diverge
+Durable job queue,Burst absorption and auditability,Latency/storage/PII lifecycle,Only for async workflow requirements
+ONNX Runtime,Potential CPU portability/latency,Conversion parity and operator drift,After locked regression benchmark
+Quantization,Lower RAM/possibly faster,Calibration and subgroup metric drift,Only with prespecified non-inferiority gates
+GPU,High batch throughput,Cost/batching/driver/SPOF,Only when demand and latency justify

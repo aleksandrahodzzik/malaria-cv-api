@@ -16,6 +16,20 @@
 > [`audit/phase6/`](phase6/INTENDED_USE_AUDIT.md),
 > [`audit/phase7/`](phase7/DATASET_DATASHEET_CURRENT.md) и
 > [`audit/phase8/`](phase8/MATHEMATICAL_VALIDATION_STATUS.md).
+>
+> Фазы 9–18 расширяют аудит до агрегации, robustness/OOD, capacity,
+> observability, STRIDE/privacy, supply chain, тестовой стратегии, human
+> factors, regulatory applicability и доказательного GO/NO-GO:
+> [`phase9`](phase9/AGGREGATION_AUDIT.md),
+> [`phase10`](phase10/ROBUSTNESS_OOD_PLAN.md),
+> [`phase11`](phase11/BENCHMARK_PROTOCOL.md),
+> [`phase12`](phase12/RELIABILITY_OBSERVABILITY_AUDIT.md),
+> [`phase13`](phase13/STRIDE_THREAT_MODEL.md),
+> [`phase14`](phase14/SUPPLY_CHAIN_AUDIT.md),
+> [`phase15`](phase15/TEST_STRATEGY.md),
+> [`phase16`](phase16/CLINICAL_WORKFLOW.md),
+> [`phase17`](phase17/REGULATORY_APPLICABILITY.md) и
+> [`phase18`](phase18/FINAL_GO_NO_GO.md).
 
 ## Итог
 

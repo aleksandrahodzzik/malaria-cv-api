@@ -5,6 +5,23 @@ They provide deterministic calculations after an approved, patient-linked
 validation cohort and locked predictions become available.
 """
 
+from src.validation.aggregation import (
+    BetaBinomialMoments,
+    CorrectedRate,
+    apparent_positive_rate,
+    beta_binomial_moments,
+    false_positive_accumulation,
+    minimum_cells_for_detection,
+    rogan_gladen_rate,
+)
+from src.validation.capacity import (
+    LatencySummary,
+    erlang_c,
+    little_law,
+    ram_estimate,
+    summarize_latency,
+    utilization,
+)
 from src.validation.statistics import (
     BinaryMetrics,
     ConfusionCounts,
@@ -22,15 +39,28 @@ from src.validation.statistics import (
 
 __all__ = [
     "BinaryMetrics",
+    "BetaBinomialMoments",
     "ConfusionCounts",
+    "CorrectedRate",
+    "LatencySummary",
+    "apparent_positive_rate",
+    "beta_binomial_moments",
     "binary_metrics",
     "calibration_metrics",
     "clopper_pearson_interval",
     "cluster_bootstrap_intervals",
     "expected_cost",
+    "false_positive_accumulation",
+    "erlang_c",
+    "little_law",
     "mcnemar_exact",
+    "minimum_cells_for_detection",
     "prevalence_predictive_values",
     "risk_coverage_curve",
+    "ram_estimate",
+    "rogan_gladen_rate",
     "sample_size_for_proportion",
+    "summarize_latency",
+    "utilization",
     "wilson_interval",
 ]

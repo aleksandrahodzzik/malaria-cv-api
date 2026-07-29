@@ -1,0 +1,13 @@
+Domain,Metric,Type,Labels allowed,Labels forbidden,Purpose,Status
+API,request_count,counter,"route template; method; status class","request_id; filename; patient",Traffic/errors,PLANNED
+API,request_duration_seconds,histogram,"route template; method","raw path; user",Latency SLO,PLANNED
+API,active_requests,gauge,none,request_id,Concurrency,PLANNED
+API,rejected_requests,counter,reason,filename,Backpressure,PLANNED
+ML,inference_duration_seconds,histogram,"model revision alias",patient,Capacity,PLANNED
+ML,model_load_status,gauge,"model revision alias",model path,Readiness,PLANNED
+ML,predicted_class_distribution,counter,class,request_id,Drift sentinel,PLANNED
+ML,confidence_distribution,histogram,"class; calibration version",patient,Calibration drift,PLANNED
+ML,reject_rate,counter,reason,filename,Safe failure,PLANNED
+ML,image_quality_failures,counter,quality flag,case hash,Acquisition monitoring,PLANNED
+System,process_resident_memory_bytes,gauge,process,none,RAM,PLANNED
+System,queue_depth,gauge,worker pool,request_id,Saturation,PLANNED

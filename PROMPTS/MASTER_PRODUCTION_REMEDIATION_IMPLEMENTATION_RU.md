@@ -1,6 +1,6 @@
 # Мастер-промпт глубокой реализации и развития `malaria-cv-api`
 
-Версия: 2.0.0
+Версия: 3.0.0
 Язык выполнения и отчёта: русский
 Режим глубины: максимальный
 Тип работы: evidence-driven remediation and implementation
@@ -13,7 +13,7 @@
 ```text
 <MASTER_PROMPT>
   <ID>MALARIA_CV_API_PRODUCTION_REMEDIATION_IMPLEMENTATION_RU</ID>
-  <VERSION>2.0.0</VERSION>
+  <VERSION>3.0.0</VERSION>
   <LANGUAGE>ru-RU</LANGUAGE>
   <EXECUTION_DEPTH>MAXIMUM</EXECUTION_DEPTH>
   <EXECUTION_MODE>AUDIT_GATED_IMPLEMENTATION</EXECUTION_MODE>
@@ -2432,7 +2432,1055 @@ GO/NO-GO updated.
 
 ---
 
-# 16. ФАЗА 9 — формализация требований
+# 16. ФАЗА 9 — АГРЕГАЦИЯ ОТ КЛЕТКИ К ПАЦИЕНТУ
+
+## 16.1. Safety boundary
+
+Cell-level prediction не является slide-level или patient-level result.
+Не добавляй patient endpoint до появления validated acquisition, sampling,
+detection, aggregation и reference-standard protocol.
+
+Определи отдельно:
+
+```text
+cell_estimand
+slide_estimand
+patient_estimand
+parasitemia_estimand
+clinical_action
+```
+
+Для каждого укажи unit, denominator, reference standard, threshold, CI,
+rejection rule и validation cohort.
+
+## 16.2. Naive estimator и его ограничения
+
+Пусть:
+
+```text
+m = число исследованных клеток
+k = число predicted-positive клеток
+p_i = cell score
+r = k / m
+```
+
+Наивная оценка:
+
+```text
+parasitemia_hat_naive = k / m
+```
+
+Она смешивает:
+
+- detector misses/duplicates;
+- classifier sensitivity/specificity;
+- unreadable/rejected cells;
+- within-slide correlation;
+- incomplete field coverage;
+- biased field/cell sampling;
+- stage/species differences;
+- low-density infection;
+- denominator definition.
+
+Не называй `k/m` clinically meaningful parasitemia без bridging validation.
+
+## 16.3. Misclassification correction
+
+При известных validated `Se_cell` и `Sp_cell`:
+
+```text
+r = q * Se_cell + (1-q) * (1-Sp_cell)
+
+q_hat_RG =
+  (r + Sp_cell - 1)
+  / (Se_cell + Sp_cell - 1)
+```
+
+Это Rogan–Gladen-type correction. Проверь:
+
+- `Se + Sp > 1`;
+- uncertainty Se/Sp;
+- applicability к site/stain/stage;
+- cluster dependence;
+- boundary estimates;
+- detector contribution.
+
+Покажи unconstrained и `[0,1]` constrained estimates, но не скрывай boundary
+clipping.
+
+## 16.4. Запрещённая independence shortcut
+
+Не используй без доказательства:
+
+```text
+P(patient positive) = 1 - Π_i (1-p_i)
+```
+
+Формула предполагает условную независимость и calibrated `p_i`. При
+correlated cells и даже малом false-positive rate результат быстро стремится к
+единице.
+
+Проведи sensitivity illustration:
+
+```text
+P(at least one FP | m truly negative independent cells)
+= 1 - Sp_cell^m
+```
+
+Маркируй это как independence illustration, а не clinical model.
+
+## 16.5. Hierarchical design
+
+Предложи уровни:
+
+```text
+patient
+  -> slide/specimen
+    -> field of view
+      -> detected cell
+        -> classifier observation
+```
+
+Рассмотри:
+
+- generalized linear mixed model;
+- beta-binomial overdispersion;
+- Bayesian hierarchical model;
+- measurement-error model for detector/classifier;
+- zero-inflated/low-parasitemia component;
+- species/stage-specific effects;
+- site/device/stain random effects.
+
+Beta-binomial:
+
+```text
+q_slide ~ Beta(alpha, beta)
+k | q_slide ~ Binomial(m, q_slide)
+
+E[k] = m * alpha/(alpha+beta)
+
+Var[k] =
+  m * μ * (1-μ)
+  * [1 + (m-1)ρ]
+
+ρ = 1/(alpha+beta+1)
+```
+
+Model choice, priors и posterior decision rule pre-register до locked test.
+
+## 16.6. Minimum sampling
+
+Для optimistic independent-sampling illustration:
+
+```text
+P(detect >= 1) = 1 - (1 - q*Se_cell)^m
+
+m_required =
+  ceil(log(1-target_detection_probability)
+       / log(1-q*Se_cell))
+```
+
+Это нижняя planning bound, а не validated minimum. Реальный protocol учитывает:
+
+- clustering/design effect;
+- detector miss rate;
+- unreadable fraction;
+- field selection;
+- stage/species sensitivity;
+- stopping rules;
+- microscopy reference standard.
+
+## 16.7. Architecture comparison
+
+Сравни:
+
+```text
+A. cropped-cell classification
+B. detection/segmentation + classification + counting
+C. whole-field/whole-slide end-to-end detector
+```
+
+| Criterion | A | B | C |
+|---|---|---|---|
+| Input burden | expert/manual crop | raw field + annotations | raw field/slide |
+| Detection errors | hidden upstream | explicit/measurable | integrated |
+| Counting | absent | native | possible |
+| Interpretability | cell class | detections/counts | field-level |
+| Annotation cost | cell labels | boxes/masks + labels | boxes/masks/field labels |
+| Deployment complexity | low | high | medium/high |
+| Patient bridge | absent | possible after validation | possible after validation |
+| Domain-shift surface | crop | detector + classifier | end-to-end |
+
+Не выбирай architecture без intended use, data availability и target hardware.
+
+## 16.8. Gate и deliverables
+
+Создай:
+
+```text
+audit/phase9/AGGREGATION_AUDIT.md
+audit/phase9/ARCHITECTURE_COMPARISON.csv
+audit/phase9/AGGREGATION_MATHEMATICS.md
+audit/phase9/PATIENT_LEVEL_GATE.md
+```
+
+Patient aggregation остаётся `NO-GO`, пока нет validated detector/sampling,
+patient-linked cohort, reference standard, aggregation threshold и human
+review workflow.
+
+---
+
+# 17. ФАЗА 10 — ROBUSTNESS, OOD И FAILURE ANALYSIS
+
+## 17.1. Taxonomy
+
+Разделяй:
+
+```text
+technical corruption
+acquisition shift
+biological/domain shift
+semantic OOD
+adversarial input
+pipeline failure
+```
+
+Минимальные corruptions:
+
+- blur/defocus/motion blur;
+- JPEG/WebP compression;
+- brightness/contrast/gamma;
+- white balance/color cast/stain shift;
+- scale/rotation/crop shift;
+- occlusion/overlap;
+- leukocytes/platelets/artefacts/dust;
+- empty background/non-blood/document/face/noise;
+- other microscope/site/institution;
+- adversarial perturbation.
+
+## 17.2. Corruption protocol
+
+Для каждого corruption:
+
+```text
+severity ∈ {0,1,2,3,4,5}
+seed
+parameter mapping
+clinical rationale
+pixel-space constraint
+identity check at severity=0
+artifact checksum
+```
+
+Строй:
+
+```text
+Metric(corruption, severity)
+Delta_from_clean
+failure/reject rate
+calibration degradation
+subgroup/site interaction
+```
+
+Не используй augmentation, меняющую clinically meaningful morphology, как
+«исправление» без медицинского review.
+
+## 17.3. OOD
+
+Оцени:
+
+- MSP baseline;
+- entropy;
+- energy/margin if supported;
+- embedding-distance baseline;
+- dedicated OOD set;
+- image-quality/reject model;
+- ensemble disagreement.
+
+Не подбирай OOD threshold на final test. Report:
+
+```text
+AUROC_OOD
+AUPRC_OOD
+FPR@TPR
+coverage
+selective risk
+false accept OOD
+false reject ID
+```
+
+## 17.4. Failure clustering
+
+Таблица:
+
+| Cluster | Count | Error type | Severity | Cause hypothesis | Evidence | Mitigation |
+|---|---:|---|---|---|---|---|
+
+Кластеризуй по:
+
+- morphology;
+- stain/color;
+- acquisition;
+- crop geometry;
+- predicted/true class;
+- confidence/entropy;
+- site/device;
+- species/stage;
+- detector failure.
+
+## 17.5. Explainability
+
+Если применяется Grad-CAM/XAI:
+
+- не трактуй heatmap как causality;
+- выполни model/randomization sanity checks;
+- оцени parameter/layer sensitivity;
+- проверь stability под малым perturbation;
+- сравни с expert ROI;
+- документируй cherry-picking risk.
+
+## 17.6. Implementation boundary
+
+Разрешено реализовать deterministic offline corruption harness. Запрещено
+включать corruptions/TTA в production preprocessing без model-specific
+validation.
+
+Deliverables:
+
+```text
+audit/phase10/ROBUSTNESS_OOD_PLAN.md
+audit/phase10/CORRUPTION_TAXONOMY.csv
+audit/phase10/FAILURE_ANALYSIS_TEMPLATE.csv
+audit/phase10/ROBUSTNESS_EXECUTION_STATUS.md
+```
+
+---
+
+# 18. ФАЗА 11 — PERFORMANCE И CAPACITY MODEL
+
+## 18.1. Benchmark tiers
+
+Разделяй:
+
+```text
+T0 = no-model API/framework baseline
+T1 = mocked/synthetic inference baseline
+T2 = approved real-model single-worker
+T3 = approved real-model deployment topology
+```
+
+Не переносить T0/T1 latency на T2/T3.
+
+## 18.2. Scenarios
+
+Измерь:
+
+- cold process startup;
+- model load;
+- warm startup;
+- first request;
+- sequential steady state;
+- concurrency 1,2,4,8,16;
+- file-size/input-resolution matrix;
+- valid/invalid/oversized/corrupt;
+- timeout/cancellation/capacity rejection;
+- graceful shutdown under load.
+
+Повтори сценарии. Запиши:
+
+```text
+N
+warmup count
+mean
+standard deviation
+95% CI method
+p50/p90/p95/p99
+throughput
+error/timeout/reject rate
+CPU
+RSS/peak RSS
+threads
+queue depth
+model load time
+```
+
+## 18.3. Queueing
+
+```text
+μ = service rate одного worker
+λ = arrival rate
+c = workers/servers
+ρ = λ/(c*μ)
+```
+
+Если `ρ -> 1`, queue latency растёт нелинейно. Проверяй candidate operating
+points около `ρ <= 0.7`, но не объявляй 0.7 универсальным SLO.
+
+Little’s Law:
+
+```text
+L = λW
+```
+
+Проверяй согласованность measured throughput/latency/concurrency.
+
+## 18.4. Memory
+
+```text
+RAM_total ≈
+  c * (RAM_model + RAM_runtime + RAM_activation_peak)
+  + RAM_shared
+  + RAM_upload_buffers
+  + safety_margin
+```
+
+Gunicorn workers обычно создают отдельные process-local model copies.
+Подтверди RSS экспериментом; не называй copy-on-write устойчивой экономией
+после mutable framework initialization без измерения.
+
+## 18.5. Topology comparison
+
+Сравни:
+
+- 1 process + bounded concurrency;
+- multiple Gunicorn processes;
+- dedicated inference worker;
+- durable/non-durable queue;
+- ONNX Runtime;
+- quantization;
+- TorchScript/`torch.compile`;
+- CPU/GPU.
+
+Optimization gate:
+
+```text
+baseline measured
+correctness regression suite exists
+target bottleneck identified
+candidate measured on same cases/hardware
+accuracy/calibration delta acceptable
+```
+
+Deliverables:
+
+```text
+audit/phase11/BENCHMARK_PROTOCOL.md
+audit/phase11/BENCHMARK_RESULTS.csv
+audit/phase11/CAPACITY_MODEL.md
+audit/phase11/TOPOLOGY_OPTIONS.csv
+```
+
+---
+
+# 19. ФАЗА 12 — RELIABILITY И OBSERVABILITY
+
+## 19.1. Signals
+
+Проверь:
+
+- structured JSON logs;
+- correlation ID;
+- traces;
+- metrics;
+- alerts/dashboards;
+- audit log;
+- code/model/dataset/checksum provenance;
+- liveness/readiness/startup;
+- graceful shutdown;
+- timeout/retry/circuit breaker;
+- backpressure/rate limit.
+
+## 19.2. Metric contract
+
+API:
+
+```text
+request_count
+request_duration_seconds
+request_size_bytes
+response_size_bytes
+http_error_count
+active_requests
+rejected_requests
+```
+
+ML:
+
+```text
+inference_duration_seconds
+model_load_status
+model_load_duration_seconds
+prediction_distribution
+score/entropy_distribution
+reject_rate
+ood_rate
+image_quality_failure_count
+```
+
+System:
+
+```text
+cpu
+rss_bytes
+thread_count
+queue_depth
+disk
+container_restart_count
+```
+
+Cardinality controls:
+
+- не использовать filename/request ID как metric label;
+- model revision label только bounded;
+- не использовать patient/site identifiers без approved aggregation/privacy.
+
+## 19.3. Logging privacy
+
+Не логируй:
+
+- image bytes;
+- filenames с patient metadata;
+- direct identifiers;
+- Authorization/API keys/tokens;
+- request bodies;
+- local secret paths;
+- raw model repository credentials.
+
+Structured event minimum:
+
+```text
+timestamp
+level
+event
+service_version
+request_id
+method
+route/path template
+status
+duration_ms
+error_type
+```
+
+## 19.4. SLO framework
+
+Не выдумывай targets. Предложи candidate ranges и вопросы владельцу:
+
+```text
+availability
+p95/p99 latency
+5xx rate
+capacity rejection rate
+model-not-ready duration
+data-quality reject rate
+```
+
+Monthly error budget:
+
+```text
+ErrorBudget =
+  (1 - SLO_target) * total_time
+```
+
+Определи burn-rate alerts только после утверждения SLO.
+
+Deliverables:
+
+```text
+audit/phase12/RELIABILITY_OBSERVABILITY_AUDIT.md
+audit/phase12/METRIC_CATALOG.csv
+audit/phase12/SLO_FRAMEWORK.md
+audit/phase12/PRIVACY_LOGGING_POLICY.md
+```
+
+---
+
+# 20. ФАЗА 13 — SECURITY И PRIVACY
+
+## 20.1. STRIDE
+
+Assets:
+
+- images/results/clinical metadata;
+- model/registry/token/checksum;
+- container/runtime;
+- CI secrets/logs/infrastructure.
+
+Actors:
+
+- anonymous user/bot;
+- malicious user;
+- compromised dependency/model repo;
+- insider;
+- supply-chain attacker.
+
+Для каждого threat:
+
+```text
+Threat ID
+STRIDE class
+Asset
+Actor
+Entry point
+Concrete attack path
+Existing control
+Gap
+Likelihood
+Impact
+Detection
+Mitigation
+Acceptance
+```
+
+## 20.2. Required checks
+
+Проверь:
+
+- authn/authz/global rate limits;
+- TLS/reverse proxy trust;
+- CORS;
+- upload/decompression/image parser DoS;
+- filename/log/error injection;
+- model extraction/inversion/membership inference;
+- adversarial inputs;
+- dependency confusion/unpinned transitives;
+- unsigned/mutable artifacts;
+- unsafe pickle/remote code;
+- secrets/history;
+- Actions permissions/SHA pinning;
+- SBOM/CVE scanning;
+- non-root/capabilities/read-only/no-new-privileges;
+- CPU/RAM/pids/disk limits;
+- network egress/model integrity.
+
+## 20.3. Privacy
+
+Определи:
+
+- data controller/processor roles;
+- purpose and legal basis;
+- minimization;
+- retention/deletion;
+- encryption in transit/at rest;
+- access logs;
+- incident response;
+- data subject handling;
+- DPIA trigger;
+- cross-border transfer;
+- model/privacy attack risk.
+
+Не загружай patient images во внешние scanners.
+
+## 20.4. Framework mapping
+
+Сопоставь findings:
+
+- OWASP API Security Top 10 2023;
+- NIST SSDF SP 800-218;
+- NIST AI RMF;
+- applicable medical cybersecurity guidance.
+
+Deliverables:
+
+```text
+audit/phase13/STRIDE_THREAT_MODEL.md
+audit/phase13/SECURITY_FINDINGS.csv
+audit/phase13/PRIVACY_GAP_ANALYSIS.md
+audit/phase13/CONTROL_MAPPING.csv
+```
+
+---
+
+# 21. ФАЗА 14 — DOCKER И SUPPLY CHAIN
+
+## 21.1. Docker
+
+Проверь:
+
+- base digest;
+- stage isolation;
+- image size;
+- non-root UID/GID;
+- writable dirs;
+- OS packages/cleanup;
+- runtime curl/shell;
+- HEALTHCHECK/startup semantics;
+- exec form/signals/graceful timeout;
+- worker/model copies;
+- model download/egress;
+- reproducibility/CVEs/SBOM/provenance.
+
+Не объявляй build/runtime PASS без Docker execution.
+
+## 21.2. Python/model supply chain
+
+Проверь:
+
+- direct/transitive locks;
+- hashes/platform matrix;
+- PyTorch index/CPU-GPU wheel;
+- model immutable revision;
+- safetensors;
+- SHA-256/signature;
+- license;
+- offline install/load;
+- dependency/model SBOM.
+
+## 21.3. CI
+
+Проверь:
+
+- top-level `permissions`;
+- full action commit SHA;
+- `persist-credentials`;
+- untrusted PR/token behavior;
+- dependency cache poisoning surface;
+- artifact retention;
+- attestations;
+- release/environment approvals.
+
+## 21.4. Prediction lineage
+
+Цепочка:
+
+```text
+source commit
+-> dependency lock
+-> tested model revision/checksum
+-> container digest
+-> SBOM
+-> signature/attestation
+-> deployment revision
+-> request/prediction provenance
+```
+
+Каждое production prediction должно быть связано с immutable release
+manifest без раскрытия secrets клиенту.
+
+Deliverables:
+
+```text
+audit/phase14/DOCKER_AUDIT.md
+audit/phase14/SUPPLY_CHAIN_AUDIT.md
+audit/phase14/RELEASE_LINEAGE.md
+audit/phase14/CI_HARDENING.md
+```
+
+---
+
+# 22. ФАЗА 15 — TEST STRATEGY
+
+## 22.1. Test pyramid/matrix
+
+Раздели:
+
+1. unit;
+2. API contract;
+3. integration;
+4. real-model smoke;
+5. model regression;
+6. security;
+7. property-based/fuzz;
+8. load;
+9. resilience;
+10. end-to-end.
+
+## 22.2. Mock boundary
+
+Проверь, не скрывает ли mock:
+
+- unavailable artifact;
+- wrong labels/preprocessing/logits;
+- load/license/version incompatibility;
+- unsafe serialization;
+- device/dtype issue;
+- calibration absence.
+
+Mocked success = software contract test, не model integration evidence.
+
+## 22.3. Required cases
+
+Покрой:
+
+- health/ready/not-ready;
+- missing/empty/unsupported/spoofed/corrupt/truncated;
+- encoded/decoded oversize;
+- grayscale/RGBA/CMYK/WEBP/multiframe;
+- concurrency/timeout/cancellation/capacity;
+- model/processor exceptions;
+- label/logit/revision contracts;
+- deterministic prediction;
+- golden/OOD/low-quality;
+- structured logging privacy;
+- aggregation/capacity/corruption mathematical invariants.
+
+## 22.4. Golden tests
+
+```text
+model revision/checksum fixed
+image SHA-256 fixed
+processor version fixed
+hardware/determinism documented
+tolerance justified
+class/rank and probability tolerance
+```
+
+Не сравнивай float строго. Golden assets должны быть лицензированы и
+de-identified.
+
+Deliverables:
+
+```text
+audit/phase15/TEST_STRATEGY.md
+audit/phase15/TEST_MATRIX.csv
+audit/phase15/MOCK_GAP_ANALYSIS.md
+```
+
+---
+
+# 23. ФАЗА 16 — CLINICAL WORKFLOW И HUMAN FACTORS
+
+## 23.1. Intended use
+
+Различай:
+
+- research/educational;
+- screening;
+- triage;
+- clinical decision support;
+- autonomous diagnosis.
+
+Определи intended user/population/setting/acquisition/training/contraindications,
+override, escalation, uncertainty и FP/FN consequences.
+
+## 23.2. UI/API semantics
+
+Проверь термины:
+
+```text
+diagnosis
+prediction
+screening result
+score/confidence
+calibrated probability
+uncertainty
+requires review
+quality flag
+```
+
+Не показывай raw softmax как disease probability.
+
+Safe research response должен включать:
+
+```text
+cell_prediction
+uncalibrated_score
+requires_review = true
+uncertainty_reason
+technical_quality_flags
+model revision/checksum when approved
+serving/preprocessing/calibration version
+intended_use
+request_id
+```
+
+## 23.3. Automation bias
+
+Проверь:
+
+- salience/color/wording;
+- default action;
+- score anchoring;
+- alert fatigue;
+- confirmation bias;
+- override friction;
+- missing-context warning;
+- reviewer accountability;
+- training/competency.
+
+Conduct formative usability test before clinical workflow and summative test
+under applicable human-factors process.
+
+Deliverables:
+
+```text
+audit/phase16/CLINICAL_WORKFLOW.md
+audit/phase16/HUMAN_FACTORS_RISK_ANALYSIS.csv
+audit/phase16/SAFE_RESPONSE_CONTRACT.md
+```
+
+---
+
+# 24. ФАЗА 17 — REGULATORY APPLICABILITY
+
+## 24.1. Non-legal boundary
+
+Не давай окончательного юридического заключения. Определи jurisdiction,
+intended purpose и claims до классификации.
+
+Различай:
+
+- human specimen image processing;
+- IVD purpose;
+- medical-device software;
+- research software;
+- general wellness;
+- decision support.
+
+## 24.2. Applicability matrix
+
+Оцени:
+
+- EU MDR 2017/745;
+- EU IVDR 2017/746;
+- EU AI Act 2024/1689;
+- GDPR;
+- FDA SaMD для US plan;
+- IMDRF SaMD;
+- national target-market rules.
+
+Для каждого:
+
+```text
+Applicability
+Trigger
+Current evidence
+Gap
+Decision owner
+Required specialist review
+```
+
+## 24.3. Standards
+
+Перед указанием версии проверь официальную актуальную редакцию:
+
+- ISO 13485;
+- ISO 14971;
+- IEC 62304;
+- IEC 62366-1;
+- IEC 81001-5-1;
+- ISO/IEC 27001;
+- applicable CLSI/WHO microscopy recommendations.
+
+Стандарт может быть платным; не выдумывай его normative clauses из secondary
+summary.
+
+## 24.4. Gap areas
+
+| Area | Applicability | Evidence | Gap | Required artifact |
+|---|---|---|---|---|
+| QMS | | | | |
+| intended purpose | | | | |
+| risk management | | | | |
+| software lifecycle | | | | |
+| performance evaluation | | | | |
+| usability | | | | |
+| cybersecurity | | | | |
+| post-market | | | | |
+| change control | | | | |
+| traceability | | | | |
+| human oversight | | | | |
+| technical documentation | | | | |
+
+Tests/Docker не равны regulatory compliance.
+
+Deliverables:
+
+```text
+audit/phase17/REGULATORY_APPLICABILITY.md
+audit/phase17/STANDARDS_VERIFICATION.md
+audit/phase17/REGULATORY_GAP_MATRIX.csv
+```
+
+---
+
+# 25. СИСТЕМА ОЦЕНКИ
+
+## 25.1. Quality score
+
+Scores `0..5`; weights:
+
+```text
+Clinical/model evidence      25
+Data quality/governance      15
+Software correctness         12
+Security/privacy             12
+Reliability/performance      10
+MLOps/reproducibility        10
+Testing/CI                    8
+Documentation/regulatory     8
+Total                       100
+```
+
+```text
+QualityScore =
+  Σ_i weight_i * score_i / 5
+```
+
+Для каждого score дай evidence и confidence. Docker не компенсирует отсутствие
+clinical evidence.
+
+Safety gates:
+
+```text
+G0 model exists/access/license
+G1 end-to-end inference reproducible
+G2 independent external validation
+G3 safe failure
+G4 basic security
+G5 intended use
+G6 claims match evidence
+```
+
+```text
+if G0 or G1 fail:
+  production inference = NO_GO
+
+if G2 fail:
+  clinical deployment = NO_GO
+```
+
+## 25.2. Risk register
+
+```text
+S,O,D ∈ {1,2,3,4,5}
+D=1 easy pre-harm detection
+D=5 hard detection
+
+RPN = S*O*D
+C ∈ [0,1]
+U = 1-C
+AdjustedPriority = RPN*(1+U)
+```
+
+Thresholds зафиксируй до scoring:
+
+```text
+Critical >= 100
+High      >= 50
+Medium    >= 20
+Low       < 20
+```
+
+Отдельный STOP-SHIP override:
+
+- missing/unlicensed/unreproducible model;
+- possible label inversion;
+- uncontrolled clinically dangerous FN;
+- critical vulnerability/license violation;
+- clinical claim without validation.
+
+Deliverables:
+
+```text
+audit/phase18/QUALITY_SCORE.md
+audit/phase18/RISK_REGISTER.csv
+audit/phase18/SAFETY_GATES.md
+audit/phase18/FINAL_GO_NO_GO.md
+```
+
+---
+
+# 26. ФАЗА 18 — формализация требований
 
 Создай requirements registry:
 
@@ -2480,7 +3528,7 @@ reason отображается в aria-live,
 
 ---
 
-# 17. Математическая приоритизация
+# 27. Математическая приоритизация
 
 Используй несколько моделей одновременно.
 
@@ -2572,7 +3620,7 @@ Priority_i =
 
 ---
 
-# 18. Архитектурные варианты
+# 28. Архитектурные варианты
 
 Для каждой крупной функции сравни:
 
@@ -2613,7 +3661,7 @@ Complexity     0.05
 
 ---
 
-# 19. ADR
+# 29. ADR
 
 Для архитектурных решений создай ADR:
 
@@ -2645,7 +3693,7 @@ Verification
 
 ---
 
-# 20. Backend remediation
+# 30. Backend remediation
 
 ## 17.1. API surface
 
@@ -2748,7 +3796,7 @@ Semaphore/queue slot нельзя освобождать до фактическ
 
 ---
 
-# 21. Model/MLOps gate
+# 31. Model/MLOps gate
 
 ## 18.1. Нельзя подменять модель
 
@@ -2813,7 +3861,7 @@ approval
 
 ---
 
-# 22. UI implementation
+# 32. UI implementation
 
 ## 19.1. Product semantics
 
@@ -2901,7 +3949,7 @@ UI должен ясно показывать:
 
 ---
 
-# 23. Authentication and authorization
+# 33. Authentication and authorization
 
 Не внедряй случайную auth-систему без deployment context.
 
@@ -2938,7 +3986,7 @@ UI должен ясно показывать:
 
 ---
 
-# 24. Reliability и performance
+# 34. Reliability и performance
 
 ## 21.1. Capacity model
 
@@ -3018,7 +4066,7 @@ request_peak_memory ≈
 
 ---
 
-# 25. Observability
+# 35. Observability
 
 Проверить/реализовать:
 
@@ -3062,7 +4110,7 @@ Errors
 
 ---
 
-# 26. Dependency и build reproducibility
+# 36. Dependency и build reproducibility
 
 Проверить:
 
@@ -3096,7 +4144,7 @@ input constraints
 
 ---
 
-# 27. Container/CI/CD
+# 37. Container/CI/CD
 
 ## 24.1. Docker
 
@@ -3159,7 +4207,7 @@ input constraints
 
 ---
 
-# 28. Security threat model
+# 38. Security threat model
 
 Построй:
 
@@ -3199,7 +4247,7 @@ residual risk
 
 ---
 
-# 29. Тестовая архитектура
+# 39. Тестовая архитектура
 
 ## 26.1. Pyramid
 
@@ -3276,7 +4324,7 @@ static
 
 ---
 
-# 30. Statistical/clinical track
+# 40. Statistical/clinical track
 
 Этот track не блокирует улучшение software skeleton, но блокирует claims.
 
@@ -3347,7 +4395,7 @@ clinical gate = FAIL
 
 ---
 
-# 31. Implementation batching
+# 41. Implementation batching
 
 ## Batch A — correctness/safety
 
@@ -3397,7 +4445,7 @@ diff review
 
 ---
 
-# 32. Вариационная проверка
+# 42. Вариационная проверка
 
 Проведи минимум четыре review passes.
 
@@ -3448,7 +4496,7 @@ find
 
 ---
 
-# 33. Definition of Done
+# 43. Definition of Done
 
 Software increment завершён только если:
 
@@ -3492,7 +4540,7 @@ Clinical readiness завершена только если:
 
 ---
 
-# 34. Обязательные deliverables
+# 44. Обязательные deliverables
 
 Создай:
 
@@ -3527,7 +4575,7 @@ docs/
 
 ---
 
-# 35. Формат implementation log
+# 45. Формат implementation log
 
 | Change ID | Requirement | Risk | Files | Behavior | Tests | Status | Residual |
 |---|---|---|---|---|---|---|---|
@@ -3547,7 +4595,7 @@ Verification
 
 ---
 
-# 36. Финальный GO/NO-GO
+# 46. Финальный GO/NO-GO
 
 Дай отдельный verdict:
 
@@ -3578,7 +4626,7 @@ Verdicts:
 
 ---
 
-# 37. Финальный ответ пользователю
+# 47. Финальный ответ пользователю
 
 Начни с результата:
 
@@ -3601,7 +4649,7 @@ Verdicts:
 
 ---
 
-# 38. Команда начала
+# 48. Команда начала
 
 После явной команды пользователя применить этот prompt:
 

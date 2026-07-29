@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = Field(
         default="Malaria Cell Classification Microservice", description="Project name"
     )
-    VERSION: str = Field(default="1.2.0", description="API version")
+    VERSION: str = Field(default="1.3.0", description="API version")
     DESCRIPTION: str = Field(
         default=(
             "Research-only API prototype for classifying pre-cropped microscopic "
@@ -31,6 +31,10 @@ class Settings(BaseSettings):
     HOST: str = Field(default="0.0.0.0", description="Bind host")
     PORT: int = Field(default=8000, ge=1, le=65535, description="Bind port")
     DEBUG: bool = Field(default=False, description="Debug mode flag")
+    LOG_LEVEL: Literal["INFO", "WARNING", "ERROR"] = Field(
+        default="INFO",
+        description="Minimum application log level",
+    )
 
     # ML Model Configuration
     MODEL_NAME: str = Field(

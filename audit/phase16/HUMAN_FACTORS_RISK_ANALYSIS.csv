@@ -1,0 +1,7 @@
+Use error,Potential harm,Cause,Current control,Required validation
+Оператор воспринимает cell class как patient diagnosis,Wrong treatment/delay,Terminology/automation bias,Research-only text and scope checkbox,Usability test with intended users
+Оператор игнорирует low confidence,False negative,Softmax overtrust,Limitations text,Calibrated uncertainty + mandatory review workflow
+Неверный crop/не RBC анализируется,False result,No biological QC,Decoder validation only,Acquisition QC and cell-type rejection
+Неправильный stain/microscope,Domain shift,Undefined acquisition protocol,None,Locked IFU and multi-site validation
+Повторная отправка после timeout,Duplicate work/overload,No idempotency/result store,Request ID only,Workflow/idempotency design
+Чувствительные данные в filename,Privacy breach,User behavior,Filename not logged,UI warning and server-side pseudonym policy

@@ -1,0 +1,18 @@
+Layer,Case,Expected,Current
+API,health,200 + version/tracing/no-store,COVERED
+API,ready model missing,503 typed error,COVERED
+Upload,missing/empty/unsupported,typed 4xx,COVERED
+Upload,MIME spoof/corrupt/truncated,typed rejection,COVERED
+Upload,encoded and decoded oversize,413 or validation rejection,COVERED
+Upload,grayscale/RGBA/CMYK/WEBP,documented normalization,COVERED/PARTIAL
+Concurrency,semaphore busy/timeout,bounded typed failure,COVERED unit
+Cancellation,native thread continues slot until done,no premature release,COVERED unit
+Model,load exception,not ready without detail leakage,COVERED mock
+Model,correct labels and logits,locked manifest match,BLOCKED
+Model,deterministic golden image,within tolerance,BLOCKED
+Model,OOD/low quality,reject or review,BLOCKED
+Security,decompression bomb,bounded pixels/time,COVERED unit; LOAD MISSING
+Security,log injection/secrets,no sensitive output,COVERED
+Load,c=1/2/4/8/16 real model,p50-p99/RSS/error,T1 ONLY
+Resilience,worker kill/restart,graceful recovery,NOT EXECUTED
+E2E,representative clinical workflow,prespecified human outcome,NOT EXECUTED

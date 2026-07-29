@@ -1,0 +1,13 @@
+ID,Risk,S,O,D,RPN,Confidence,Uncertainty,AdjustedPriority,Category,STOP-SHIP,Control/next action
+R-001,Approved model artifact absent,5,5,2,50,1.00,0.00,50.0,High,YES,Approve licensed immutable safetensors artifact and manifest
+R-002,No independent patient-level external validation,5,5,4,100,1.00,0.00,100.0,Critical,YES,Prospective/multisite locked patient cohort
+R-003,Potential clinically dangerous false negative if misused,5,4,5,100,0.80,0.20,120.0,Critical,YES,Safe intended use QC reject human review and validation
+R-004,Cell result misread as patient diagnosis,5,4,4,80,0.95,0.05,84.0,High,YES,Terminology and patient-level gate
+R-005,Patient/slide data leakage unknown,4,4,4,64,0.60,0.40,89.6,High,NO,Patient-grouped lineage and duplicate analysis
+R-006,Anonymous resource exhaustion,4,4,3,48,0.90,0.10,52.8,High,NO,Edge auth quotas rate/resource limits
+R-007,Mutable/unverified model supply chain,5,4,4,80,0.95,0.05,84.0,High,YES,Revision checksum signature fail-closed startup
+R-008,Dependency/base image non-reproducibility,4,3,4,48,0.90,0.10,52.8,High,NO,Hash lock base digest scan attestation
+R-009,No biological quality/OOD rejection,5,4,4,80,0.90,0.10,88.0,High,YES,QC OOD selective prediction external validation
+R-010,Operational degradation not alerted,4,3,4,48,0.90,0.10,52.8,High,NO,Internal metrics alerts dashboard runbook
+R-011,Health-data governance undefined in deployment,5,3,4,60,0.75,0.25,75.0,High,NO,DPIA access retention encryption incident plan
+R-012,Real model capacity unknown,4,4,3,48,1.00,0.00,48.0,Medium,NO,T2/T3 load/RSS/thread/soak benchmark
