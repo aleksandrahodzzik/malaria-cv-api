@@ -129,6 +129,18 @@ policy, registry classification и readiness redaction дополнены явн
 `PureWindowsPath`-проверкой; точная CI-команда воспроизведена локально с
 pytest 9.0.3 и pytest-asyncio 1.3.0.
 
+### GitHub Actions Linux matrix
+
+```text
+Run: 30463000521
+Commit: 28ad3483067af9a6025f9b575f46a6c0cd9b92e5
+Platforms: ubuntu-latest; Python 3.11 and 3.12
+Status: completed
+Conclusion: success
+URL: https://github.com/aleksandrahodzzik/malaria-cv-api/actions/runs/30463000521
+Interpretation: PASS
+```
+
 ## Not executed
 
 - real-model inference: approved artifact absent;

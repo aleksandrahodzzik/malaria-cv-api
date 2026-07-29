@@ -16,6 +16,7 @@
 | Registry tests | PASS | sealed/tampered/synthetic prohibition/evidence scope |
 | Synthetic cohort harness | PASS | 500 unique records; simulation-only classification |
 | `scripts/verify_audit_math.py` | PASS | weights 100; score 52.38 |
+| GitHub Actions Linux matrix | PASS | run 30463000521; Python 3.11 and 3.12 |
 | Markdown/CSV consistency | PASS | re-evaluated canonical artifacts |
 
 Точные финальные stdout/stderr и длительности находятся в
