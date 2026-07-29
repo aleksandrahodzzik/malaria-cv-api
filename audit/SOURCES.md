@@ -178,7 +178,9 @@ guidelines не интерпретированы как доказательст
     cybersecurity.
     https://health.ec.europa.eu/medical-devices-sector/new-regulations/guidance-mdcg-endorsed-documents-and-other-guidance_en
 
-## 7. Дополнительные официальные источники, проверенные 2026-07-28
+## 7. Дополнительные официальные источники
+
+Проверены 2026-07-28 и повторно просмотрены 2026-07-29.
 
 29. ISO 13485:2016, Medical devices — Quality management systems —
     Requirements for regulatory purposes, edition 3.

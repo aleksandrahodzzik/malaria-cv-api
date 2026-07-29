@@ -1,6 +1,6 @@
 # Мастер-промпт глубокой реализации и развития `malaria-cv-api`
 
-Версия: 3.0.0
+Версия: 4.0.0
 Язык выполнения и отчёта: русский
 Режим глубины: максимальный
 Тип работы: evidence-driven remediation and implementation
@@ -13,7 +13,7 @@
 ```text
 <MASTER_PROMPT>
   <ID>MALARIA_CV_API_PRODUCTION_REMEDIATION_IMPLEMENTATION_RU</ID>
-  <VERSION>3.0.0</VERSION>
+  <VERSION>4.0.0</VERSION>
   <LANGUAGE>ru-RU</LANGUAGE>
   <EXECUTION_DEPTH>MAXIMUM</EXECUTION_DEPTH>
   <EXECUTION_MODE>AUDIT_GATED_IMPLEMENTATION</EXECUTION_MODE>
@@ -3532,7 +3532,46 @@ reason отображается в aria-live,
 
 Используй несколько моделей одновременно.
 
-## 14.1. RICE
+## 27.1. Обязательная основная формула
+
+Для каждой рекомендации задай:
+
+```text
+Impact I ∈ {1,2,3,4,5}
+Urgency U ∈ {1,2,3,4,5}
+Evidence E ∈ [0.25,1.0]
+Effort F ∈ {1,2,3,4,5}
+DependencyComplexity D ∈ {1,2,3,4,5}
+
+PriorityScore = (I * U * E) / sqrt(F * D)
+```
+
+Проверь диапазоны и пересчитай score отдельным скриптом. Число не заменяет
+policy:
+
+```text
+STOP_SHIP > regulatory_mandatory > patient_safety
+          > evidence_enabler > security/reliability > feature > optimization
+```
+
+STOP-SHIP всегда располагается выше любого числового результата. Regulatory
+mandatory action выше feature development. Patient-safety action выше
+performance optimization.
+
+Для каждой рекомендации обязательно документируй:
+
+- проблему и root cause;
+- предлагаемое решение;
+- ожидаемый эффект;
+- evidence и confidence;
+- зависимости;
+- трудоёмкость;
+- внедренческий/residual risk;
+- измеримый acceptance criterion;
+- способ измерения эффекта;
+- owner role.
+
+## 27.2. RICE
 
 ```text
 RICE_i =
@@ -3549,7 +3588,7 @@ Confidence ∈ [0, 1]
 Effort > 0
 ```
 
-## 14.2. WSJF
+## 27.3. WSJF
 
 ```text
 WSJF_i =
@@ -3560,7 +3599,7 @@ WSJF_i =
   / JobSize_i
 ```
 
-## 14.3. Risk-adjusted value
+## 27.4. Risk-adjusted value
 
 ```text
 RAV_i =
@@ -3570,7 +3609,7 @@ RAV_i =
   / (Cost_i * Time_i * Irreversibility_i)
 ```
 
-## 14.4. Cost of delay
+## 27.5. Cost of delay
 
 ```text
 CoD_i =
@@ -3580,7 +3619,7 @@ CoD_i =
   + EvidenceDelayPerPeriod_i
 ```
 
-## 14.5. FMEA
+## 27.6. FMEA
 
 ```text
 RPN_i = Severity_i * Occurrence_i * Detectability_i
@@ -3608,7 +3647,7 @@ Safety override:
 priority = P0 независимо от RICE/WSJF
 ```
 
-## 14.6. Итог
+## 27.7. Итог
 
 ```text
 Priority_i =
@@ -3621,6 +3660,36 @@ Priority_i =
 ---
 
 # 28. Архитектурные варианты
+
+## 28.1. Обязательные продуктовые стратегии
+
+Сравни минимум:
+
+```text
+A = исследовательский cell-classification API
+B = laboratory screening assistant для pre-cropped cells
+C = detection + segmentation + classification + counting
+D = clinical decision-support с обязательным human review
+```
+
+Для каждой оцени:
+
+- научную и инженерную сложность;
+- необходимые patient/slide/cell данные;
+- инфраструктуру;
+- realistic time-to-market;
+- clinical и commercial value;
+- regulatory burden;
+- safety/residual risk;
+- команду и внешние компетенции;
+- обратимость решения;
+- exit/kill criteria.
+
+Наиболее сложная стратегия не считается лучшей автоматически. Отдельно
+рассмотри staged path `A -> B -> C -> D`, но не предполагай, что переход
+обязателен.
+
+## 28.2. Варианты функции
 
 Для каждой крупной функции сравни:
 
@@ -4397,6 +4466,22 @@ clinical gate = FAIL
 
 # 41. Implementation batching
 
+## 41.1. Обязательный roadmap
+
+Построй пять горизонтов:
+
+| Horizon | Focus |
+|---|---|
+| 0–7 дней | STOP-SHIP, model provenance, claims, critical security, smoke |
+| 8–30 дней | registry/revision, evaluation harness, datasheet/model card, calibration/reject, lock, metrics |
+| 31–60 дней | external data, patient validation, image QC/OOD, load, auth/rate limit, staging |
+| 61–90 дней | silent deployment, human factors, workflow, risk/incident/drift |
+| 3–6 месяцев | multi-site, slide/patient pipeline, parasitemia, prospective/regulatory/QMS/PMS |
+
+Для каждой initiative укажи deliverable, accountable owner, зависимости,
+estimated person-weeks, measurable exit criteria, risk и fallback. Даты
+начинаются только после утверждения ресурсов и P0 model decision.
+
 ## Batch A — correctness/safety
 
 - broken contracts;
@@ -4449,40 +4534,40 @@ diff review
 
 Проведи минимум четыре review passes.
 
-## Review A — correctness
+## Review A — скептический биостатистик
 
-- logic;
-- types;
-- errors;
-- contracts;
-- compatibility;
-- edge cases.
+- leakage и pseudoreplication;
+- patient/slide denominator;
+- cluster-aware CI;
+- prevalence/PPV/NPV;
+- calibration/threshold/test-set misuse;
+- external validation и statistical claims.
 
-## Review B — adversarial/security
+## Review B — security/SRE red team
 
 - malicious inputs;
-- leaks;
-- supply chain;
-- resource abuse;
-- fail-open.
+- DoS/resource exhaustion;
+- leaks/secrets/log injection;
+- mutable model/dependencies/actions;
+- concurrency/memory/timeouts/readiness;
+- fail-open и incident recovery.
 
-## Review C — concurrency/reliability
+## Review C — clinical/regulatory reviewer
 
-- cancellation;
-- native threads;
-- semaphore;
-- startup;
-- shutdown;
-- overload.
+- cell result против patient diagnosis;
+- intended use и human oversight;
+- automation bias и terminology;
+- clinical performance evidence;
+- change control, monitoring и conditional applicability.
 
-## Review D — UX/clinical safety
+## Review D — логическая и математическая проверка
 
-- misleading language;
-- false confidence;
-- unavailable states;
-- mobile;
-- accessibility;
-- automation bias.
+- weights и score;
+- formula domains/division by zero;
+- TP/TN/FP/FN consistency;
+- units, CI и sample-size assumptions;
+- contradictions между summary, risk, roadmap и verdict;
+- воспроизводимый независимый calculation script.
 
 Процесс:
 
@@ -4494,9 +4579,41 @@ find
 -> full regression
 ```
 
+## 42.1. Counterfactual check
+
+Для каждого Critical/High finding зафиксируй:
+
+```text
+Primary hypothesis
+Alternative hypothesis
+Discriminating test
+Observed result или NOT EXECUTED
+Residual uncertainty
+```
+
+Для каждого irreversible/high-cost архитектурного решения сравни минимум три
+варианта по преимуществам, недостаткам, стоимости, риску, обратимости и
+evidence. Не принимай первую правдоподобную причину без discriminating test.
+
 ---
 
 # 43. Definition of Done
+
+Перед завершением выполни machine-checkable completeness checklist:
+
+- выполненные команды и exit codes перечислены;
+- NOT EXECUTED содержит причину;
+- Critical findings имеют evidence и reproduction;
+- model availability/license/labels/preprocessing/revision проверены либо
+  явно UNKNOWN/BLOCKED;
+- cell/slide/patient levels не смешаны;
+- prevalence, calibration, uncertainty, OOD и independence рассмотрены;
+- security, supply chain и capacity рассмотрены;
+- regulatory conclusions условны;
+- weights равны 100;
+- формулы определяют переменные и domains;
+- DOI/URL и access date проверены;
+- recommendations, roadmap и verdict логически согласованы.
 
 Software increment завершён только если:
 
@@ -4542,7 +4659,34 @@ Clinical readiness завершена только если:
 
 # 44. Обязательные deliverables
 
-Создай:
+Создай канонический итоговый пакет:
+
+```text
+audit/
+  EXECUTIVE_SUMMARY.md
+  REPOSITORY_INVENTORY.md
+  CLAIM_EVIDENCE_MATRIX.md
+  TECHNICAL_AUDIT.md
+  MODEL_AND_DATA_AUDIT.md
+  STATISTICAL_VALIDATION_PLAN.md
+  SECURITY_THREAT_MODEL.md
+  CLINICAL_REGULATORY_GAP_ANALYSIS.md
+  RISK_REGISTER.csv
+  EVIDENCE_MATRIX.csv
+  DEVELOPMENT_ROADMAP.md
+  FINAL_GO_NO_GO.md
+```
+
+Executive summary обязан содержать общий verdict, technical/clinical
+readiness, STOP-SHIP, top-5 risks/recommendations, VERIFIED и UNKNOWN.
+
+Findings schema:
+
+```text
+ID | Domain | Severity | Fact/Inference | Evidence | Impact | Recommendation
+```
+
+Также создай implementation evidence:
 
 ```text
 audit/implementation/
@@ -4621,8 +4765,17 @@ Verdicts:
 - `GO`;
 - `CONDITIONAL_GO`;
 - `NO_GO`;
-- `BLOCKED`;
-- `NOT_EXECUTED`.
+- `INSUFFICIENT_EVIDENCE`.
+
+Минимальные scenarios:
+
+- Local demo;
+- Public non-clinical API;
+- Research use;
+- Retrospective clinical research;
+- Prospective silent evaluation;
+- Clinical decision support;
+- Autonomous diagnosis.
 
 ---
 

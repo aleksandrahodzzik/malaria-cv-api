@@ -261,7 +261,11 @@ patient-linked данных и locked test predictions все model performance 
   severity 0–5;
 - `src.validation.capacity` — utilization, Little/Erlang-C, RAM и latency
   summaries;
+- `src.validation.prioritization` — проверяемые PriorityScore, QualityScore и
+  uncertainty-adjusted RPN;
 - `scripts/benchmark_api.py` — явно маркированный T0/T1 ASGI benchmark.
+- `scripts/verify_audit_math.py` — независимая проверка recommendation,
+  quality-score и risk-register CSV.
 
 Эти утилиты не создают patient-level diagnosis и не подтверждают robustness или
 capacity реальной модели. Зафиксированный T0/T1 baseline использует synthetic
@@ -383,6 +387,7 @@ read-only и передавать соответствующие перемен�
 - [clinical workflow/human factors](audit/phase16/CLINICAL_WORKFLOW.md);
 - [regulatory applicability](audit/phase17/REGULATORY_APPLICABILITY.md);
 - [quality score и safety gates](audit/phase18/FINAL_GO_NO_GO.md).
+- [приоритеты, roadmap и продуктовые стратегии](audit/phase19/RECOMMENDATION_PORTFOLIO.md).
 
 ## Лицензия
 

@@ -22,6 +22,11 @@ from src.validation.capacity import (
     summarize_latency,
     utilization,
 )
+from src.validation.prioritization import (
+    adjusted_rpn,
+    priority_score,
+    quality_score,
+)
 from src.validation.statistics import (
     BinaryMetrics,
     ConfusionCounts,
@@ -44,6 +49,7 @@ __all__ = [
     "CorrectedRate",
     "LatencySummary",
     "apparent_positive_rate",
+    "adjusted_rpn",
     "beta_binomial_moments",
     "binary_metrics",
     "calibration_metrics",
@@ -56,6 +62,8 @@ __all__ = [
     "mcnemar_exact",
     "minimum_cells_for_detection",
     "prevalence_predictive_values",
+    "priority_score",
+    "quality_score",
     "risk_coverage_curve",
     "ram_estimate",
     "rogan_gladen_rate",

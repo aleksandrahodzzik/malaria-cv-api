@@ -1,0 +1,13 @@
+ID,Domain,Severity,Fact/Inference,Evidence,Impact,Recommendation
+F-001,Model,Critical,VERIFIED,"Exact historical model unavailable publicly/locally; phase5 HTTP/cache evidence","G0/G1 fail; no real inference","REC-001 then REC-003; no silent substitution"
+F-002,Clinical evidence,Critical,VERIFIED,"No independent patient-level cohort or predictions","Clinical performance unknown; G2 fail","REC-004 prespecified external validation"
+F-003,Patient safety,Critical,INFERRED,"No QC/OOD/reject and possible clinical misuse","Confident false negative could harm if scope violated","REC-002/005 and mandatory human review"
+F-004,Aggregation,Critical,VERIFIED,"Only cropped-cell contract; no detector/slide/patient aggregator","Cell result cannot be patient diagnosis","REC-007 after patient-level evidence"
+F-005,Data,High,UNKNOWN,"Patient/slide identifiers and split manifest absent","Leakage/pseudoreplication cannot be excluded","REC-008 lineage registry and duplicate audit"
+F-006,Security,High,VERIFIED,"No application/deployment authentication or global rate limit","Anonymous resource exhaustion/model extraction","REC-010 gateway identity and quotas"
+F-007,Supply chain,High,VERIFIED,"Model/hash lock/base digest/signatures incomplete","Artifact/rebuild tampering or drift","REC-001/011 fail-closed signed lineage"
+F-008,Robustness,High,VERIFIED,"Corruption harness exists; real-model QC/OOD benchmark not executed","Domain-shift safety unknown","REC-005 external QC/OOD/risk-coverage"
+F-009,Observability,High,VERIFIED,"JSON event logs exist; protected metrics/alerts/runbooks absent","Slow detection and recovery","REC-012 internal telemetry and drills"
+F-010,Performance,High,VERIFIED,"Only T0/T1 synthetic ASGI benchmark exists","Real capacity/RSS/threads unknown","REC-013 T2/T3 benchmark before optimization"
+F-011,Privacy/regulatory,High,UNKNOWN,"Deployment controller/legal basis/retention/encryption evidence absent","GDPR/QMS/regulatory readiness cannot be claimed","REC-006 plus deployment DPIA/governance"
+F-012,Software,Low,VERIFIED,"78 local tests; 88.52% branch coverage; prior Python 3.11/3.12 CI passed","Strong prototype contract but mocks do not validate model","Keep gates; add artifact-backed integration test"

@@ -1,17 +1,13 @@
-Risk_ID,Title,Classification,Severity,S,O,D,Base_RPN,Uncertainty,Adjusted_RPN,Evidence,Control,Acceptance_Criteria,Owner_Hypothesis,Status
-R-001,"Configured model unavailable",INFERRED,CRITICAL,5,5,1,25,0.10,27.5,"HF profile omits model; no local cache; tests mock load","Immutable approved artifact","Clean-cache online load and offline reload; revision and SHA256 verified",ML/MLOps,OPEN_STOP_SHIP
-R-002,"Incorrect or inverted id2label",UNKNOWN,CRITICAL,5,3,5,75,0.20,90.0,"Model config unavailable; fallback assumes class order","Golden label-contract tests","Signed label manifest plus known positive/negative golden cases",ML,OPEN_STOP_SHIP
-R-003,"Cell prediction misrepresented as patient diagnosis",OBSERVED,CRITICAL,5,5,4,100,0.10,110.0,"diagnosis/clinical wording; no patient aggregation","Restrict intended use and redesign output","Approved intended-use statement and slide/patient evaluation",Clinical/Product,OPEN_STOP_SHIP
-R-004,"No independent clinical/model performance evidence",OBSERVED,CRITICAL,5,5,5,125,0.05,131.3,"No dataset/model/evaluation artifacts","Locked external evaluation protocol","Patient-level external test with CI and subgroup analysis",Clinical/Stats,OPEN_STOP_SHIP
-R-005,"Uncalibrated confidence and no abstention",OBSERVED,HIGH,5,4,4,80,0.10,88.0,"Raw softmax; threshold unused","Calibration + reject option","ECE/Brier/NLL and risk-coverage targets passed",ML/Stats,OPEN
-R-006,"Mutable dependency/model supply chain",OBSERVED,HIGH,4,4,4,64,0.05,67.2,"Ranges; mutable tags; no model revision","Lock/hash/digest/SBOM/signing","Reproducible build and verified provenance",Platform/Security,OPEN
-R-007,"Two workers duplicate model memory/download",INFERRED,HIGH,4,4,3,48,0.15,55.2,"Gunicorn -w 2; lifespan loads per process","Capacity-based worker design","Measured peak RSS/startup; no OOM; controlled model cache",SRE/MLOps,OPEN
-R-008,"No auth quota or rate limiting",OBSERVED,HIGH,4,4,2,32,0.10,35.2,"No application controls found","Gateway/app auth and quotas","Unauthorized requests rejected; load abuse bounded",Security/Platform,OPEN
-R-009,"Multipart/body and image parser DoS",INFERRED,HIGH,4,3,3,36,0.15,41.4,"Application limit occurs after multipart handling","Proxy body cap; timeouts; fuzzing","Oversize/slow/decompression corpus fails safely",Security/SRE,OPEN
-R-010,"Internal exception details disclosed",OBSERVED,MEDIUM,3,3,2,18,0.05,18.9,"Exception text returned in HTTP detail","Stable public error codes","No stack/path/model/provider detail reaches client",Backend/Security,OPEN
-R-011,"Untrusted request ID reaches logs/response",OBSERVED,MEDIUM,2,3,2,12,0.10,13.2,"Inbound header accepted without validation","Validate length/charset or generate server ID","Fuzz tests prove bounded structured logs",Backend/Security,OPEN
-R-012,"Unit tests mask broken real ML path",OBSERVED,HIGH,4,5,2,40,0.05,42.0,"load_model and analyze mocked","Separate real-model smoke suite","Release requires artifact-backed smoke test",QA/MLOps,OPEN
-R-013,"No performance/capacity evidence",OBSERVED,HIGH,4,4,4,64,0.05,67.2,"No load reports; Docker unavailable","Defined SLO and load/soak tests","p50/p95/p99 throughput RSS and errors meet targets",SRE,OPEN
-R-014,"No data provenance or patient-level split",OBSERVED,CRITICAL,5,4,5,100,0.10,110.0,"No manifest/split/model card","Versioned data lineage","No patient/slide leakage; manifests and licenses approved",Data/Clinical,OPEN_STOP_SHIP
-R-015,"No monitoring for drift and post-market safety",OBSERVED,HIGH,5,3,5,75,0.10,82.5,"Only request latency logs","Performance/drift/safety monitoring plan","Alert thresholds escalation and rollback rehearsed",SRE/Clinical,OPEN
-R-016,"Unnecessary httpx2 development dependency",OBSERVED,MEDIUM,2,3,2,12,0.05,12.6,"httpx2 explicitly installed but has no reverse dependencies","Remove or justify package","Clean test environment passes without unexplained package",QA/Security,OPEN
+ID,Risk,S,O,D,RPN,Confidence,Uncertainty,AdjustedPriority,Category,STOP-SHIP,Control/next action
+R-001,Approved model artifact absent,5,5,2,50,1.00,0.00,50.0,High,YES,Approve licensed immutable safetensors artifact and manifest
+R-002,No independent patient-level external validation,5,5,4,100,1.00,0.00,100.0,Critical,YES,Prespecified multi-site locked patient cohort
+R-003,Potential dangerous false negative if clinically misused,5,4,5,100,0.80,0.20,120.0,Critical,YES,Safe intended use QC reject human review validation
+R-004,Cell result misread as patient diagnosis,5,4,4,80,0.95,0.05,84.0,High,YES,Terminology and patient-level gate
+R-005,Patient/slide data leakage unknown,4,4,4,64,0.60,0.40,89.6,High,NO,Patient-grouped lineage and duplicate analysis
+R-006,Anonymous resource exhaustion,4,4,3,48,0.90,0.10,52.8,High,NO,Gateway identity quotas global rate/resource limits
+R-007,Mutable/unverified model supply chain,5,4,4,80,0.95,0.05,84.0,High,YES,Revision checksum signature fail-closed startup
+R-008,Dependency/base image non-reproducibility,4,3,4,48,0.90,0.10,52.8,High,NO,Hash lock base digest scan attestation
+R-009,No biological quality/OOD rejection,5,4,4,80,0.90,0.10,88.0,High,YES,QC OOD selective prediction external validation
+R-010,Operational degradation not alerted,4,3,4,48,0.90,0.10,52.8,High,NO,Internal metrics alerts dashboard runbook
+R-011,Health-data governance undefined in deployment,5,3,4,60,0.75,0.25,75.0,High,NO,DPIA access retention encryption incident plan
+R-012,Real model capacity unknown,4,4,3,48,1.00,0.00,48.0,Medium,NO,T2/T3 load RSS thread soak benchmark

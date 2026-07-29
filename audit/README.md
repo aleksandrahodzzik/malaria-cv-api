@@ -30,6 +30,30 @@
 > [`phase16`](phase16/CLINICAL_WORKFLOW.md),
 > [`phase17`](phase17/REGULATORY_APPLICABILITY.md) и
 > [`phase18`](phase18/FINAL_GO_NO_GO.md).
+>
+> Фаза 19 синхронизирует канонические отчёты, policy-aware рекомендации,
+> измеримый roadmap, продуктовые стратегии, counterfactual tests и четыре
+> независимых review-pass:
+> [`phase19`](phase19/RECOMMENDATION_PORTFOLIO.md).
+
+## Канонический текущий пакет
+
+- [EXECUTIVE_SUMMARY.md](EXECUTIVE_SUMMARY.md)
+- [REPOSITORY_INVENTORY.md](REPOSITORY_INVENTORY.md)
+- [CLAIM_EVIDENCE_MATRIX.md](CLAIM_EVIDENCE_MATRIX.md)
+- [TECHNICAL_AUDIT.md](TECHNICAL_AUDIT.md)
+- [MODEL_AND_DATA_AUDIT.md](MODEL_AND_DATA_AUDIT.md)
+- [STATISTICAL_VALIDATION_PLAN.md](STATISTICAL_VALIDATION_PLAN.md)
+- [SECURITY_THREAT_MODEL.md](SECURITY_THREAT_MODEL.md)
+- [CLINICAL_REGULATORY_GAP_ANALYSIS.md](CLINICAL_REGULATORY_GAP_ANALYSIS.md)
+- [RISK_REGISTER.csv](RISK_REGISTER.csv)
+- [EVIDENCE_MATRIX.csv](EVIDENCE_MATRIX.csv)
+- [DEVELOPMENT_ROADMAP.md](DEVELOPMENT_ROADMAP.md)
+- [FINAL_GO_NO_GO.md](FINAL_GO_NO_GO.md)
+
+Фазовые документы сохраняют подробную историю evidence. При расхождении
+актуальный verdict и score берутся из канонического пакета с датой
+2026-07-29.
 
 ## Итог
 

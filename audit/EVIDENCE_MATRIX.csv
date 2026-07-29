@@ -1,27 +1,13 @@
-Evidence_ID,Claim,Classification,Source,Verification,Result,Limitations
-E-001,"Исходный стек FastAPI/PyTorch/Transformers присутствует",OBSERVED,"requirements.txt; src/",Static inspection,PASS,"Наличие библиотек не доказывает real inference"
-E-002,"Линтер проходит",VERIFIED,"ruff check src tests","Command executed 2026-07-27",PASS,"Только обнаруживаемые статические нарушения"
-E-003,"Форматирование проходит",VERIFIED,"ruff format --check src tests","Command executed 2026-07-27",PASS,"Не оценивает корректность"
-E-004,"Типизация проходит",VERIFIED,"mypy src","Command executed 2026-07-27",PASS,"Any вокруг модели ослабляет проверку"
-E-005,"Unit/API tests проходят",VERIFIED,"pytest tests with coverage","9 passed; 74% total coverage",PASS,"Модель и успешный инференс mocked"
-E-006,"Зависимости текущего venv согласованы",VERIFIED,"pip check","Command executed 2026-07-27",PASS,"Не является vulnerability/license audit"
-E-007,"MODEL_NAME указывает на malaria-модель",OBSERVED,"src/core/config.py",Static inspection,PASS,"Это конфигурационное заявление"
-E-008,"Указанная модель публично доступна",INFERRED,"Hugging Face profile + exact search","Profile lists only two unrelated models",FAIL,"Private/renamed/deleted repository remains possible"
-E-009,"Модель присутствует локально",VERIFIED,"%USERPROFILE%/.cache/huggingface/hub","Cache root not found",FAIL,"Другой нестандартный cache path теоретически возможен"
-E-010,"Тесты проверяют реальную загрузку модели",OBSERVED,"tests/test_api.py",load_model and service are patched,FAIL,"No integration/model smoke test"
-E-011,"Порядок id2label корректен",UNKNOWN,"src/services/inference.py + absent model config",Not verifiable,UNKNOWN,"Fallback mapping is an assumption"
-E-012,"Preprocessing совпадает с обучением",UNKNOWN,"from_pretrained processor + absent model card",Not verifiable,UNKNOWN,"Training transforms unavailable"
-E-013,"Softmax confidence калиброван",OBSERVED,"src/services/inference.py",No calibration artifact,FAIL,"Softmax alone is not calibration"
-E-014,"CONFIDENCE_THRESHOLD применяется",OBSERVED,"src/core/config.py; repository search","Only declaration found",FAIL,"Dead configuration"
-E-015,"Cell result является patient diagnosis",INFERRED,"API schema/docs vs workflow absence","No slide/patient aggregation",FAIL,"Clinical intended use not supplied"
-E-016,"Размер upload ограничен",OBSERVED,"src/api/routes.py",Chunk accumulator limit,PASS,"Multipart parsing/global body limit not proven"
-E-017,"Decoded pixel area ограничена",OBSERVED,"src/services/inference.py",MAX_IMAGE_PIXELS check,PASS,"Decoder/parser fuzzing absent"
-E-018,"Инференс offloaded от event loop",OBSERVED,"src/services/inference.py",asyncio.to_thread,PASS,"No concurrency bound or load evidence"
-E-019,"Контейнер запускается non-root",OBSERVED,"Dockerfile",USER appuser UID 10001,PASS,"Docker build/run not executed"
-E-020,"Docker image воспроизводим",OBSERVED,"Dockerfile + requirements.txt","Mutable base tags and dependency ranges",FAIL,"No digest lock or image attestation"
-E-021,"CI выполняет quality checks",OBSERVED,".github/workflows/ci.yml",ruff+mypy+pytest configured,PASS,"Workflow not executed locally; actions not SHA-pinned"
-E-022,"CI проверяет production container/model/security",OBSERVED,".github/workflows/ci.yml",No such jobs,FAIL,"None"
-E-023,"API защищён auth/rate limiting",OBSERVED,"src/main.py; src/api/routes.py",No controls found,FAIL,"External gateway not in scope/unknown"
-E-024,"Ошибки не раскрывают internals",OBSERVED,"src/api/routes.py","Exception text returned to clients",FAIL,"Reverse proxy filtering unknown"
-E-025,"Production-ready claim доказан",INFERRED,"README vs E-008..E-024",Critical gates fail,FAIL,"No external deployment evidence supplied"
-E-026,"Dev dependency httpx2 необходима тестам",OBSERVED,"requirements-dev.txt; pip show httpx2/httpx","httpx2 has no reverse dependencies; TestClient uses httpx",FAIL,"Confirm no undocumented tooling requires it"
+Evidence ID,Statement,Classification,Source,Result,Limitation
+E-001,Configured historical model is available,VERIFIED,phase5 model provenance,False in checked public/local scope,Private external artifact may exist
+E-002,Software contract passes tests,VERIFIED,phase19 release verification,78 passed and 88.52% branch coverage,Mostly mocked model
+E-003,Python compatibility,VERIFIED,GitHub Actions run 30436050922,3.11 and 3.12 success,No real-model artifact
+E-004,Cell-to-patient aggregation exists,VERIFIED,phase9 chain matrix,False,Planning math only
+E-005,Model clinical performance known,UNKNOWN,phase8 status,NOT EXECUTED,No predictions/cohort
+E-006,T0/T1 framework performance measured,VERIFIED,phase11 benchmark,600 HTTP 200 with recorded latency,Synthetic in-process ASGI only
+E-007,Real-model capacity known,UNKNOWN,phase11,NOT EXECUTED,Model/Docker absent
+E-008,Structured logs protect sensitive fields,VERIFIED,code and tests,Allowlist/no filename/error text,Deployment collectors unverified
+E-009,CI actions immutable,VERIFIED,workflow and official tag refs,Full SHA pins,Dependency/base/model chain incomplete
+E-010,Clinical/regulatory readiness,VERIFIED,phases16-18,NO-GO/conditional applicability,Not legal advice
+E-011,Quality score calculation,VERIFIED,phase19 input and verification script,36.3 with weights 100,Safety gates override
+E-012,Recommendations are measurable,VERIFIED,phase19 priority/roadmap CSV,Acceptance and measurement recorded,Effort estimates require resourcing

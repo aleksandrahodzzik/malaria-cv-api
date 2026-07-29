@@ -17,6 +17,11 @@ from src.validation.capacity import (
     summarize_latency,
     utilization,
 )
+from src.validation.prioritization import (
+    adjusted_rpn,
+    priority_score,
+    quality_score,
+)
 from src.validation.robustness import (
     SUPPORTED_CORRUPTIONS,
     apply_corruption,
@@ -158,3 +163,49 @@ def test_corruption_validation() -> None:
         apply_corruption(image, "unknown", 1)
     with pytest.raises(ValueError, match="severity"):
         apply_corruption(image, "gaussian_blur", 6)
+
+
+def test_governance_score_formulas_and_domains() -> None:
+    assert priority_score(
+        impact=5,
+        urgency=5,
+        evidence=1.0,
+        effort=2,
+        dependency_complexity=2,
+    ) == pytest.approx(12.5)
+    assert adjusted_rpn(
+        severity=5,
+        occurrence=4,
+        detectability=5,
+        confidence=0.8,
+    ) == pytest.approx(120)
+    assert quality_score(
+        [
+            (25, 0),
+            (15, 0.5),
+            (12, 4),
+            (12, 2.5),
+            (10, 2),
+            (10, 2),
+            (8, 4),
+            (8, 3),
+        ]
+    ) == pytest.approx(36.3)
+
+    with pytest.raises(ValueError, match="evidence"):
+        priority_score(
+            impact=5,
+            urgency=5,
+            evidence=0.1,
+            effort=1,
+            dependency_complexity=1,
+        )
+    with pytest.raises(ValueError, match="total 100"):
+        quality_score([(99, 5)])
+    with pytest.raises(ValueError, match="integer"):
+        adjusted_rpn(
+            severity=True,
+            occurrence=1,
+            detectability=1,
+            confidence=1,
+        )
