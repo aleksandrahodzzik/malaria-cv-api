@@ -2,7 +2,7 @@
 
 import logging
 import unicodedata
-from pathlib import PurePath
+from pathlib import PurePath, PureWindowsPath
 from typing import Annotated, Any
 
 from fastapi import (
@@ -63,7 +63,11 @@ def _public_model_reference() -> str | None:
     configured = settings.MODEL_NAME.strip()
     if not configured:
         return None
-    if settings.MODEL_LOCAL_FILES_ONLY or PurePath(configured).is_absolute():
+    if (
+        settings.MODEL_LOCAL_FILES_ONLY
+        or PurePath(configured).is_absolute()
+        or PureWindowsPath(configured).is_absolute()
+    ):
         return "local-artifact"
     return configured
 

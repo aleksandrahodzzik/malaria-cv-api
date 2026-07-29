@@ -1,7 +1,7 @@
 """Application configuration module using Pydantic Settings."""
 
 import re
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 from typing import Literal, Self
 
 from pydantic import Field, SecretStr, model_validator
@@ -251,7 +251,10 @@ class Settings(BaseSettings):
         if (
             self.ENVIRONMENT == "production"
             and self.MODEL_NAME.strip()
-            and Path(self.MODEL_NAME).is_absolute()
+            and (
+                Path(self.MODEL_NAME).is_absolute()
+                or PureWindowsPath(self.MODEL_NAME).is_absolute()
+            )
             and not self.MODEL_SOURCE_ID.strip()
         ):
             raise ValueError("Production local models require MODEL_SOURCE_ID.")

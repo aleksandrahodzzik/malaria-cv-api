@@ -122,6 +122,13 @@ Variation: первый GitHub Actions run для expansion остановилс
 Formatting`. Локальный запуск воспроизвёл расхождение, `ruff format` исправил
 10 файлов, после чего format check, Ruff, mypy и все 185 тестов прошли повторно.
 
+Variation: второй run прошёл formatting/Ruff/mypy, но pytest завершился ошибкой
+на Linux 3.11 и 3.12. Проверка platform-dependent branches выявила, что
+`Path("C:\\model").is_absolute()` истинно на Windows и ложно на Linux. Trust
+policy, registry classification и readiness redaction дополнены явной
+`PureWindowsPath`-проверкой; точная CI-команда воспроизведена локально с
+pytest 9.0.3 и pytest-asyncio 1.3.0.
+
 ## Not executed
 
 - real-model inference: approved artifact absent;

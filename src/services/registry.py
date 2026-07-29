@@ -10,7 +10,7 @@ from __future__ import annotations
 import hashlib
 from dataclasses import dataclass
 from enum import StrEnum
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 from typing import Protocol
 
 from src.core.manifest import (
@@ -80,7 +80,11 @@ class SealedModelRegistry:
             else model_root / "model_manifest.json"
         )
         configured_path = Path(request.model_name)
-        is_local_path = configured_path.is_absolute() or configured_path.exists()
+        is_local_path = (
+            configured_path.is_absolute()
+            or PureWindowsPath(request.model_name).is_absolute()
+            or configured_path.exists()
+        )
         expected_model_id = request.model_source_id.strip()
         if not expected_model_id and not is_local_path:
             expected_model_id = request.model_name
