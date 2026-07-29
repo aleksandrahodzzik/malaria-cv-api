@@ -9,10 +9,10 @@ remediation; не clinical validation и не юридическое заклю�
 - Technical production readiness: **NO-GO** без утверждённого model release.
 - Clinical readiness: **NO-GO**.
 - Local no-model research UI: **GO**.
-- Quality Score: **51.02/100**, с override незакрытых safety gates.
-- Branch coverage: **98.11%**, 163 tests.
+- Quality Score: **52.38/100**, с override незакрытых safety gates.
+- Branch coverage: **98.29%**, 185 tests.
 
-Цель 95/100 не присвоена: 40 из 100 весовых баллов относятся к
+Цель 85–95/100 не присвоена: 40 из 100 весовых баллов относятся к
 clinical/model evidence и data governance, которых невозможно создать
 рефакторингом API.
 
@@ -45,11 +45,18 @@ clinical/model evidence и data governance, которых невозможно 
    - invalid key не создаёт отдельный quota bucket;
    - bounded client-key cardinality.
 5. Verification:
-   - 163 tests;
-   - 98.11% branch coverage;
+   - 185 tests;
+   - 98.29% branch coverage;
    - Ruff PASS;
    - strict mypy PASS;
    - coverage gate повышен с 80 до 95.
+6. Registry и evaluation expansion:
+   - pluggable sealed registry abstraction;
+   - `/ready` раскрывает revision/manifest digest без локального пути;
+   - synthetic provider запрещён вне `test` и не eligible для serving;
+   - 500 уникальных simulated patient/slide records;
+   - patient-level sensitivity/specificity, Wilson CI, AUROC и AUPRC harness;
+   - отчёт помечен `SIMULATION_ONLY_NOT_EXTERNAL_VALIDATION`.
 
 ## Residual STOP-SHIP
 
@@ -61,6 +68,8 @@ clinical/model evidence и data governance, которых невозможно 
 4. Независимая patient-level external validation отсутствует.
 5. QC thresholds являются инженерными эвристиками, не clinically validated OOD.
 6. Patient-level aggregation, reference standard и decision rule отсутствуют.
+7. Созданный simulation cohort не содержит биологических образцов, PCR или
+   expert-microscopy ground truth и не закрывает G2.
 
 ## Safety gates
 

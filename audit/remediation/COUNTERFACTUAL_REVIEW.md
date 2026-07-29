@@ -49,5 +49,5 @@ deployment из-за отсутствия intended clinical protocol и performa
 
 ## Review D — logic/math
 
-Weights = 100. Quality Score = 51.02. Coverage = 98.11%. Wilson tests include
+Weights = 100. Quality Score = 52.38. Coverage = 98.29%. Wilson tests include
 0/10, 5/10, 10/10. Target 95/100 не подменяет фактический результат.

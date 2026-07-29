@@ -1,7 +1,7 @@
 Evidence ID,Statement,Classification,Source,Result,Limitation
 E-001,Configured historical model is available,VERIFIED,phase5 model provenance,False in checked public/local scope,Private external artifact may exist
-E-002,Software contract passes tests,VERIFIED,2026-07-29 remediation verification,163 passed and 98.11% branch coverage,Model inference remains mocked
-E-003,Static quality gates,VERIFIED,Ruff and strict mypy commands,PASS on 24 source files,Does not establish runtime model validity
+E-002,Software contract passes tests,VERIFIED,2026-07-29 expansion verification,185 passed and 98.29% branch coverage,Real model inference remains unexecuted
+E-003,Static quality gates,VERIFIED,Ruff and strict mypy commands,PASS on 26 source files,Does not establish runtime model validity
 E-004,Slide aggregation exists,VERIFIED,src/services/aggregation.py and API tests,Predicted-cell counts and Wilson interval verified,Not patient aggregation or clinical parasitemia
 E-005,Model clinical performance known,UNKNOWN,phase8 status,NOT EXECUTED,No real predictions or cohort
 E-006,Model manifest verification exists,VERIFIED,src/core/manifest.py and 16 manifest tests,Fail-closed SHA revision label resolution and license metadata checks,No approved release bundle supplied
@@ -10,5 +10,8 @@ E-008,Rate limiting prevents simple per-client bursts,VERIFIED,src/core/ratelimi
 E-009,API-key control exists,VERIFIED,dependency and negative tests,401 missing 403 invalid constant-time match,Optional and deployment policy not verified
 E-010,Real-model capacity known,UNKNOWN,phase11,NOT EXECUTED,Model/Docker absent
 E-011,Clinical/regulatory readiness,VERIFIED,phases16-18 and re-evaluation,NO-GO/conditional applicability,Not legal advice
-E-012,Quality score calculation,VERIFIED,phase19 input and verification script,51.02 with weights 100,Safety gates override
+E-012,Quality score calculation,VERIFIED,phase19 input and verification script,52.38 with weights 100,Safety gates override
 E-013,UI surfaces QC and quota errors,VERIFIED,src/ui/app.js and API test,Uses textContent-compatible error path,No slide batch UI
+E-014,Sealed registry abstraction works,VERIFIED,src/services/registry.py and tests/test_registry.py,Manifest-verified releases are serving eligible,Supplied release still absent
+E-015,Synthetic patient harness works,VERIFIED,clinical.py CLI CSV and report,500 unique records and reproducible patient-level calculations,SIMULATION_ONLY not external validation
+E-016,External retrospective validation exists,CONTRADICTED,cohort provenance fields,All records are SYNTHETIC_SIMULATION,Real governed patient cohort absent

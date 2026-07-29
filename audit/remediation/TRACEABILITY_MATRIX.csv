@@ -5,5 +5,7 @@ REM-003,No pre-inference biological QC,Versioned blur contrast color resolution 
 REM-004,No slide aggregation,Bounded multi-file route plus Wilson interval and research-only schema,tests/test_aggregation.py and slide API test,RESEARCH_CONTROL_COMPLETE,Sampling model error and clustering excluded
 REM-005,Anonymous resource exhaustion,Bounded sliding window trusted-key identity and cardinality cap,tests/test_middleware.py,PROCESS_CONTROL_COMPLETE,Not global across workers or replicas
 REM-006,No API-key authentication,Optional X-API-Key with constant-time comparison,401/403/valid dependency tests,COMPLETE,Production policy and key rotation external
-REM-007,Branch coverage below target,Expanded meaningful negative-path suite and fail_under 95,163 tests and 98.11 branch coverage,COMPLETE,Real model smoke still absent
+REM-007,Branch coverage below target,Expanded meaningful negative-path suite and fail_under 95,185 tests and 98.29 branch coverage,COMPLETE,Real model smoke still absent
+REM-009,No pluggable release provider,Sealed registry plus test-only synthetic provider,tests/test_registry.py,COMPLETE,Approved release still absent
+REM-010,Patient evaluation pipeline unexercised,Provenance-gated simulation harness,tests/test_clinical_evaluation.py and generated report,COMPLETE,Not external clinical validation
 REM-008,Clinical evidence absent,None can be created from code alone,Audit gate G2,OPEN_STOP_SHIP,External patient-level validation required

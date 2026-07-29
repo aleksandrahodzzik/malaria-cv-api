@@ -22,6 +22,15 @@ from src.validation.capacity import (
     summarize_latency,
     utilization,
 )
+from src.validation.clinical import (
+    ClinicalCohortRecord,
+    ClinicalEvaluation,
+    evaluate_patient_cohort,
+    generate_synthetic_cohort,
+    load_cohort_csv,
+    render_evaluation_report,
+    write_cohort_csv,
+)
 from src.validation.prioritization import (
     adjusted_rpn,
     priority_score,
@@ -47,6 +56,8 @@ __all__ = [
     "BetaBinomialMoments",
     "ConfusionCounts",
     "CorrectedRate",
+    "ClinicalCohortRecord",
+    "ClinicalEvaluation",
     "LatencySummary",
     "apparent_positive_rate",
     "adjusted_rpn",
@@ -56,6 +67,7 @@ __all__ = [
     "clopper_pearson_interval",
     "cluster_bootstrap_intervals",
     "expected_cost",
+    "evaluate_patient_cohort",
     "false_positive_accumulation",
     "erlang_c",
     "little_law",
@@ -65,10 +77,14 @@ __all__ = [
     "priority_score",
     "quality_score",
     "risk_coverage_curve",
+    "generate_synthetic_cohort",
+    "load_cohort_csv",
+    "render_evaluation_report",
     "ram_estimate",
     "rogan_gladen_rate",
     "sample_size_for_proportion",
     "summarize_latency",
     "utilization",
     "wilson_interval",
+    "write_cohort_csv",
 ]

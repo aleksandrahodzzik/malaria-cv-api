@@ -39,6 +39,10 @@
 > Post-remediation пакет 2026-07-29 содержит manifest/QC/slide/auth/quota
 > traceability, финальные команды и counterfactual review:
 > [`remediation`](remediation/IMPLEMENTATION_REPORT.md).
+> Expansion того же дня добавляет sealed registry abstraction и строго
+> simulation-only patient evaluation harness:
+> [`EXPANSION_REPORT.md`](remediation/EXPANSION_REPORT.md) и
+> [`CLINICAL_VALIDATION_REPORT.md`](remediation/CLINICAL_VALIDATION_REPORT.md).
 
 ## Канонический текущий пакет
 

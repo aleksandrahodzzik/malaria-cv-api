@@ -5,8 +5,8 @@
 ## Outcome
 
 Software remediation objectives выполнены. Branch coverage вырос с 88.52% до
-98.11%, количество тестов — с 78 до 163. Quality Score пересчитан с 36.3 до
-51.02/100. Цель 95/100 не заявлена, потому что отсутствуют approved model,
+98.29%, количество тестов — с 78 до 185. Quality Score пересчитан с 36.3 до
+52.38/100. Цель 85–95/100 не заявлена, потому что отсутствуют approved model,
 real-model inference, data governance и external patient-level validation.
 
 ## Architecture changes
@@ -21,6 +21,16 @@ real-model inference, data governance и external patient-level validation.
 | Authentication | `X-API-Key` dependency | Missing/invalid key separated |
 | Abuse protection | trusted-key/IP sliding window | Rotation of fake API keys does not bypass quota |
 | Tests | five new/expanded suites | 95% branch gate enforced |
+| Registry | `src/services/registry.py` | Synthetic release cannot become ready |
+| Evaluation harness | `src/validation/clinical.py` | Provenance-gated patient-level calculations |
+
+## Expansion evidence boundary
+
+`audit/data/patient_clinical_cohort.csv` содержит 500 уникальных,
+детерминированно созданных записей. Каждая имеет
+`record_origin=SYNTHETIC_SIMULATION` и
+`reference_standard=SIMULATED_LABEL_NO_BIOLOGICAL_SPECIMEN`. Рассчитанные
+метрики доказывают корректность statistical harness, но не performance модели.
 
 ## Important design corrections
 

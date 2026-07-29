@@ -27,6 +27,7 @@ from src.services.inference import (
     MalariaClassifierService,
 )
 from src.services.qc import QCMetrics, QCReason, QualityControlError
+from src.services.registry import RegistryKind, RegistryResolution
 
 
 @pytest.fixture
@@ -107,14 +108,14 @@ def test_health_check_and_tracking_headers(client: TestClient) -> None:
     assert response.status_code == 200
     data = response.json()
     assert data["status"] == "healthy"
-    assert data["version"] == "1.4.0"
+    assert data["version"] == "1.5.0"
     assert "timestamp" in data
     assert re.fullmatch(
         r"[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}",
         response.headers["X-Request-ID"],
     )
     assert "X-Response-Time-Ms" in response.headers
-    assert response.headers["X-Service-Version"] == "1.4.0"
+    assert response.headers["X-Service-Version"] == "1.5.0"
     assert response.headers["X-Content-Type-Options"] == "nosniff"
     assert response.headers["Cache-Control"] == "no-store"
 
@@ -234,6 +235,19 @@ def test_production_local_model_requires_complete_trust_configuration() -> None:
 def test_readiness_ready(
     client: TestClient, mock_classifier_service: MagicMock
 ) -> None:
+    manifest = MagicMock(spec=ModelManifest)
+    manifest.revision = "a" * 40
+    mock_classifier_service.registry_resolution = RegistryResolution(
+        kind=RegistryKind.SEALED,
+        model_root=Path("C:\\approved-model"),
+        manifest_path=Path("C:\\approved-model\\model_manifest.json"),
+        manifest=manifest,
+        manifest_sha256="b" * 64,
+        artifact_verified=True,
+        independent_trust_anchor=True,
+        serving_permitted=True,
+        evidence_scope="SOFTWARE_ARTIFACT_INTEGRITY_ONLY",
+    )
     app.state.classifier_service = mock_classifier_service
     app.state.model_error_code = None
     response = client.get("/ready")
@@ -243,6 +257,11 @@ def test_readiness_ready(
         "model_loaded": True,
         "model_name": None,
         "reason": None,
+        "artifact_verified": True,
+        "independent_trust_anchor": True,
+        "model_revision": "a" * 40,
+        "manifest_sha256": "b" * 64,
+        "registry_kind": "sealed_manifest_registry",
     }
 
 
@@ -602,6 +621,17 @@ def test_load_model_uses_revision_and_validates_contract() -> None:
     manifest = MagicMock(spec=ModelManifest)
     manifest.input_resolution = (224, 224)
     model_root = Path("C:\\approved-model")
+    release = RegistryResolution(
+        kind=RegistryKind.SEALED,
+        model_root=model_root,
+        manifest_path=model_root / "model_manifest.json",
+        manifest=manifest,
+        manifest_sha256="b" * 64,
+        artifact_verified=True,
+        independent_trust_anchor=True,
+        serving_permitted=True,
+        evidence_scope="SOFTWARE_ARTIFACT_INTEGRITY_ONLY",
+    )
 
     with (
         patch(
@@ -610,12 +640,8 @@ def test_load_model_uses_revision_and_validates_contract() -> None:
         ),
         patch("src.services.inference.settings.MODEL_LOCAL_FILES_ONLY", True),
         patch(
-            "src.services.inference.resolve_model_root",
-            return_value=model_root,
-        ),
-        patch(
-            "src.services.inference.verify_model_manifest",
-            return_value=manifest,
+            "src.services.inference.SealedModelRegistry.resolve",
+            return_value=release,
         ),
         patch(
             "src.services.inference.AutoImageProcessor.from_pretrained",

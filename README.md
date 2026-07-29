@@ -35,6 +35,7 @@ Backend, UI и тестовый HTTP-контур реализованы. Утв
 - queue и execution timeouts с корректным учётом native worker;
 - fail-closed проверка `id2label`;
 - fail-closed SHA-256 manifest и immutable model revision;
+- pluggable sealed model registry с test-only synthetic adapter;
 - обязательные `safetensors` и запрет remote code;
 - инженерный QC: blur, contrast, stain-color, resolution и aspect ratio;
 - research-only slide summary с Wilson 95% interval;
@@ -46,6 +47,7 @@ Backend, UI и тестовый HTTP-контур реализованы. Утв
 - machine-readable intended-use and pipeline boundaries;
 - explicit pre-cropped-cell acknowledgement in UI;
 - offline statistical validation toolkit;
+- patient-level evaluation harness с provenance gate;
 - non-root multi-stage Docker image;
 - Ruff, Mypy, Pytest и coverage gate.
 
@@ -178,7 +180,7 @@ curl http://localhost:8000/api/v1/capabilities
 
 ```json
 {
-  "api_version": "1.4.0",
+  "api_version": "1.5.0",
   "intended_use": "research_only",
   "task": "pre_cropped_single_cell_classification",
   "analysis_level": "cell",
@@ -221,7 +223,12 @@ Detection, patient-level interpretation и clinical action отсутствую�
   "status": "not_ready",
   "model_loaded": false,
   "model_name": null,
-  "reason": "MODEL_NOT_CONFIGURED"
+  "reason": "MODEL_NOT_CONFIGURED",
+  "artifact_verified": false,
+  "independent_trust_anchor": false,
+  "model_revision": null,
+  "manifest_sha256": null,
+  "registry_kind": null
 }
 ```
 
@@ -266,6 +273,19 @@ locked validation cohort:
 Наличие toolkit не является валидацией текущей модели. Без approved model,
 patient-linked данных и locked test predictions все model performance metrics
 остаются `NOT EXECUTED`.
+
+### Simulation-only patient evaluation harness
+
+```powershell
+.\.venv\Scripts\python.exe scripts\evaluate_clinical_cohort.py --generate-synthetic
+```
+
+Команда создаёт 500 детерминированных test records и проверяет patient-level
+statistical pipeline. Все строки имеют
+`record_origin=SYNTHETIC_SIMULATION`; полученные sensitivity, specificity,
+AUROC и AUPRC не являются результатами malaria model, PCR validation или
+external clinical study. Для настоящего исследования loader поддерживает
+fail-closed режим `--require-external`.
 
 ## Offline aggregation, robustness и capacity planning
 
@@ -359,6 +379,7 @@ read-only и передавать соответствующие перемен�
 │   ├── schemas/
 │   ├── services/
 │   ├── ui/
+│   ├── validation/
 │   └── main.py
 ├── tests/
 ├── .env.example

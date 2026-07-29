@@ -20,7 +20,7 @@ class HealthResponse(BaseModel):
         json_schema_extra={
             "example": {
                 "status": "healthy",
-                "version": "1.4.0",
+                "version": "1.5.0",
                 "timestamp": "2026-07-27T18:00:00Z",
             }
         }
@@ -41,6 +41,26 @@ class ReadinessResponse(BaseModel):
         default=None,
         description="Stable machine-readable reason while the service is not ready",
     )
+    artifact_verified: bool = Field(
+        default=False,
+        description="True only after every manifest-declared artifact passes SHA-256",
+    )
+    independent_trust_anchor: bool = Field(
+        default=False,
+        description="Whether an independently configured manifest digest was checked",
+    )
+    model_revision: str | None = Field(
+        default=None,
+        description="Exact immutable model revision from the verified manifest",
+    )
+    manifest_sha256: str | None = Field(
+        default=None,
+        description="Digest of the verified local manifest",
+    )
+    registry_kind: str | None = Field(
+        default=None,
+        description="Model registry adapter that produced the serving release",
+    )
 
     model_config = ConfigDict(
         json_schema_extra={
@@ -49,6 +69,11 @@ class ReadinessResponse(BaseModel):
                 "model_loaded": True,
                 "model_name": "organization/approved-malaria-cell-model",
                 "reason": None,
+                "artifact_verified": True,
+                "independent_trust_anchor": True,
+                "model_revision": "0123456789abcdef0123456789abcdef01234567",
+                "manifest_sha256": "0" * 64,
+                "registry_kind": "sealed_manifest_registry",
             }
         }
     )

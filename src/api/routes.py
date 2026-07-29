@@ -38,6 +38,7 @@ from src.services.inference import (
     MalariaClassifierService,
 )
 from src.services.qc import QualityControlError
+from src.services.registry import RegistryResolution
 
 logger = logging.getLogger("malaria_api.routes")
 
@@ -223,6 +224,17 @@ async def readiness_check(
     is_ready = service is not None and service.is_ready()
     if not is_ready:
         response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+    candidate_registry = (
+        getattr(service, "registry_resolution", None)
+        if service is not None and service.is_ready()
+        else None
+    )
+    registry = (
+        candidate_registry
+        if isinstance(candidate_registry, RegistryResolution)
+        else None
+    )
+    manifest = registry.manifest if registry is not None else None
 
     return ReadinessResponse(
         status="ready" if is_ready else "not_ready",
@@ -231,6 +243,15 @@ async def readiness_check(
         reason=None
         if is_ready
         else getattr(request.app.state, "model_error_code", "model_unavailable"),
+        artifact_verified=registry.artifact_verified if registry is not None else False,
+        independent_trust_anchor=(
+            registry.independent_trust_anchor if registry is not None else False
+        ),
+        model_revision=manifest.revision if manifest is not None else None,
+        manifest_sha256=(
+            registry.manifest_sha256 if registry is not None else None
+        ),
+        registry_kind=registry.kind.value if registry is not None else None,
     )
 
 

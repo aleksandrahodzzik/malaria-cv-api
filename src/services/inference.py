@@ -4,7 +4,6 @@ import asyncio
 import io
 import logging
 import time
-from pathlib import Path
 from typing import Any
 
 import torch
@@ -16,7 +15,6 @@ from src.core.manifest import (
     ModelArtifactVerificationError,
     ModelManifest,
     resolve_model_root,
-    verify_model_manifest,
 )
 from src.schemas.payload import (
     ClassProbability,
@@ -24,6 +22,11 @@ from src.schemas.payload import (
     QualityControlSummary,
 )
 from src.services.qc import QCResult, evaluate_image_quality
+from src.services.registry import (
+    RegistryRequest,
+    RegistryResolution,
+    SealedModelRegistry,
+)
 
 logger = logging.getLogger("malaria_api.inference")
 
@@ -53,6 +56,7 @@ class MalariaClassifierService:
         self._is_ready: bool = False
         self._id2label: dict[int, str] = {}
         self._manifest: ModelManifest | None = None
+        self._registry_resolution: RegistryResolution | None = None
         self._inference_semaphore = asyncio.Semaphore(
             settings.MAX_CONCURRENT_INFERENCES
         )
@@ -69,27 +73,32 @@ class MalariaClassifierService:
         start_time = time.perf_counter()
 
         try:
-            model_root = resolve_model_root(
-                self.model_name,
-                revision=settings.MODEL_REVISION,
-                local_files_only=settings.MODEL_LOCAL_FILES_ONLY,
-            )
-            manifest_path = (
-                Path(settings.MODEL_MANIFEST_PATH)
-                if settings.MODEL_MANIFEST_PATH.strip()
-                else model_root / "model_manifest.json"
-            )
             if settings.MODEL_REQUIRE_MANIFEST:
-                expected_model_id = settings.MODEL_SOURCE_ID.strip()
-                if not expected_model_id and not Path(self.model_name).is_absolute():
-                    expected_model_id = self.model_name
-                self._manifest = verify_model_manifest(
-                    model_root=model_root,
-                    manifest_path=manifest_path,
-                    expected_manifest_sha256=settings.MODEL_MANIFEST_SHA256,
-                    expected_model_id=expected_model_id,
-                    expected_revision=settings.MODEL_REVISION,
-                    expected_labels=settings.MODEL_EXPECTED_LABELS,
+                self._registry_resolution = SealedModelRegistry().resolve(
+                    RegistryRequest(
+                        model_name=self.model_name,
+                        revision=settings.MODEL_REVISION,
+                        local_files_only=settings.MODEL_LOCAL_FILES_ONLY,
+                        manifest_path=settings.MODEL_MANIFEST_PATH,
+                        manifest_sha256=settings.MODEL_MANIFEST_SHA256,
+                        model_source_id=settings.MODEL_SOURCE_ID,
+                        expected_labels=tuple(settings.MODEL_EXPECTED_LABELS),
+                    )
+                )
+                model_root = self._registry_resolution.model_root
+                self._manifest = self._registry_resolution.manifest
+                if (
+                    model_root is None
+                    or not self._registry_resolution.serving_permitted
+                ):
+                    raise ModelArtifactVerificationError(
+                        "Registry release is not eligible for serving."
+                    )
+            else:
+                model_root = resolve_model_root(
+                    self.model_name,
+                    revision=settings.MODEL_REVISION,
+                    local_files_only=settings.MODEL_LOCAL_FILES_ONLY,
                 )
 
             load_options: dict[str, Any] = {"local_files_only": True}
@@ -178,6 +187,11 @@ class MalariaClassifierService:
     def is_ready(self) -> bool:
         """Check if model and processor are initialized and ready for inference."""
         return self._is_ready and self.model is not None and self.processor is not None
+
+    @property
+    def registry_resolution(self) -> RegistryResolution | None:
+        """Expose non-secret release verification metadata for readiness probes."""
+        return self._registry_resolution
 
     def _release_background_inference(
         self,

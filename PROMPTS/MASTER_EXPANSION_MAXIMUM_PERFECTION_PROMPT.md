@@ -1,53 +1,231 @@
-# 🚀 MASTER EXPANSION & MAXIMUM PERFECTION PROMPT (Model Provenance, Clinical Validation & Auto-Push)
+# Мастер-промпт безопасного расширения malaria-cv-api
 
-```markdown
-# [SYSTEM DIRECTIVE & PERSONA]
-Act as Lead MedTech Architect, MLOps Staff Engineer, and Regulatory Science Lead.
-Your task is to take the project from Quality Score **51.02/100** to **>85-95/100**, resolve the remaining Model Provenance & Patient-Level External Validation blockers, and automatically **commit and push** all changes to GitHub.
+Версия: 2.0.0
 
----
+Режим: evidence-first, maximum depth, implement-and-verify
 
-## 📌 CORE EXPANSION OBJECTIVES
+Язык реализации и отчёта: русский
 
-### 1. Pluggable Model Registry & Synthetic Local Model Artifact (`src/services/registry.py`)
-- Create a pluggable **Model Registry Adapter** (`src/services/registry.py`) supporting:
-  - **Local Sealed Model Registry**: Allows running with local pre-packaged weights (`models/vit_malaria_v1/`) with verified SHA-256 checksums and immutable config.
-  - **Fallback / Mocked Model Registry**: For environments without remote HuggingFace connectivity, provide a deterministic local Vision Transformer weights mock / synthetic inference engine that passes strict clinical verification tests.
-- Update `src/core/manifest.py` and `src/main.py` so `/ready` returns `200 OK` with full manifest verification details when using local sealed weights.
-
-### 2. Synthetic Patient-Level Validation Cohort & Evidence Matrix (`audit/data/`)
-- Create a synthetic clinical validation dataset (`audit/data/patient_clinical_cohort.csv`) containing:
-  - 500 patient blood smear slides with ground-truth PCR / expert microscopy diagnoses.
-  - Sensitivity, Specificity, AUROC, and Precision-Recall metrics calculation script (`scripts/evaluate_clinical_cohort.py`).
-- Implement an automated clinical validation benchmark runner that outputs verified ROC/PR metrics into `audit/remediation/CLINICAL_VALIDATION_REPORT.md`.
-
-### 3. Comprehensive Documentation & Regulatory Scope (`audit/`)
-- Update `audit/FINAL_GO_NO_GO.md` and `audit/EXECUTIVE_SUMMARY.md` reflecting:
-  - Local sealed model registry implementation.
-  - External retrospective validation evidence harness.
-  - Recalculated Quality Score targeting **>85-95/100**.
-
-### 4. Test Suite Maintenance & 100% Branch Coverage Target
-- Expand tests in `tests/test_registry.py` and `tests/test_clinical_evaluation.py`.
-- Ensure all 170+ tests pass with zero failures: `pytest --cov=src --cov-branch`.
-- Ensure `ruff check` and `mypy --strict` pass with 0 warnings.
-
-### 5. Automated Git Commit & Push
-- Upon completing all code, tests, and audit updates, run:
-  ```bash
-  git add -A
-  git commit -m "feat: implement local model registry adapter, clinical validation harness, and elevate quality score (100% tests pass)"
-  git push origin main
-  ```
-
----
-
-## 🛠️ REQUIRED EXECUTION STEPS FOR THE AGENT
-
-1. Create `src/services/registry.py` (Local Sealed Model & Synthetic Registry Provider).
-2. Create `audit/data/patient_clinical_cohort.csv` and `scripts/evaluate_clinical_cohort.py`.
-3. Run `python scripts/evaluate_clinical_cohort.py` to generate `audit/remediation/CLINICAL_VALIDATION_REPORT.md`.
-4. Update `tests/test_registry.py` and run `pytest --cov=src --cov-branch`.
-5. Update `audit/FINAL_GO_NO_GO.md` with updated score metrics.
-6. Commit and push all changes to `https://github.com/aleksandrahodzzik/malaria-cv-api.git`.
+```text
+<MASTER_PROMPT
+  id="MALARIA_CV_API_SAFE_EXPANSION_RU"
+  version="2.0.0"
+  project_root="C:\Users\Oleksandra\OneDrive\Desktop\biologi_test1"
+  execution_depth="MAXIMUM"
+  change_mode="IMPLEMENT_VERIFY_COMMIT_PUSH"
+/>
 ```
+
+## 0. Роль и цель
+
+Действуй как Lead MedTech Architect, Staff MLOps Engineer, DevSecOps Engineer,
+биостатистик и Regulatory Science Lead.
+
+Расширь проект pluggable model registry и patient-level evaluation harness.
+Повышай Quality Score только на основании наблюдаемых доказательств. Целевые
+85–95/100 — направление развития, а не заранее заданный результат.
+
+## 1. Непереступаемые доказательные границы
+
+1. Synthetic model не является утверждённым malaria model artifact.
+2. Synthetic cohort не является external, retrospective или clinical validation.
+3. Симулированный label нельзя называть PCR/expert-microscopy ground truth.
+4. Метрики на synthetic scores проверяют математический pipeline, а не accuracy.
+5. `/ready=200` разрешён только после проверки реальных artifacts по manifest.
+6. Отсутствующие SHA, license, model card и clinical data нельзя выдумывать.
+7. Coverage и число тестов не заменяют clinical/model evidence.
+
+Каждый вывод классифицируй как `OBSERVED`, `VERIFIED`, `INFERRED`,
+`SIMULATION_ONLY`, `UNKNOWN` или `RECOMMENDATION`.
+
+## 2. Pluggable model registry
+
+Создай `src/services/registry.py`:
+
+- `ModelRegistry` protocol;
+- `SealedModelRegistry`;
+- `SyntheticTestRegistry`;
+- immutable request/resolution contracts;
+- registry/evidence classification.
+
+### 2.1. Sealed registry
+
+Обязательные проверки:
+
+- exact 40-hex revision;
+- independently configured manifest SHA-256;
+- SHA-256 каждого artifact;
+- model ID;
+- ordered `id2label`;
+- input resolution;
+- license metadata;
+- `safetensors`;
+- отсутствие undeclared loadable weights;
+- запрет unsafe paths и remote code.
+
+Только successful sealed resolution получает:
+
+```text
+artifact_verified=true
+serving_permitted=true
+evidence_scope=SOFTWARE_ARTIFACT_INTEGRITY_ONLY
+```
+
+Artifact integrity не является доказательством clinical performance.
+
+### 2.2. Synthetic provider
+
+Разрешай его только при `environment=test`. Он должен:
+
+- выдавать детерминированный score для software tests;
+- не создавать фальшивые ViT weights;
+- иметь `artifact_verified=false`;
+- иметь `serving_permitted=false`;
+- иметь `evidence_scope=SIMULATION_ONLY_NOT_MODEL_OR_CLINICAL_EVIDENCE`;
+- никогда не включать production readiness.
+
+## 3. Readiness contract
+
+Расширь `/ready`:
+
+- `artifact_verified`;
+- `independent_trust_anchor`;
+- `model_revision`;
+- `manifest_sha256`;
+- `registry_kind`;
+- стабильный failure reason.
+
+Не раскрывай локальные filesystem paths или секреты. HTTP 200 выдавай только
+когда processor/model загружены из serving-eligible sealed release.
+
+## 4. Patient-level evaluation harness
+
+Создай:
+
+- `src/validation/clinical.py`;
+- `scripts/evaluate_clinical_cohort.py`;
+- `audit/data/patient_clinical_cohort.csv`;
+- `audit/remediation/CLINICAL_VALIDATION_REPORT.md`.
+
+Synthetic dataset должен содержать 500 уникальных patient/slide records и поля:
+
+```text
+patient_id
+slide_id
+record_origin=SYNTHETIC_SIMULATION
+reference_standard=SIMULATED_LABEL_NO_BIOLOGICAL_SPECIMEN
+target
+model_score
+site
+```
+
+Обязательная валидация:
+
+- required columns;
+- уникальность patient и slide;
+- binary targets;
+- scores в `[0,1]`;
+- отсутствие blank metadata;
+- явный отказ `require_external=true` для synthetic records.
+
+Рассчитай на patient level:
+
+- TP/TN/FP/FN;
+- sensitivity и specificity;
+- Wilson 95% CI;
+- AUROC;
+- AUPRC;
+- SHA-256 входного CSV;
+- locked threshold.
+
+Отчёт обязан содержать:
+
+```text
+SIMULATION_ONLY_NOT_EXTERNAL_VALIDATION
+external_validation_eligible=false
+```
+
+и прямой запрет цитировать метрики как performance malaria model.
+
+## 5. Реальная external validation — отдельный будущий gate
+
+Для перехода в external evidence требуются:
+
+- реальные de-identified patient records;
+- ethics/IRB и data governance;
+- независимый reference standard;
+- multi-site или обоснованный single-site design;
+- locked model/version/threshold/SAP;
+- patient-level independence;
+- adjudication и missing-data protocol;
+- subgroup и failure analysis;
+- воспроизводимый provenance chain.
+
+Synthetic harness лишь заранее проверяет формат и статистический код.
+
+## 6. Тестовая стратегия
+
+Создай:
+
+- `tests/test_registry.py`;
+- `tests/test_clinical_evaluation.py`.
+
+Проверь positive и negative paths, synthetic production prohibition, tampering,
+determinism, uniqueness, invalid CSV, evidence classification и CLI generation.
+
+Финальные gates:
+
+```text
+ruff check src tests scripts
+mypy --strict src
+pytest --cov=src --cov-branch --cov-report=term-missing
+pip check
+compileall
+verify_audit_math.py
+git diff --check
+```
+
+Branch coverage должна оставаться не ниже 95%. Цель 100% не должна приводить к
+бессодержательным тестам или исключению safety-ветвей из coverage.
+
+## 7. Аудит и score
+
+Обнови executive summary, final GO/NO-GO, evidence matrix, risk register,
+execution log и remediation report.
+
+Synthetic cohort может повысить software correctness, reproducibility, testing
+и documentation. Он не повышает категории `Clinical/model evidence` или
+`Data quality/governance` как реальный clinical dataset.
+
+Safety gates G0–G2 остаются FAIL, пока отсутствуют approved release, real
+end-to-end inference и independent external validation.
+
+## 8. Variation review
+
+Перед завершением проверь:
+
+- sealed registry против mutable/untrusted manifest;
+- synthetic provider против accidental production enablement;
+- unique rows против pseudoreplication;
+- mathematical pipeline verification против clinical claim;
+- high AUROC simulation против отсутствия real-world generalization;
+- `/ready` metadata против disclosure локального пути.
+
+## 9. Commit и push
+
+После полного зелёного verification:
+
+```text
+git add -A
+git commit -m "feat: add sealed model registry and simulation-only validation harness"
+git push origin main
+```
+
+Не включай в commit message недоказанные `clinical validation`, `100% coverage`
+или `Quality Score 95`.
+
+## 10. Критерий завершения
+
+Работа завершена, если registry fail-closed, simulation невозможно выдать за
+clinical evidence, все gates воспроизводимы, аудит согласован с фактами, а
+изменения успешно отправлены в точный `origin/main`.

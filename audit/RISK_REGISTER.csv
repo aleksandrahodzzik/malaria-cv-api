@@ -11,3 +11,4 @@ R-009,QC heuristic fails on shifted microscopy domain,5,3,4,60,0.90,0.10,66.0,Hi
 R-010,Operational degradation not alerted,4,3,4,48,0.90,0.10,52.8,High,NO,Metrics alerts dashboard and runbook
 R-011,Health-data governance undefined in deployment,5,3,4,60,0.75,0.25,75.0,High,NO,DPIA access retention encryption incident plan
 R-012,Real model capacity unknown,4,4,3,48,1.00,0.00,48.0,Medium,NO,T2/T3 load RSS thread soak benchmark
+R-013,Synthetic metrics are misrepresented as clinical validation,5,3,3,45,0.95,0.05,47.25,Medium,YES,Preserve simulation-only provenance gate and prohibit clinical score uplift

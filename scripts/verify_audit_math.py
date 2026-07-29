@@ -46,7 +46,7 @@ def main() -> None:
     if abs(quality - recorded_contribution) > 1e-9:
         raise ValueError("Quality-score contribution mismatch.")
 
-    risk_rows = _rows("audit/phase18/RISK_REGISTER.csv")
+    risk_rows = _rows("audit/RISK_REGISTER.csv")
     for row in risk_rows:
         calculated = adjusted_rpn(
             severity=int(row["S"]),

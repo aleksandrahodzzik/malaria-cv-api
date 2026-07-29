@@ -20,6 +20,7 @@ from src.main import create_application, lifespan
 from src.schemas.payload import ClassProbability
 from src.services.inference import MalariaClassifierService
 from src.services.qc import QCMetrics, QCResult
+from src.services.registry import RegistryKind, RegistryResolution
 
 
 @pytest.fixture
@@ -139,7 +140,10 @@ def test_load_model_propagates_trust_failure_and_wraps_loader_failure() -> None:
     service = MalariaClassifierService("approved/model")
     failure = ModelArtifactVerificationError("not verified")
     with (
-        patch("src.services.inference.resolve_model_root", side_effect=failure),
+        patch(
+            "src.services.inference.SealedModelRegistry.resolve",
+            side_effect=failure,
+        ),
         pytest.raises(ModelArtifactVerificationError),
     ):
         service.load_model()
@@ -156,6 +160,30 @@ def test_load_model_propagates_trust_failure_and_wraps_loader_failure() -> None:
             side_effect=OSError("loader"),
         ),
         pytest.raises(RuntimeError, match="initialization"),
+    ):
+        service.load_model()
+    assert service.is_ready() is False
+
+
+def test_load_model_rejects_non_serving_registry_resolution() -> None:
+    service = MalariaClassifierService("synthetic")
+    resolution = RegistryResolution(
+        kind=RegistryKind.SYNTHETIC_TEST,
+        model_root=None,
+        manifest_path=None,
+        manifest=None,
+        manifest_sha256=None,
+        artifact_verified=False,
+        independent_trust_anchor=False,
+        serving_permitted=False,
+        evidence_scope="SIMULATION_ONLY_NOT_MODEL_OR_CLINICAL_EVIDENCE",
+    )
+    with (
+        patch(
+            "src.services.inference.SealedModelRegistry.resolve",
+            return_value=resolution,
+        ),
+        pytest.raises(ModelArtifactVerificationError, match="not eligible"),
     ):
         service.load_model()
     assert service.is_ready() is False
