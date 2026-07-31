@@ -5,12 +5,14 @@ import logging
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from pathlib import Path
+from typing import Annotated
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
 
+from src.api.dependencies import require_metrics_key
 from src.api.routes import router as api_router
 from src.core.config import settings
 from src.core.errors import register_exception_handlers
@@ -22,6 +24,7 @@ from src.core.middleware import (
     RequestTrackingMiddleware,
 )
 from src.core.ratelimit import RateLimitMiddleware, SlidingWindowRateLimiter
+from src.core.telemetry import MetricsRegistry, RequestMetricsMiddleware
 from src.services.inference import MalariaClassifierService
 
 logger = logging.getLogger("malaria_api.main")
@@ -99,6 +102,8 @@ def create_application() -> FastAPI:
         redoc_url="/redoc",
         openapi_url="/openapi.json",
     )
+    metrics_registry = MetricsRegistry()
+    app.state.metrics_registry = metrics_registry
 
     # CORS is opt-in and restricted to explicitly configured origins.
     if settings.CORS_ORIGINS:
@@ -165,6 +170,11 @@ def create_application() -> FastAPI:
 
     # Register custom observability and tracing middleware.
     app.add_middleware(RequestTrackingMiddleware)
+    app.add_middleware(
+        RequestMetricsMiddleware,
+        registry=metrics_registry,
+        enabled=settings.METRICS_ENABLED,
+    )
     register_exception_handlers(app)
 
     app.mount("/assets", StaticFiles(directory=UI_ROOT), name="assets")
@@ -177,6 +187,20 @@ def create_application() -> FastAPI:
     async def research_ui() -> FileResponse:
         """Serve the dependency-free research interface."""
         return FileResponse(UI_ROOT / "index.html", media_type="text/html")
+
+    @app.get(
+        "/metrics",
+        include_in_schema=False,
+        response_class=PlainTextResponse,
+    )
+    async def operational_metrics(
+        _auth: Annotated[None, Depends(require_metrics_key)],
+    ) -> PlainTextResponse:
+        """Expose bounded operational metrics to an authenticated collector."""
+        return PlainTextResponse(
+            metrics_registry.render_prometheus(),
+            media_type="text/plain; version=0.0.4",
+        )
 
     # Compatibility aliases remain callable but are hidden from the canonical
     # OpenAPI surface and carry deprecation/successor headers.

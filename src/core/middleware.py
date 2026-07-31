@@ -14,6 +14,7 @@ from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from src.core.config import settings
 from src.core.logging import safe_extra
+from src.core.telemetry import route_label
 
 logger = logging.getLogger("malaria_api.middleware")
 
@@ -186,7 +187,7 @@ class RequestTrackingMiddleware(BaseHTTPMiddleware):
                     event="request_failed",
                     request_id=request_id,
                     method=request.method,
-                    path=request.url.path,
+                    path=route_label(request.scope),
                     duration_ms=round(duration_ms, 2),
                     error_type=type(exc).__name__,
                 ),
@@ -224,7 +225,7 @@ class RequestTrackingMiddleware(BaseHTTPMiddleware):
                 event="request_completed",
                 request_id=request_id,
                 method=request.method,
-                path=request.url.path,
+                path=route_label(request.scope),
                 status=response.status_code,
                 duration_ms=round(process_time_ms, 2),
             ),

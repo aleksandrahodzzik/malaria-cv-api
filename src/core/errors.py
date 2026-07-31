@@ -9,6 +9,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+from src.core.telemetry import route_label
 from src.schemas.payload import ErrorResponse
 from src.services.qc import QualityControlError
 
@@ -81,7 +82,7 @@ def register_exception_handlers(app: FastAPI) -> None:
         logger.info(
             "Request validation failed | ID: %s | Path: %s | Errors: %s",
             _request_id(request),
-            request.url.path,
+            route_label(request.scope),
             len(exc.errors()),
         )
         return _error_response(
@@ -111,7 +112,7 @@ def register_exception_handlers(app: FastAPI) -> None:
         logger.exception(
             "Unhandled request failure | ID: %s | Path: %s",
             _request_id(request),
-            request.url.path,
+            route_label(request.scope),
             exc_info=exc,
         )
         return _error_response(

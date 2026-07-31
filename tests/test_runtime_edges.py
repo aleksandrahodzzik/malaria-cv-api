@@ -52,6 +52,8 @@ def sample_image_bytes() -> bytes:
         ({"QC_MIN_WIDTH": 100, "QC_MAX_WIDTH": 99}, "QC_MIN_WIDTH"),
         ({"QC_MIN_HEIGHT": 100, "QC_MAX_HEIGHT": 99}, "QC_MIN_HEIGHT"),
         ({"MODEL_MANIFEST_SHA256": "bad"}, "64 hexadecimal"),
+        ({"METRICS_ENABLED": True}, "requires METRICS_API_KEY"),
+        ({"METRICS_API_KEY": SecretStr("short")}, "at least 32"),
         (
             {"ENVIRONMENT": "production"},
             "API_KEY_REQUIRED=true",
@@ -129,6 +131,11 @@ def test_api_key_settings_accept_secret_values() -> None:
         API_KEYS=[SecretStr("secret")],
     )
     assert configured.API_KEYS[0].get_secret_value() == "secret"
+
+
+def test_blank_optional_metrics_key_is_treated_as_unset() -> None:
+    configured = Settings(METRICS_API_KEY="")
+    assert configured.METRICS_API_KEY is None
 
 
 class FakeClassifier:

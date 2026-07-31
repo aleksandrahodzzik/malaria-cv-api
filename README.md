@@ -170,6 +170,26 @@ RATE_LIMIT_ENABLED=true
 шаблон: нулевые revision/checksums и `REPLACE_*` значения не являются
 утверждённым release и не пройдут artifact verification.
 
+## Operational metrics
+
+Dependency-free Prometheus metrics можно включить только с отдельным ключом:
+
+```dotenv
+METRICS_ENABLED=true
+METRICS_API_KEY=replace-with-a-dedicated-32-character-collector-secret
+```
+
+```bash
+curl -H "X-Metrics-Key: $METRICS_API_KEY" http://localhost:8000/metrics
+```
+
+`/metrics` скрыт из OpenAPI и при отключённой telemetry отвечает `404`. Labels
+ограничены route template, HTTP method и status class; raw URL, request ID,
+имена файлов и пользовательские значения не экспортируются. Для production
+endpoint дополнительно ограничьте внутренней сетью. Registry находится в памяти
+одного процесса, поэтому multi-worker/replika deployment требует Prometheus,
+OpenTelemetry Collector или другого внешнего агрегатора.
+
 ## API
 
 Канонические versioned endpoints:

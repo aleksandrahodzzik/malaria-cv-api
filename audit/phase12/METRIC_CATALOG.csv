@@ -1,7 +1,7 @@
 Domain,Metric,Type,Labels allowed,Labels forbidden,Purpose,Status
-API,request_count,counter,"route template; method; status class","request_id; filename; patient",Traffic/errors,PLANNED
-API,request_duration_seconds,histogram,"route template; method","raw path; user",Latency SLO,PLANNED
-API,active_requests,gauge,none,request_id,Concurrency,PLANNED
+API,request_count,counter,"route template; method; status class","request_id; filename; patient",Traffic/errors,IMPLEMENTED
+API,request_duration_seconds,histogram,"route template; method","raw path; user",Latency SLO,IMPLEMENTED
+API,active_requests,gauge,none,request_id,Concurrency,IMPLEMENTED
 API,rejected_requests,counter,reason,filename,Backpressure,PLANNED
 ML,inference_duration_seconds,histogram,"model revision alias",patient,Capacity,PLANNED
 ML,model_load_status,gauge,"model revision alias",model path,Readiness,PLANNED

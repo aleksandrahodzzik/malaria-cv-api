@@ -4,7 +4,7 @@ import re
 from pathlib import Path, PureWindowsPath
 from typing import Literal, Self
 
-from pydantic import Field, SecretStr, model_validator
+from pydantic import Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -36,6 +36,17 @@ class Settings(BaseSettings):
     LOG_LEVEL: Literal["INFO", "WARNING", "ERROR"] = Field(
         default="INFO",
         description="Minimum application log level",
+    )
+
+    # Internal operational telemetry. The exporter is disabled unless a
+    # dedicated collector secret is explicitly configured.
+    METRICS_ENABLED: bool = Field(
+        default=False,
+        description="Expose the authenticated internal Prometheus endpoint",
+    )
+    METRICS_API_KEY: SecretStr | None = Field(
+        default=None,
+        description="Dedicated X-Metrics-Key secret for the internal collector",
     )
 
     # ML Model Configuration
@@ -204,6 +215,14 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
+    @field_validator("METRICS_API_KEY", mode="before")
+    @classmethod
+    def normalize_optional_metrics_key(cls, value: object) -> object:
+        """Treat the blank .env.example placeholder as an unset secret."""
+        if isinstance(value, str) and not value.strip():
+            return None
+        return value
+
     @model_validator(mode="after")
     def validate_security_invariants(self) -> Self:
         """Reject ambiguous production and cross-origin configurations."""
@@ -230,6 +249,13 @@ class Settings(BaseSettings):
             raise ValueError("Production API keys must contain at least 32 characters.")
         if self.ENVIRONMENT == "production" and not self.RATE_LIMIT_ENABLED:
             raise ValueError("Production cannot disable inference rate limiting.")
+        if self.METRICS_ENABLED and self.METRICS_API_KEY is None:
+            raise ValueError("METRICS_ENABLED requires METRICS_API_KEY.")
+        if (
+            self.METRICS_API_KEY is not None
+            and len(self.METRICS_API_KEY.get_secret_value()) < 32
+        ):
+            raise ValueError("METRICS_API_KEY must contain at least 32 characters.")
         if self.SLIDE_MIN_CELLS > self.SLIDE_MAX_CELLS:
             raise ValueError("SLIDE_MIN_CELLS cannot exceed SLIDE_MAX_CELLS.")
         if self.QC_MIN_WIDTH > self.QC_MAX_WIDTH:
