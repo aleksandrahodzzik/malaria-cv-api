@@ -101,6 +101,18 @@
 
             <p id="form-error" class="inline-error" role="alert" hidden></p>
 
+            <label id="api-key-field" class="api-key-field" hidden>
+              <span>API-ключ</span>
+              <input
+                id="api-key"
+                type="password"
+                autocomplete="new-password"
+                spellcheck="false"
+                placeholder="Введите ключ для защищённого inference"
+              >
+              <small>Ключ хранится только в памяти этой вкладки.</small>
+            </label>
+
             <label class="scope-confirmation">
               <input id="scope-confirmation" type="checkbox">
               <span>

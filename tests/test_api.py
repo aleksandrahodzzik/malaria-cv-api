@@ -13,7 +13,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 import torch
 from PIL import Image
-from pydantic import ValidationError
+from pydantic import SecretStr, ValidationError
 from starlette.testclient import TestClient
 
 from src.core.config import Settings, settings
@@ -146,6 +146,7 @@ def test_capabilities_are_explicitly_research_only(client: TestClient) -> None:
     assert data["parasitemia_supported"] is False
     assert data["human_review_required"] is True
     assert data["model_configured"] is False
+    assert data["api_key_required"] is settings.API_KEY_REQUIRED
     assert data["max_upload_size_mb"] == settings.MAX_UPLOAD_SIZE_MB
     assert data["accepted_content_types"] == settings.ALLOWED_CONTENT_TYPES
 
@@ -214,6 +215,8 @@ def test_production_remote_model_requires_revision() -> None:
     with pytest.raises(ValidationError, match="exact 40-character"):
         Settings(
             ENVIRONMENT="production",
+            API_KEY_REQUIRED=True,
+            API_KEYS=[SecretStr("p" * 32)],
             MODEL_NAME="organization/model",
             MODEL_LOCAL_FILES_ONLY=False,
             MODEL_REVISION=None,
@@ -223,6 +226,8 @@ def test_production_remote_model_requires_revision() -> None:
 def test_production_local_model_requires_complete_trust_configuration() -> None:
     configured = Settings(
         ENVIRONMENT="production",
+        API_KEY_REQUIRED=True,
+        API_KEYS=[SecretStr("p" * 32)],
         MODEL_NAME="C:\\models\\approved",
         MODEL_SOURCE_ID="approved/malaria",
         MODEL_LOCAL_FILES_ONLY=True,

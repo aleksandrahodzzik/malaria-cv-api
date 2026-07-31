@@ -37,13 +37,56 @@ def sample_image_bytes() -> bytes:
         ({"MODEL_EXPECTED_LABELS": ["A", "A"]}, "unique"),
         ({"MODEL_EXPECTED_LABELS": ["A", " "]}, "blank"),
         ({"API_KEY_REQUIRED": True}, "at least one"),
+        (
+            {"API_KEY_REQUIRED": True, "API_KEYS": [SecretStr(" ")]},
+            "blank values",
+        ),
+        (
+            {
+                "API_KEY_REQUIRED": True,
+                "API_KEYS": [SecretStr("same"), SecretStr("same")],
+            },
+            "unique",
+        ),
         ({"SLIDE_MIN_CELLS": 11, "SLIDE_MAX_CELLS": 10}, "SLIDE_MIN"),
         ({"QC_MIN_WIDTH": 100, "QC_MAX_WIDTH": 99}, "QC_MIN_WIDTH"),
         ({"QC_MIN_HEIGHT": 100, "QC_MAX_HEIGHT": 99}, "QC_MIN_HEIGHT"),
         ({"MODEL_MANIFEST_SHA256": "bad"}, "64 hexadecimal"),
         (
+            {"ENVIRONMENT": "production"},
+            "API_KEY_REQUIRED=true",
+        ),
+        (
             {
                 "ENVIRONMENT": "production",
+                "DEBUG": True,
+                "API_KEY_REQUIRED": True,
+                "API_KEYS": [SecretStr("p" * 32)],
+            },
+            "DEBUG",
+        ),
+        (
+            {
+                "ENVIRONMENT": "production",
+                "API_KEY_REQUIRED": True,
+                "API_KEYS": [SecretStr("too-short")],
+            },
+            "at least 32",
+        ),
+        (
+            {
+                "ENVIRONMENT": "production",
+                "API_KEY_REQUIRED": True,
+                "API_KEYS": [SecretStr("p" * 32)],
+                "RATE_LIMIT_ENABLED": False,
+            },
+            "rate limiting",
+        ),
+        (
+            {
+                "ENVIRONMENT": "production",
+                "API_KEY_REQUIRED": True,
+                "API_KEYS": [SecretStr("p" * 32)],
                 "MODEL_NAME": "C:\\model",
                 "MODEL_SOURCE_ID": "approved/model",
                 "MODEL_REVISION": "a" * 40,
@@ -54,6 +97,8 @@ def sample_image_bytes() -> bytes:
         (
             {
                 "ENVIRONMENT": "production",
+                "API_KEY_REQUIRED": True,
+                "API_KEYS": [SecretStr("p" * 32)],
                 "MODEL_NAME": "C:\\model",
                 "MODEL_REVISION": "a" * 40,
                 "MODEL_MANIFEST_SHA256": "0" * 64,
@@ -63,6 +108,8 @@ def sample_image_bytes() -> bytes:
         (
             {
                 "ENVIRONMENT": "production",
+                "API_KEY_REQUIRED": True,
+                "API_KEYS": [SecretStr("p" * 32)],
                 "MODEL_NAME": "C:\\model",
                 "MODEL_REVISION": "a" * 40,
                 "MODEL_REQUIRE_MANIFEST": False,

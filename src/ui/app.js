@@ -13,6 +13,8 @@ const elements = {
   cancelButton: document.querySelector("#cancel-button"),
   buttonLabel: document.querySelector(".button-label"),
   formError: document.querySelector("#form-error"),
+  apiKeyField: document.querySelector("#api-key-field"),
+  apiKey: document.querySelector("#api-key"),
   scopeConfirmation: document.querySelector("#scope-confirmation"),
   statusDot: document.querySelector("#status-dot"),
   statusText: document.querySelector("#service-status-text"),
@@ -34,9 +36,11 @@ const state = {
   requestController: null,
   ready: false,
   scopeAccepted: false,
+  apiKey: "",
   capabilities: {
     accepted_content_types: ["image/jpeg", "image/png", "image/webp"],
     max_upload_size_mb: 10,
+    api_key_required: false,
   },
 };
 
@@ -75,8 +79,14 @@ function setReadiness(ready, reason = null) {
 
 function updateSubmitState() {
   const loading = state.requestController !== null;
+  const authenticationReady =
+    !state.capabilities.api_key_required || state.apiKey.trim().length > 0;
   elements.analyzeButton.disabled =
-    !state.selectedFile || !state.ready || !state.scopeAccepted || loading;
+    !state.selectedFile ||
+    !state.ready ||
+    !state.scopeAccepted ||
+    !authenticationReady ||
+    loading;
 }
 
 function revokePreview() {
@@ -243,6 +253,8 @@ async function fetchJson(url, options = {}) {
 async function loadCapabilities() {
   try {
     state.capabilities = await fetchJson("/api/v1/capabilities");
+    elements.apiKeyField.hidden = !state.capabilities.api_key_required;
+    updateSubmitState();
     const types = state.capabilities.accepted_content_types
       .map((type) => type.split("/")[1].toUpperCase())
       .join(" · ");
@@ -304,6 +316,9 @@ async function analyze(event) {
       method: "POST",
       body: formData,
       signal: controller.signal,
+      headers: state.capabilities.api_key_required
+        ? { "X-API-Key": state.apiKey }
+        : {},
     });
     renderResult(result);
   } catch (error) {
@@ -317,6 +332,8 @@ async function analyze(event) {
     } else if (error.status === 429) {
       const retry = error.retryAfter ? ` Через ${error.retryAfter} с.` : "";
       showError(`Превышена квота запросов.${retry}`);
+    } else if (error.status === 401 || error.status === 403) {
+      showError("API-ключ отсутствует или не принят сервером.");
     } else {
       showError(error.message || "Не удалось выполнить анализ.");
     }
@@ -352,6 +369,10 @@ elements.dropZone.addEventListener("drop", (event) => {
 });
 
 elements.removeFile.addEventListener("click", clearFile);
+elements.apiKey.addEventListener("input", () => {
+  state.apiKey = elements.apiKey.value;
+  updateSubmitState();
+});
 elements.scopeConfirmation.addEventListener("change", () => {
   state.scopeAccepted = elements.scopeConfirmation.checked;
   updateSubmitState();

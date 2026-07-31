@@ -215,6 +215,21 @@ class Settings(BaseSettings):
             raise ValueError("Wildcard CORS origins are not supported.")
         if self.API_KEY_REQUIRED and not self.API_KEYS:
             raise ValueError("API_KEY_REQUIRED needs at least one configured API key.")
+        api_key_values = [key.get_secret_value() for key in self.API_KEYS]
+        if any(not key.strip() for key in api_key_values):
+            raise ValueError("API_KEYS cannot contain blank values.")
+        if len(set(api_key_values)) != len(api_key_values):
+            raise ValueError("API_KEYS must contain unique values.")
+        if self.ENVIRONMENT == "production" and self.DEBUG:
+            raise ValueError("Production cannot run with DEBUG enabled.")
+        if self.ENVIRONMENT == "production" and not self.API_KEY_REQUIRED:
+            raise ValueError("Production inference requires API_KEY_REQUIRED=true.")
+        if self.ENVIRONMENT == "production" and any(
+            len(key) < 32 for key in api_key_values
+        ):
+            raise ValueError("Production API keys must contain at least 32 characters.")
+        if self.ENVIRONMENT == "production" and not self.RATE_LIMIT_ENABLED:
+            raise ValueError("Production cannot disable inference rate limiting.")
         if self.SLIDE_MIN_CELLS > self.SLIDE_MAX_CELLS:
             raise ValueError("SLIDE_MIN_CELLS cannot exceed SLIDE_MAX_CELLS.")
         if self.QC_MIN_WIDTH > self.QC_MAX_WIDTH:

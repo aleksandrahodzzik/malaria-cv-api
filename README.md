@@ -146,6 +146,23 @@ MODEL_EXPECTED_LABELS=["Parasitized","Uninfected"]
 Для production рекомендуется заранее получить artifact, проверить hashes и
 запускать с `MODEL_LOCAL_FILES_ONLY=true`.
 
+Профиль `ENVIRONMENT=production` работает fail-closed: он не запустится при
+`DEBUG=true`, `API_KEY_REQUIRED=false`, пустом `API_KEYS` или отключённом
+`RATE_LIMIT_ENABLED`. Минимальная security-конфигурация:
+
+```dotenv
+ENVIRONMENT=production
+DEBUG=false
+API_KEY_REQUIRED=true
+API_KEYS=["replace-with-a-random-secret-of-at-least-32-characters"]
+RATE_LIMIT_ENABLED=true
+```
+
+Локальный UI показывает поле API-ключа, когда оно требуется. Значение живёт
+только в памяти вкладки и добавляется к inference-запросу как `X-API-Key`.
+Для нескольких процессов или реплик встроенный rate limiter всё ещё нужно
+дополнить общей квотой на gateway/Redis.
+
 Полный пример находится в [.env.example](.env.example).
 
 Структура trust document показана в
@@ -185,6 +202,7 @@ curl http://localhost:8000/api/v1/capabilities
   "task": "pre_cropped_single_cell_classification",
   "analysis_level": "cell",
   "model_configured": false,
+  "api_key_required": false,
   "accepted_content_types": [
     "image/jpeg",
     "image/png",

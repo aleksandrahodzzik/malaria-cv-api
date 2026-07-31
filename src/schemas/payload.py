@@ -247,6 +247,7 @@ class CapabilitiesResponse(BaseModel):
     )
     analysis_level: Literal["cell"] = "cell"
     model_configured: bool
+    api_key_required: bool
     accepted_content_types: list[str]
     max_upload_size_mb: int
     max_image_pixels: int

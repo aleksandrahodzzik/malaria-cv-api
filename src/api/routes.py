@@ -114,6 +114,7 @@ async def capabilities() -> CapabilitiesResponse:
     return CapabilitiesResponse(
         api_version=settings.VERSION,
         model_configured=bool(settings.MODEL_NAME.strip()),
+        api_key_required=settings.API_KEY_REQUIRED,
         accepted_content_types=settings.ALLOWED_CONTENT_TYPES,
         max_upload_size_mb=settings.MAX_UPLOAD_SIZE_MB,
         max_image_pixels=settings.MAX_IMAGE_PIXELS,

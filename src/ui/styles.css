@@ -467,6 +467,40 @@ h2 {
   border-radius: var(--radius-sm);
 }
 
+.api-key-field {
+  display: grid;
+  gap: 0.4rem;
+  margin-top: 1rem;
+}
+
+.api-key-field[hidden] {
+  display: none;
+}
+
+.api-key-field > span {
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.api-key-field input {
+  width: 100%;
+  padding: 0.75rem 0.85rem;
+  color: var(--ink);
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  font: inherit;
+}
+
+.api-key-field input:focus-visible {
+  border-color: var(--teal);
+  outline: 3px solid rgba(8, 127, 109, 0.2);
+}
+
+.api-key-field small {
+  color: var(--muted);
+}
+
 .empty-result {
   display: grid;
   min-height: 360px;
