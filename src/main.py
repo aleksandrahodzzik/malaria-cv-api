@@ -2,6 +2,7 @@
 
 import hashlib
 import logging
+import mimetypes
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -93,6 +94,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
 def create_application() -> FastAPI:
     """Factory function creating configured FastAPI application instance."""
+    mimetypes.add_type("image/webp", ".webp")
     app = FastAPI(
         title=settings.PROJECT_NAME,
         version=settings.VERSION,

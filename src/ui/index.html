@@ -33,7 +33,7 @@
 
     <main id="main-content">
       <section class="hero" aria-labelledby="page-title">
-        <div>
+        <div class="hero-copy-block">
           <p class="eyebrow">Исследовательский прототип</p>
           <h1 id="page-title">Анализ изображения отдельной клетки</h1>
           <p class="hero-copy">
@@ -43,12 +43,26 @@
           </p>
         </div>
 
-        <div class="service-status" aria-live="polite" aria-atomic="true">
-          <span id="status-dot" class="status-dot pending" aria-hidden="true"></span>
-          <span>
-            <small>Состояние модели</small>
-            <strong id="service-status-text">Проверяем…</strong>
-          </span>
+        <div class="hero-visual">
+          <div class="crew-badge">
+            <span aria-hidden="true">●</span>
+            Персонажи исследовательской команды
+          </div>
+          <img
+            class="cell-crew"
+            src="/assets/cell-crew.webp"
+            width="1536"
+            height="1024"
+            alt=""
+            fetchpriority="high"
+          >
+          <div class="service-status" aria-live="polite" aria-atomic="true">
+            <span id="status-dot" class="status-dot pending" aria-hidden="true"></span>
+            <span>
+              <small>Состояние модели</small>
+              <strong id="service-status-text">Проверяем…</strong>
+            </span>
+          </div>
         </div>
       </section>
 

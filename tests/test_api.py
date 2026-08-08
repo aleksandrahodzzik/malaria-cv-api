@@ -88,8 +88,13 @@ def test_research_ui_and_static_assets(client: TestClient) -> None:
 
     script = client.get("/assets/app.js")
     stylesheet = client.get("/assets/styles.css")
+    cell_crew = client.get("/assets/cell-crew.webp")
     assert script.status_code == 200
     assert stylesheet.status_code == 200
+    assert cell_crew.status_code == 200
+    assert cell_crew.headers["content-type"] == "image/webp"
+    assert len(cell_crew.content) < 250_000
+    assert 'src="/assets/cell-crew.webp"' in response.text
     assert "innerHTML" not in script.text
     assert "style.width" not in script.text
     assert 'document.createElement("progress")' in script.text
