@@ -17,36 +17,71 @@
     <header class="site-header">
       <div class="header-inner">
         <a class="brand" href="/" aria-label="Malaria Cell Lab, главная">
-          <span class="brand-mark" aria-hidden="true">MC</span>
-          <span>
+          <span class="brand-mark" aria-hidden="true">
+            <span></span>
+          </span>
+          <span class="brand-copy">
             <strong>Malaria Cell Lab</strong>
-            <small>Research interface</small>
+            <small>Research interface · Cell AI</small>
           </span>
         </a>
 
-        <nav aria-label="Служебные ссылки">
-          <a href="/docs">API Docs</a>
-          <a href="/redoc">ReDoc</a>
+        <nav aria-label="Основная навигация">
+          <a href="#analysis-workbench">Анализ</a>
+          <a href="#methodology">Методология</a>
+          <a class="nav-api" href="/docs">API Docs <span aria-hidden="true">↗</span></a>
         </nav>
       </div>
     </header>
 
     <main id="main-content">
       <section class="hero" aria-labelledby="page-title">
-        <div class="hero-copy-block">
-          <p class="eyebrow">Исследовательский прототип</p>
-          <h1 id="page-title">Анализ изображения отдельной клетки</h1>
+        <div class="hero-content">
+          <div class="hero-meta">
+            <span>Исследовательский прототип</span>
+            <span>Single-cell · AI</span>
+          </div>
+
+          <h1 id="page-title">
+            Смотрим на клетку.
+            <span>Не ставим диагноз.</span>
+          </h1>
+
           <p class="hero-copy">
-            Загрузите заранее выделенное изображение клетки в формате JPEG,
-            PNG или WEBP. Сервис вернёт класс модели и некалиброванный
-            softmax-score.
+            Интерфейс для технической проверки и классификации заранее вырезанного
+            изображения одной клетки крови. Результат — класс модели и
+            некалиброванный softmax-score.
           </p>
+
+          <div class="hero-actions">
+            <a class="hero-primary" href="#analysis-workbench">
+              Перейти к анализу
+              <span aria-hidden="true">↓</span>
+            </a>
+            <a class="hero-secondary" href="#methodology">Границы системы</a>
+          </div>
+
+          <dl class="hero-facts">
+            <div>
+              <dt>Вход</dt>
+              <dd>1 клетка</dd>
+            </div>
+            <div>
+              <dt>Форматы</dt>
+              <dd>JPEG · PNG · WEBP</dd>
+            </div>
+            <div>
+              <dt>Назначение</dt>
+              <dd>Research only</dd>
+            </div>
+          </dl>
         </div>
 
-        <div class="hero-visual">
-          <div class="crew-badge">
-            <span aria-hidden="true">●</span>
-            Персонажи исследовательской команды
+        <div class="hero-stage">
+          <div class="stage-grid" aria-hidden="true"></div>
+          <div class="stage-kicker">
+            <span aria-hidden="true"></span>
+            Cell crew · interface guides
           </div>
           <img
             class="cell-crew"
@@ -56,6 +91,14 @@
             alt=""
             fetchpriority="high"
           >
+          <div class="stage-note stage-note-one" aria-hidden="true">
+            <span>01</span>
+            Quality gate
+          </div>
+          <div class="stage-note stage-note-two" aria-hidden="true">
+            Human review
+            <span>required</span>
+          </div>
           <div class="service-status" aria-live="polite" aria-atomic="true">
             <span id="status-dot" class="status-dot pending" aria-hidden="true"></span>
             <span>
@@ -67,181 +110,239 @@
       </section>
 
       <section class="safety-notice" aria-labelledby="safety-title">
-        <span class="notice-icon" aria-hidden="true">!</span>
-        <div>
-          <h2 id="safety-title">Не является диагностикой</h2>
+        <div class="safety-marker" aria-hidden="true">!</div>
+        <div class="safety-copy">
+          <p class="section-kicker">Главное ограничение</p>
+          <h2 id="safety-title">Результат не является диагностикой</h2>
           <p>
-            Результат относится только к загруженному изображению клетки. Он
-            не исключает малярию, не оценивает пациента и не предназначен для
-            выбора лечения.
+            Он относится только к загруженному изображению клетки, не исключает
+            малярию, не оценивает пациента и не предназначен для выбора лечения.
           </p>
+        </div>
+        <ul class="safety-tags" aria-label="Ограничения результата">
+          <li>Не patient-level</li>
+          <li>Не calibrated</li>
+          <li>Нужна проверка человеком</li>
+        </ul>
+      </section>
+
+      <section id="analysis-workbench" class="workbench" aria-labelledby="workbench-title">
+        <header class="section-intro">
+          <div>
+            <p class="section-kicker">Рабочая область · 01</p>
+            <h2 id="workbench-title">Проверьте одну клетку</h2>
+          </div>
+          <p>
+            Файл проходит транспортную проверку и инженерный QC до передачи
+            модели. Изображение не сохраняется интерфейсом.
+          </p>
+        </header>
+
+        <div class="workspace-grid">
+          <section class="panel upload-panel" aria-labelledby="upload-title">
+            <div class="panel-heading">
+              <div class="panel-title-row">
+                <span class="panel-number">01</span>
+                <div>
+                  <p class="step-label">Input</p>
+                  <h2 id="upload-title">Изображение клетки</h2>
+                </div>
+              </div>
+              <span id="limits-label" class="meta-pill">JPEG · PNG · WEBP</span>
+            </div>
+
+            <form id="analysis-form" novalidate>
+              <label id="drop-zone" class="drop-zone" for="cell-image">
+                <input
+                  id="cell-image"
+                  name="file"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                >
+                <span class="upload-symbol" aria-hidden="true">
+                  <span></span>
+                </span>
+                <strong>Перетащите изображение</strong>
+                <span>или нажмите, чтобы выбрать файл</span>
+                <small id="file-help">Получаем ограничения API…</small>
+              </label>
+
+              <div id="file-card" class="file-card" hidden>
+                <img id="preview" alt="Предварительный просмотр выбранной клетки">
+                <div class="file-details">
+                  <small>Готово к проверке</small>
+                  <strong id="file-name"></strong>
+                  <span id="file-meta"></span>
+                </div>
+                <button id="remove-file" class="icon-button" type="button">
+                  Удалить
+                </button>
+              </div>
+
+              <p id="form-error" class="inline-error" role="alert" hidden></p>
+
+              <label id="api-key-field" class="api-key-field" hidden>
+                <span>API-ключ</span>
+                <input
+                  id="api-key"
+                  type="password"
+                  autocomplete="new-password"
+                  spellcheck="false"
+                  placeholder="Ключ для защищённого inference"
+                >
+                <small>Ключ существует только в памяти этой вкладки.</small>
+              </label>
+
+              <label class="scope-confirmation">
+                <input id="scope-confirmation" type="checkbox">
+                <span>
+                  Подтверждаю: это заранее вырезанное изображение одной клетки без
+                  идентифицирующих данных пациента.
+                </span>
+              </label>
+
+              <div class="actions">
+                <button id="analyze-button" class="primary-button" type="submit" disabled>
+                  <span class="button-label">Запустить анализ</span>
+                  <span class="button-arrow" aria-hidden="true">→</span>
+                  <span class="button-spinner" aria-hidden="true"></span>
+                </button>
+                <button id="cancel-button" class="secondary-button" type="button" hidden>
+                  Отменить запрос
+                </button>
+              </div>
+            </form>
+          </section>
+
+          <section class="panel result-panel" aria-labelledby="result-title">
+            <div class="panel-heading">
+              <div class="panel-title-row">
+                <span class="panel-number">02</span>
+                <div>
+                  <p class="step-label">Model output</p>
+                  <h2 id="result-title">Результат модели</h2>
+                </div>
+              </div>
+              <span class="meta-pill neutral">Без сохранения</span>
+            </div>
+
+            <div id="empty-result" class="empty-result">
+              <div class="scan-visual" aria-hidden="true">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+              <p class="empty-eyebrow">Output standby</p>
+              <h3>Здесь появится результат</h3>
+              <p>
+                Сначала выберите клетку, подтвердите scope и дождитесь готовности модели.
+              </p>
+            </div>
+
+            <div id="result-content" class="result-content" tabindex="-1" hidden>
+              <p class="result-kicker">Предсказанный класс клетки</p>
+              <div class="result-summary">
+                <strong id="predicted-class"></strong>
+                <span id="top-score"></span>
+              </div>
+
+              <div id="score-list" class="score-list" aria-label="Scores по классам"></div>
+
+              <div class="result-warning">
+                <strong>Score не калиброван</strong>
+                <span>
+                  Не интерпретируйте его как вероятность правильного диагноза.
+                  Автоматическое клиническое действие не поддерживается.
+                </span>
+              </div>
+
+              <dl class="result-meta">
+                <div>
+                  <dt>Файл</dt>
+                  <dd id="result-file"></dd>
+                </div>
+                <div>
+                  <dt>Время inference</dt>
+                  <dd id="execution-time"></dd>
+                </div>
+                <div>
+                  <dt>Назначение</dt>
+                  <dd>Только исследования</dd>
+                </div>
+              </dl>
+            </div>
+          </section>
         </div>
       </section>
 
-      <div class="workspace-grid">
-        <section class="panel upload-panel" aria-labelledby="upload-title">
-          <div class="panel-heading">
-            <div>
-              <p class="step-label">Шаг 1</p>
-              <h2 id="upload-title">Выберите изображение</h2>
-            </div>
-            <span id="limits-label" class="meta-pill">JPEG · PNG · WEBP</span>
+      <section id="methodology" class="pipeline-section" aria-labelledby="pipeline-title">
+        <div class="pipeline-heading">
+          <div>
+            <p class="section-kicker">System boundary · 02</p>
+            <h2 id="pipeline-title">От пикселя до решения — не один шаг</h2>
           </div>
-
-          <form id="analysis-form" novalidate>
-            <label id="drop-zone" class="drop-zone" for="cell-image">
-              <input
-                id="cell-image"
-                name="file"
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-              >
-              <span class="upload-symbol" aria-hidden="true">↑</span>
-              <strong>Перетащите файл сюда</strong>
-              <span>или нажмите, чтобы выбрать</span>
-              <small id="file-help">Максимальный размер уточняется…</small>
-            </label>
-
-            <div id="file-card" class="file-card" hidden>
-              <img id="preview" alt="Предварительный просмотр выбранной клетки">
-              <div class="file-details">
-                <strong id="file-name"></strong>
-                <span id="file-meta"></span>
-              </div>
-              <button id="remove-file" class="icon-button" type="button">
-                Удалить
-              </button>
-            </div>
-
-            <p id="form-error" class="inline-error" role="alert" hidden></p>
-
-            <label id="api-key-field" class="api-key-field" hidden>
-              <span>API-ключ</span>
-              <input
-                id="api-key"
-                type="password"
-                autocomplete="new-password"
-                spellcheck="false"
-                placeholder="Введите ключ для защищённого inference"
-              >
-              <small>Ключ хранится только в памяти этой вкладки.</small>
-            </label>
-
-            <label class="scope-confirmation">
-              <input id="scope-confirmation" type="checkbox">
-              <span>
-                Подтверждаю: это заранее вырезанное изображение одной клетки
-                без идентифицирующих данных пациента.
-              </span>
-            </label>
-
-            <div class="actions">
-              <button id="analyze-button" class="primary-button" type="submit" disabled>
-                <span class="button-label">Запустить анализ</span>
-                <span class="button-spinner" aria-hidden="true"></span>
-              </button>
-              <button id="cancel-button" class="secondary-button" type="button" hidden>
-                Отменить запрос
-              </button>
-            </div>
-          </form>
-        </section>
-
-        <section class="panel result-panel" aria-labelledby="result-title">
-          <div class="panel-heading">
-            <div>
-              <p class="step-label">Шаг 2</p>
-              <h2 id="result-title">Результат модели</h2>
-            </div>
-            <span class="meta-pill neutral">Без сохранения файла</span>
-          </div>
-
-          <div id="empty-result" class="empty-result">
-            <span aria-hidden="true">◎</span>
-            <p>После анализа здесь появятся класс и распределение score.</p>
-          </div>
-
-          <div id="result-content" class="result-content" tabindex="-1" hidden>
-            <p class="result-kicker">Предсказанный класс клетки</p>
-            <div class="result-summary">
-              <strong id="predicted-class"></strong>
-              <span id="top-score"></span>
-            </div>
-
-            <div id="score-list" class="score-list" aria-label="Scores по классам"></div>
-
-            <div class="result-warning">
-              <strong>Score не калиброван. Требуется проверка человеком.</strong>
-              <span>
-                Его нельзя интерпретировать как вероятность правильного
-                диагноза или использовать для автоматического клинического
-                действия.
-              </span>
-            </div>
-
-            <dl class="result-meta">
-              <div>
-                <dt>Файл</dt>
-                <dd id="result-file"></dd>
-              </div>
-              <div>
-                <dt>Время инференса</dt>
-                <dd id="execution-time"></dd>
-              </div>
-              <div>
-                <dt>Назначение</dt>
-                <dd>Только исследования</dd>
-              </div>
-            </dl>
-          </div>
-        </section>
-      </div>
-
-      <section class="pipeline-section" aria-labelledby="pipeline-title">
-        <div class="section-heading">
-          <p class="step-label">Границы системы</p>
-          <h2 id="pipeline-title">От изображения до клинического действия</h2>
           <p>
-            API реализует только технический приём файла и исследовательскую
-            классификацию отдельной клетки. Остальные звенья нельзя считать
-            выполненными автоматически.
+            Прототип реализует только ограниченный участок цепочки. Остальные
+            уровни нельзя считать выполненными автоматически.
           </p>
         </div>
         <ol id="pipeline-list" class="pipeline-list" aria-live="polite">
-          <li class="pipeline-placeholder">Получаем машиночитаемую методологию…</li>
+          <li class="pipeline-placeholder">
+            <span aria-hidden="true"></span>
+            Получаем машиночитаемую методологию…
+          </li>
         </ol>
       </section>
 
-      <section class="details-grid" aria-label="Ограничения и техническая информация">
-        <article>
-          <h2>Что проверяет API</h2>
-          <p>
-            Тип файла, encoded size, возможность безопасного декодирования и
-            максимальную площадь изображения до передачи в ML processor.
-          </p>
-        </article>
-        <article>
-          <h2>Что API не проверяет</h2>
-          <p>
-            Диагноз пациента, качество всего мазка, вид Plasmodium,
-            паразитемию и клинический контекст.
-          </p>
-        </article>
-        <article>
-          <h2>Конфиденциальность</h2>
-          <p>
-            Интерфейс не хранит историю и не отправляет файл сторонним
-            frontend-сервисам. Не загружайте идентифицирующие данные.
-          </p>
-        </article>
+      <section class="principles" aria-labelledby="principles-title">
+        <header class="section-intro compact">
+          <div>
+            <p class="section-kicker">Принципы · 03</p>
+            <h2 id="principles-title">Что держим под контролем</h2>
+          </div>
+        </header>
+
+        <div class="details-grid">
+          <article class="detail-card detail-card-technical">
+            <span class="detail-index">A</span>
+            <h3>Технический вход</h3>
+            <p>
+              MIME-тип, encoded size, безопасное декодирование, площадь изображения
+              и инженерные QC-эвристики.
+            </p>
+          </article>
+          <article class="detail-card detail-card-boundary">
+            <span class="detail-index">B</span>
+            <h3>Честная граница</h3>
+            <p>
+              API не определяет диагноз пациента, вид Plasmodium, качество всего
+              мазка или клинический контекст.
+            </p>
+          </article>
+          <article class="detail-card detail-card-privacy">
+            <span class="detail-index">C</span>
+            <h3>Приватность</h3>
+            <p>
+              Нет истории файлов и сторонних frontend-сервисов. Не загружайте
+              идентифицирующие данные.
+            </p>
+          </article>
+        </div>
       </section>
     </main>
 
     <footer>
-      <p>
-        malaria-cv-api · research-only ·
-        <a href="/api/v1/capabilities">возможности API</a>
-      </p>
+      <div class="footer-inner">
+        <div>
+          <strong>Malaria Cell Lab</strong>
+          <span>Research-only interface</span>
+        </div>
+        <p>
+          <a href="/api/v1/capabilities">Возможности API</a>
+          <span aria-hidden="true">·</span>
+          <a href="/redoc">ReDoc</a>
+        </p>
+      </div>
     </footer>
   </body>
 </html>
